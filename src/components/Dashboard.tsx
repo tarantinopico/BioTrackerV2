@@ -240,9 +240,16 @@ export default function Dashboard({
   }, [activeSubstanceDetails]);
 
   return (
-    <div className="space-y-4 pb-16">
+    <div className="space-y-4 pb-16 relative">
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[40%] right-[10%] w-[25%] h-[25%] bg-amber-500/5 blur-[80px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
+      </div>
+
       {/* Main Status Header - Glassmorphism */}
-      <section className="bg-white/[0.03] backdrop-blur-2xl rounded-2xl p-4 border border-white/[0.05] relative overflow-hidden shadow-2xl">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden shadow-2xl z-10">
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-primary/10 blur-[60px] rounded-full -mr-16 -mt-16" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 blur-[40px] rounded-full -ml-12 -mb-12" />
         
@@ -335,7 +342,7 @@ export default function Dashboard({
       </section>
 
       {/* Active Effects - New Section */}
-      <section className="bg-white/[0.03] backdrop-blur-2xl rounded-2xl p-4 border border-white/[0.05] shadow-xl">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 shadow-xl relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
             <Sparkles size={10} className="text-amber-400" /> Aktuální Účinky
@@ -389,16 +396,18 @@ export default function Dashboard({
       </section>
 
       {/* Quick Actions */}
-      <QuickActions 
-        shortcuts={shortcuts}
-        substances={substances}
-        onUseShortcut={onUseShortcut}
-        onAddShortcut={onAddShortcut}
-        onRemoveShortcut={onRemoveShortcut}
-      />
+      <div className="relative z-10">
+        <QuickActions 
+          shortcuts={shortcuts}
+          substances={substances}
+          onUseShortcut={onUseShortcut}
+          onAddShortcut={onAddShortcut}
+          onRemoveShortcut={onRemoveShortcut}
+        />
+      </div>
 
       {/* Kinetic & Effects Chart */}
-      <section className="bg-white/[0.03] backdrop-blur-2xl rounded-2xl p-4 border border-white/[0.05] shadow-xl">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 shadow-xl relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex bg-white/[0.02] p-0.5 rounded-xl border border-white/[0.05]">
             <button 
@@ -520,7 +529,7 @@ export default function Dashboard({
       </section>
 
       {/* Active Doses List - Glassmorphism */}
-      <section className="space-y-3">
+      <section className="space-y-3 relative z-10">
         <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Log Aktivních Dávek</h3>
         {activeDoses.length > 0 ? (
           activeDoses.map(dose => {
@@ -528,7 +537,7 @@ export default function Dashboard({
             if (!substance) return null;
             const level = calculateSubstanceLevelAtTime(substance.id, now, substances, doses, settings);
             return (
-              <div key={dose.id} className="bg-white/[0.02] backdrop-blur-xl rounded-2xl p-4 border border-white/[0.05] flex items-center justify-between group hover:bg-white/[0.04] transition-all">
+              <div key={dose.id} className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 flex items-center justify-between group hover:bg-white/[0.04] transition-all">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] group-hover:scale-105 transition-transform">
                     <Activity size={16} style={{ color: substance.color || '#00d1ff' }} />

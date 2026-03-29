@@ -33,9 +33,15 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
   const presets = DEFAULT_SUBSTANCES.filter(ds => !substances.some(s => s.id === ds.id));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[10%] left-[-5%] w-[35%] h-[35%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
+      </div>
+
       {/* Search Bar */}
-      <div className="relative group">
+      <div className="relative group z-10">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
           <Search size={14} className="text-slate-500 group-focus-within:text-cyan-primary transition-colors" />
         </div>
@@ -44,7 +50,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Hledat látku..."
-          className="w-full bg-card-bg border border-border-muted rounded-xl py-3 pl-10 pr-10 text-xs outline-none focus:border-cyan-primary/50 focus:ring-1 focus:ring-cyan-primary/20 transition-all text-slate-200"
+          className="w-full bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-xl py-3 pl-10 pr-10 text-xs outline-none focus:border-cyan-primary/50 focus:ring-1 focus:ring-cyan-primary/20 transition-all text-slate-200"
         />
         {search && (
           <button 
@@ -57,7 +63,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
       </div>
 
       {/* Category Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+      <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1 relative z-10">
         {categories.map(cat => (
           <button
             key={cat}
@@ -66,7 +72,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
               "px-3 py-1.5 rounded-lg border text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
               selectedCategory === cat 
                 ? "bg-cyan-primary border-transparent text-dark-bg shadow-[0_0_10px_rgba(0,209,255,0.2)]" 
-                : "bg-card-bg border-border-muted text-slate-500 hover:text-slate-300"
+                : "bg-slate-950/40 backdrop-blur-md border-white/5 text-slate-500 hover:text-slate-300"
             )}
           >
             {cat === 'all' ? 'Vše' : cat}
@@ -75,7 +81,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
       </div>
 
       {/* My Substances */}
-      <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
             <div className="p-2.5 rounded-xl bg-cyan-primary/10">
@@ -96,7 +102,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
         
         <div className="space-y-2">
           {filteredSubstances.length === 0 ? (
-            <div className="py-8 text-center border border-dashed border-border-muted rounded-xl">
+            <div className="py-8 text-center border border-dashed border-white/10 rounded-xl">
               <span className="text-[10px] text-slate-600 font-medium uppercase tracking-widest">Žádné látky</span>
             </div>
           ) : (
@@ -104,11 +110,11 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
               <div 
                 key={substance.id} 
                 onClick={() => onEditSubstance(substance.id)}
-                className="bg-slate-900/50 border border-border-muted/50 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-slate-900/80 transition-all group relative overflow-hidden"
+                className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-white/[0.05] transition-all group relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: substance.color || '#00d1ff' }} />
                 
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-800 border border-border-muted/50">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/5">
                   <Activity size={16} style={{ color: substance.color || '#00d1ff' }} />
                 </div>
                 
@@ -158,7 +164,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
 
       {/* Presets */}
       {presets.length > 0 && (
-        <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
           <h2 className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
             <Package size={10} className="text-purple-400" /> Přednastavené látky
           </h2>
@@ -167,9 +173,9 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
               <button 
                 key={preset.id}
                 onClick={() => onAddPreset(preset)}
-                className="p-3 rounded-xl bg-slate-900/50 border border-border-muted/50 hover:bg-slate-900/80 text-left flex items-center gap-2.5 transition-all active:scale-95"
+                className="p-3 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] text-left flex items-center gap-2.5 transition-all active:scale-95"
               >
-                <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center border border-border-muted/50">
+                <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center border border-white/5">
                   <Activity size={12} style={{ color: preset.color || '#00d1ff' }} />
                 </div>
                 <div className="min-w-0">

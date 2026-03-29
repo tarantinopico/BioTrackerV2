@@ -24,8 +24,14 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
   }, {});
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between px-1">
+    <div className="space-y-4 relative">
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[30%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[15%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <div className="flex items-center justify-between px-1 relative z-10">
         <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
           <Clock size={10} className="text-cyan-primary" /> Časová osa
         </h2>
@@ -38,14 +44,14 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
       </div>
 
       {doses.length === 0 ? (
-        <div className="p-8 text-center bg-card-bg rounded-2xl border border-border-muted border-dashed">
-          <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3 border border-border-muted">
+        <div className="p-8 text-center bg-slate-950/40 backdrop-blur-md rounded-2xl border border-white/5 border-dashed relative z-10">
+          <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mx-auto mb-3 border border-white/5">
             <Clock size={24} className="text-slate-700" />
           </div>
           <span className="text-[10px] text-slate-600 font-bold uppercase tracking-widest">Žádné záznamy</span>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 relative z-10">
           {Object.entries(groupedDoses).map(([date, dayDoses]) => (
             <div key={date} className="space-y-2">
               <div className="flex items-center gap-2 px-1">
@@ -61,10 +67,10 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
                   return (
                     <div 
                       key={dose.id} 
-                      className="bg-card-bg rounded-xl p-3 border border-border-muted flex items-center justify-between group hover:bg-white/[0.02] transition-all"
+                      className="bg-slate-950/40 backdrop-blur-md rounded-xl p-3 border border-white/5 flex items-center justify-between group hover:bg-white/[0.05] transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center border border-border-muted group-hover:scale-105 transition-transform">
+                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-105 transition-transform">
                           <Activity size={14} style={{ color: substance.color || '#00d1ff' }} />
                         </div>
                         <div>
@@ -77,7 +83,7 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
                             {dose.route && ` • ${dose.route}`}
                           </div>
                           {dose.note && (
-                            <div className="mt-1 text-[9px] text-slate-500 italic leading-tight border-l border-slate-800 pl-2">
+                            <div className="mt-1 text-[9px] text-slate-500 italic leading-tight border-l border-white/10 pl-2">
                               {dose.note}
                             </div>
                           )}

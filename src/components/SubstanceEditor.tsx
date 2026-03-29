@@ -32,8 +32,8 @@ import { cn } from '../lib/utils';
 const KineticsPreview = ({ halfLife, tmax, onset, color }: { halfLife: number; tmax: number; onset: number; color: string }) => {
   const data = useMemo(() => {
     const points = [];
-    const duration = Math.max(halfLife * 4, tmax * 3, 12);
-    const steps = 60;
+    const duration = Math.max(halfLife * 5, tmax * 4, 12);
+    const steps = 100;
     const step = duration / steps;
 
     for (let i = 0; i <= steps; i++) {
@@ -55,32 +55,69 @@ const KineticsPreview = ({ halfLife, tmax, onset, color }: { halfLife: number; t
     return points;
   }, [halfLife, tmax, onset]);
 
+  const maxLevel = 100;
+
   return (
-    <div className="h-32 w-full bg-white/[0.02] backdrop-blur-2xl rounded-3xl border border-white/5 p-2 relative overflow-hidden shadow-2xl">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-primary/5 blur-[40px] rounded-full -mr-16 -mt-16" />
-      <div className="absolute top-2 left-4 text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] z-10">Kinetická Predikce</div>
-      <ReResponsiveContainer width="100%" height="100%">
-        <ReAreaChart data={data}>
-          <defs>
-            <linearGradient id="kineticsGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
-              <stop offset="95%" stopColor={color} stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <ReCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" vertical={false} />
-          <ReXAxis dataKey="time" hide />
-          <ReYAxis hide domain={[0, 110]} />
-          <ReArea 
-            type="monotone" 
-            dataKey="level" 
-            stroke={color} 
-            fill="url(#kineticsGradient)" 
-            strokeWidth={3} 
-            animationDuration={800} 
-            isAnimationActive={true} 
-          />
-        </ReAreaChart>
-      </ReResponsiveContainer>
+    <div className="h-48 w-full bg-slate-900/40 backdrop-blur-3xl rounded-3xl border border-white/10 p-4 relative overflow-hidden shadow-2xl group">
+      <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-primary/10 blur-[60px] rounded-full -mr-24 -mt-24 transition-all group-hover:bg-cyan-primary/20" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/5 blur-[50px] rounded-full -ml-16 -mb-16" />
+      
+      <div className="flex justify-between items-start relative z-10 mb-2">
+        <div>
+          <div className="text-[9px] font-black text-cyan-primary uppercase tracking-[0.3em]">Kinetická Predikce</div>
+          <div className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Simulace plazmatické koncentrace</div>
+        </div>
+        <div className="flex gap-3">
+          <div className="text-right">
+            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Tmax</div>
+            <div className="text-[10px] font-black text-slate-200">{tmax}h</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">T1/2</div>
+            <div className="text-[10px] font-black text-slate-200">{halfLife}h</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="h-32 w-full relative z-10">
+        <ReResponsiveContainer width="100%" height="100%">
+          <ReAreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="kineticsGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.4}/>
+                <stop offset="95%" stopColor={color} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <ReCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+            <ReXAxis dataKey="time" hide />
+            <ReYAxis hide domain={[0, maxLevel * 1.1]} />
+            <ReTooltip 
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 p-2 rounded-lg shadow-2xl">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{payload[0].payload.time}h</p>
+                      <p className="text-xs font-black text-cyan-primary">{payload[0].value?.toString().slice(0, 4)}%</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <ReArea 
+              type="monotone" 
+              dataKey="level" 
+              stroke={color} 
+              fill="url(#kineticsGradient)" 
+              strokeWidth={3} 
+              animationDuration={1000} 
+              isAnimationActive={true} 
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0, fill: color }}
+            />
+          </ReAreaChart>
+        </ReResponsiveContainer>
+      </div>
     </div>
   );
 };
@@ -88,11 +125,11 @@ const KineticsPreview = ({ halfLife, tmax, onset, color }: { halfLife: number; t
 const MetabolismPreview = ({ type, beta, color, customCurve }: { type: MetabolismCurveType; beta: number; color: string; customCurve?: { time: number; level: number }[] }) => {
   const data = useMemo(() => {
     const points = [];
-    const steps = 60;
+    const steps = 100;
     
     if (type === 'custom' && customCurve && customCurve.length > 0) {
       const sorted = [...customCurve].sort((a, b) => a.time - b.time);
-      const duration = Math.max(sorted[sorted.length - 1].time, 12);
+      const duration = Math.max(sorted[sorted.length - 1].time * 1.2, 12);
       const step = duration / steps;
       
       for (let i = 0; i <= steps; i++) {
@@ -115,7 +152,7 @@ const MetabolismPreview = ({ type, beta, color, customCurve }: { type: Metabolis
         points.push({ time: t.toFixed(2), level: Math.max(0, level) });
       }
     } else {
-      const duration = 24;
+      const duration = Math.max(24, (1 / beta) * 2);
       const step = duration / steps;
 
       for (let i = 0; i <= steps; i++) {
@@ -138,32 +175,69 @@ const MetabolismPreview = ({ type, beta, color, customCurve }: { type: Metabolis
     return points;
   }, [type, beta, customCurve]);
 
+  const maxLevel = Math.max(...data.map(d => d.level), 100);
+
   return (
-    <div className="h-32 w-full bg-white/[0.02] backdrop-blur-2xl rounded-3xl border border-white/5 p-2 relative overflow-hidden shadow-2xl">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/5 blur-[40px] rounded-full -mr-16 -mt-16" />
-      <div className="absolute top-2 left-4 text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] z-10">Metabolická Analýza</div>
-      <ReResponsiveContainer width="100%" height="100%">
-        <ReAreaChart data={data}>
-          <defs>
-            <linearGradient id="metabolismGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.3}/>
-              <stop offset="95%" stopColor={color} stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <ReCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" vertical={false} />
-          <ReXAxis dataKey="time" hide />
-          <ReYAxis hide domain={[0, 110]} />
-          <ReArea 
-            type="monotone" 
-            dataKey="level" 
-            stroke={color} 
-            fill="url(#metabolismGradient)" 
-            strokeWidth={3} 
-            animationDuration={800} 
-            isAnimationActive={true} 
-          />
-        </ReAreaChart>
-      </ReResponsiveContainer>
+    <div className="h-48 w-full bg-slate-900/40 backdrop-blur-3xl rounded-3xl border border-white/10 p-4 relative overflow-hidden shadow-2xl group">
+      <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 blur-[60px] rounded-full -mr-24 -mt-24 transition-all group-hover:bg-amber-400/20" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/5 blur-[50px] rounded-full -ml-16 -mb-16" />
+      
+      <div className="flex justify-between items-start relative z-10 mb-2">
+        <div>
+          <div className="text-[9px] font-black text-amber-400 uppercase tracking-[0.3em]">Metabolická Analýza</div>
+          <div className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Predikce eliminace a rozkladu</div>
+        </div>
+        <div className="flex gap-3">
+          <div className="text-right">
+            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Typ</div>
+            <div className="text-[10px] font-black text-slate-200 capitalize">{type}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Beta</div>
+            <div className="text-[10px] font-black text-slate-200">{beta}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="h-32 w-full relative z-10">
+        <ReResponsiveContainer width="100%" height="100%">
+          <ReAreaChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="metabolismGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color} stopOpacity={0.4}/>
+                <stop offset="95%" stopColor={color} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <ReCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+            <ReXAxis dataKey="time" hide />
+            <ReYAxis hide domain={[0, maxLevel * 1.1]} />
+            <ReTooltip 
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 p-2 rounded-lg shadow-2xl">
+                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{payload[0].payload.time}h</p>
+                      <p className="text-xs font-black text-amber-400">{payload[0].value?.toString().slice(0, 4)}%</p>
+                    </div>
+                  );
+                }
+                return null;
+              }}
+            />
+            <ReArea 
+              type="monotone" 
+              dataKey="level" 
+              stroke={color} 
+              fill="url(#metabolismGradient)" 
+              strokeWidth={3} 
+              animationDuration={1000} 
+              isAnimationActive={true} 
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0, fill: color }}
+            />
+          </ReAreaChart>
+        </ReResponsiveContainer>
+      </div>
     </div>
   );
 };

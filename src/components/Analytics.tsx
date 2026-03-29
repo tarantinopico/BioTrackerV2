@@ -230,16 +230,22 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
   }, [selectedSubstanceDoses, period, now, selectedSubstanceId, substances, doses]);
 
   const renderOverview = () => (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Background Decorative Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Period Selector */}
-      <div className="flex bg-slate-900/50 p-0.5 rounded-xl border border-border-muted overflow-x-auto no-scrollbar">
+      <div className="flex bg-slate-950/40 backdrop-blur-md p-1 rounded-xl border border-white/5 overflow-x-auto no-scrollbar relative z-10">
         {[7, 30, 90, 365].map((p) => (
           <button
             key={p}
             onClick={() => setPeriod(p as Period)}
             className={cn(
-              "flex-1 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-              period === p ? "bg-cyan-primary text-dark-bg shadow-lg" : "text-slate-500 hover:text-slate-300"
+              "flex-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+              period === p ? "bg-cyan-primary text-black shadow-lg shadow-cyan-500/20" : "text-slate-500 hover:text-slate-300"
             )}
           >
             {p === 365 ? 'Rok' : `${p} Dní`}
@@ -248,9 +254,9 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="bg-card-bg rounded-2xl p-4 border border-border-muted relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 blur-2xl rounded-full -mr-10 -mt-10" />
+      <div className="grid grid-cols-2 gap-3 relative z-10">
+        <div className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:bg-slate-900/60 transition-all">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 blur-2xl rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
           <div className="text-[7px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">Celková útrata</div>
           <div className="text-xl font-black text-white">{totalCost.toFixed(0)} <span className="text-[10px] text-slate-500">Kč</span></div>
           <div className="flex items-center gap-1 mt-1">
@@ -258,8 +264,8 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
             <span className="text-[7px] font-bold text-emerald-400 uppercase">V limitu</span>
           </div>
         </div>
-        <div className="bg-card-bg rounded-2xl p-4 border border-border-muted relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-primary/5 blur-2xl rounded-full -mr-10 -mt-10" />
+        <div className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:bg-slate-900/60 transition-all">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-primary/10 blur-2xl rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
           <div className="text-[7px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">Počet záznamů</div>
           <div className="text-xl font-black text-white">{filteredDoses.length}</div>
           <div className="flex items-center gap-1 mt-1">
@@ -270,7 +276,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
       </div>
 
       {/* Trend Chart */}
-      <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
             <TrendingUp size={10} className="text-cyan-primary" /> Trend Výdajů
@@ -290,7 +296,8 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
               <XAxis dataKey="name" stroke="#475569" fontSize={7} tickLine={false} axisLine={false} tick={{ fill: '#475569', fontWeight: 800 }} />
               <YAxis hide />
               <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(14, 18, 23, 0.8)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '9px' }}
+                contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
+                itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
               />
               <Area type="monotone" dataKey="cost" stroke="#00d1ff" fillOpacity={1} fill="url(#colorCost)" strokeWidth={2} />
             </AreaChart>
@@ -299,13 +306,13 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
       </section>
 
       {/* Category Breakdown */}
-      <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
         <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <Layers size={10} className="text-indigo-400" /> Podle kategorií
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {categoryBreakdown.map((cat, i) => (
-            <div key={i} className="bg-slate-900/50 p-3 rounded-xl border border-border-muted/50 flex justify-between items-center">
+            <div key={i} className="bg-slate-900/30 p-3 rounded-xl border border-white/5 flex justify-between items-center hover:bg-slate-900/50 transition-colors">
               <div>
                 <div className="text-[9px] font-black text-white uppercase tracking-widest">{cat.name}</div>
                 <div className="text-[7px] text-slate-500 font-bold uppercase mt-0.5">{cat.count}× záznamů</div>
@@ -317,8 +324,8 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
           ))}
         </div>
       </section>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5">
           <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <PieChartIcon size={10} className="text-purple-400" /> Podle látek
           </h2>
@@ -339,7 +346,8 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(14, 18, 23, 0.8)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '9px' }}
+                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
+                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -357,7 +365,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
           </div>
         </section>
 
-        <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5">
           <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <Clock size={10} className="text-amber-400" /> Časová aktivita
           </h2>
@@ -366,7 +374,8 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
               <BarChart data={usageByTimeOfDay}>
                 <XAxis dataKey="hour" hide />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(14, 18, 23, 0.8)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '9px' }}
+                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
+                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
                 />
                 <Bar dataKey="count" fill="#fbbf24" radius={[2, 2, 0, 0]} />
               </BarChart>
@@ -379,7 +388,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
       </div>
 
       {/* Substance List */}
-      <section className="space-y-3">
+      <section className="space-y-3 relative z-10">
         <div className="flex items-center justify-between px-1">
           <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Detailní Analýza Látek</h3>
           <div className="relative">
@@ -389,7 +398,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Hledat..."
-              className="bg-slate-900/50 border border-border-muted rounded-full py-1 pl-7 pr-3 text-[9px] outline-none focus:border-cyan-primary/50 transition-all w-28"
+              className="bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-full py-1.5 pl-7 pr-3 text-[9px] outline-none focus:border-cyan-primary/50 transition-all w-32 text-white font-bold"
             />
           </div>
         </div>
@@ -399,7 +408,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
             <button 
               key={s.id}
               onClick={() => setSelectedSubstanceId(s.id)}
-              className="w-full bg-card-bg rounded-2xl p-4 border border-border-muted flex items-center justify-between group hover:bg-white/[0.02] transition-all text-left"
+              className="w-full bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 flex items-center justify-between group hover:bg-slate-900/60 transition-all text-left"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] group-hover:scale-105 transition-transform">
@@ -438,15 +447,23 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
     const tolerance = calculateTolerance(substanceId, substances, doses);
     
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 relative">
+        {/* Background Decorative Elements */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+          <div 
+            className="absolute top-[20%] right-[-10%] w-[45%] h-[45%] blur-[130px] rounded-full animate-pulse opacity-20" 
+            style={{ backgroundColor: substance.color }}
+          />
+        </div>
+
         <button 
           onClick={() => setSelectedSubstanceId(null)}
-          className="flex items-center gap-2 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-cyan-primary transition-colors mb-1"
+          className="flex items-center gap-2 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-cyan-primary transition-colors mb-1 relative z-10"
         >
           <ChevronLeft size={12} /> Zpět na přehled
         </button>
 
-        <div className="bg-card-bg rounded-2xl p-4 border border-border-muted relative overflow-hidden">
+        <div className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden z-10">
           <div className="absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full -mr-12 -mt-12 opacity-20" style={{ backgroundColor: substance.color }} />
           
           <div className="flex items-center gap-3 mb-6">
@@ -460,19 +477,19 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
           </div>
 
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="bg-slate-900/50 rounded-xl p-3 border border-border-muted/50">
+            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
               <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Celkem užito</div>
               <div className="text-lg font-black text-white">{totalAmount.toFixed(1)} <span className="text-[10px] text-slate-500">{substance.unit}</span></div>
             </div>
-            <div className="bg-slate-900/50 rounded-xl p-3 border border-border-muted/50">
+            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
               <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Tolerance</div>
               <div className="text-lg font-black text-amber-400">{tolerance.toFixed(1)}%</div>
             </div>
-            <div className="bg-slate-900/50 rounded-xl p-3 border border-border-muted/50">
+            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
               <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Náklady</div>
               <div className="text-lg font-black text-white">{cost.toFixed(0)} <span className="text-[10px] text-slate-500">Kč</span></div>
             </div>
-            <div className="bg-slate-900/50 rounded-xl p-3 border border-border-muted/50">
+            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
               <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Prům. dávka</div>
               <div className="text-lg font-black text-cyan-primary">{(totalAmount / (sDoses.length || 1)).toFixed(1)} <span className="text-[10px] text-slate-500">{substance.unit}</span></div>
             </div>
@@ -480,7 +497,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
         </div>
 
         {/* Usage & Tolerance Trend Chart */}
-        <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
           <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <LineChartIcon size={10} className="text-cyan-primary" /> Trend Užívání a Tolerance
           </h2>
@@ -502,7 +519,8 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
                 <YAxis yAxisId="left" hide />
                 <YAxis yAxisId="right" hide />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(14, 18, 23, 0.8)', backdropFilter: 'blur(12px)', borderColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '9px' }}
+                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
+                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '7px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.1em', paddingTop: '15px' }} />
                 <Area yAxisId="left" type="monotone" name={`Množství (${substance.unit})`} dataKey="amount" stroke={substance.color} fillOpacity={1} fill="url(#colorAmount)" strokeWidth={2} />
@@ -514,7 +532,7 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
 
         {/* Strain Breakdown */}
         {strainUsage.length > 0 && (
-          <section className="bg-card-bg rounded-2xl p-4 border border-border-muted">
+          <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
             <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <Layers size={10} className="text-purple-400" /> Rozdělení podle druhů
             </h2>
@@ -545,11 +563,11 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
         )}
 
         {/* History for this substance */}
-        <section className="space-y-3">
+        <section className="space-y-3 relative z-10">
           <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Poslední záznamy</h3>
           <div className="space-y-2">
             {sDoses.slice(0, 5).map(dose => (
-              <div key={dose.id} className="bg-card-bg rounded-xl p-3 border border-border-muted flex items-center justify-between">
+              <div key={dose.id} className="bg-slate-950/40 backdrop-blur-md rounded-xl p-3 border border-white/5 flex items-center justify-between hover:bg-slate-900/60 transition-colors">
                 <div>
                   <div className="text-xs font-bold text-slate-200">
                     {dose.amount} {substance.unit}

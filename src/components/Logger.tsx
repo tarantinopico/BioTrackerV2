@@ -161,9 +161,15 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
   const price = currentStrain ? currentStrain.price * amount : (selectedSubstance?.price || 0) * amount;
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-4 pb-6 relative">
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[15%] left-[-5%] w-[35%] h-[35%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[25%] right-[-5%] w-[30%] h-[30%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       {/* Substance Selection */}
-      <section>
+      <section className="relative z-10">
         <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2 ml-1">Zvolte látku</h3>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
           {substances.map(s => {
@@ -177,7 +183,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                   "flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all whitespace-nowrap min-w-[100px] justify-center relative overflow-hidden",
                   isActive 
                     ? "border-transparent text-dark-bg font-black" 
-                    : "bg-card-bg border-border-muted text-slate-400"
+                    : "bg-slate-950/40 backdrop-blur-md border-white/5 text-slate-400"
                 )}
                 style={isActive ? { backgroundColor: s.color || '#00d1ff', boxShadow: `0 0 15px ${s.color}30` } : {}}
               >
@@ -191,7 +197,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
 
       {/* Strain Selection */}
       {selectedSubstance?.strains && selectedSubstance.strains.length > 0 && (
-        <section>
+        <section className="relative z-10">
           <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2 ml-1 flex items-center gap-1">
             <Activity size={10} /> Druh / Varianta
           </h3>
@@ -206,7 +212,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                     "px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all whitespace-nowrap uppercase tracking-widest",
                     isActive 
                       ? "bg-slate-800 border-cyan-primary text-cyan-primary" 
-                      : "bg-card-bg border-border-muted text-slate-500"
+                      : "bg-slate-950/40 backdrop-blur-md border-white/5 text-slate-500"
                   )}
                   style={isActive ? { borderColor: selectedSubstance.color, color: selectedSubstance.color } : {}}
                 >
@@ -221,14 +227,14 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       {/* Warnings */}
       <AnimatePresence>
         {warnings.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2 relative z-10">
             {warnings.map((w, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={cn(
-                  "p-4 rounded-2xl border flex items-start gap-3",
+                  "p-4 rounded-2xl border backdrop-blur-md flex items-start gap-3",
                   w.severity === 'high' ? "bg-red-500/10 border-red-500/30" : "bg-amber-500/10 border-amber-500/30"
                 )}
               >
@@ -244,7 +250,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       </AnimatePresence>
 
       {/* Amount Control */}
-      <section className="bg-card-bg rounded-3xl p-6 border border-border-muted flex flex-col items-center relative overflow-hidden">
+      <section className="bg-slate-950/40 backdrop-blur-md rounded-3xl p-6 border border-white/5 flex flex-col items-center relative overflow-hidden z-10">
         <div 
           className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none" 
           style={{ background: `linear-gradient(to bottom, ${selectedSubstance?.color || '#00d1ff'}, transparent)` }}
@@ -255,7 +261,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         <div className="flex items-center justify-between w-full max-w-[240px] relative z-10">
           <button 
             onClick={() => handleAdjust(-1)}
-            className="w-12 h-12 rounded-full flex items-center justify-center bg-slate-900 border border-border-muted text-slate-400 active:scale-90 transition-transform"
+            className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 border border-white/5 text-slate-400 active:scale-90 transition-transform"
           >
             <Minus size={20} />
           </button>
@@ -282,7 +288,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
             <button
               key={val}
               onClick={() => setAmount(val)}
-              className="px-3 py-1.5 rounded-lg bg-slate-900/80 border border-border-muted text-[9px] font-black text-slate-400 hover:text-white transition-all whitespace-nowrap uppercase tracking-widest"
+              className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black text-slate-400 hover:text-white transition-all whitespace-nowrap uppercase tracking-widest"
               style={{ borderColor: amount === val ? selectedSubstance?.color : undefined }}
             >
               {val} {selectedSubstance?.unit}
@@ -309,7 +315,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       </section>
 
       {/* Time Selection */}
-      <section>
+      <section className="relative z-10">
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
           {timeOptions.map(opt => {
             const isActive = timeOffset === opt.value;
@@ -321,7 +327,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                   "flex-1 px-3 py-3 rounded-xl border text-[11px] font-black transition-all whitespace-nowrap min-w-[70px] uppercase tracking-widest",
                   isActive 
                     ? "text-dark-bg font-black border-transparent" 
-                    : "bg-card-bg border-border-muted text-slate-500"
+                    : "bg-slate-950/40 backdrop-blur-md border-white/5 text-slate-500"
                 )}
                 style={isActive ? { backgroundColor: selectedSubstance?.color || '#00d1ff' } : {}}
               >
@@ -333,7 +339,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       </section>
 
       {/* Notes (Compact) */}
-      <section>
+      <section className="relative z-10">
         <div className="relative group">
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
             <Fingerprint size={14} className="text-slate-500 group-focus-within:text-cyan-primary transition-colors" />
@@ -343,7 +349,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="Poznámka k dávce..."
-            className="w-full bg-card-bg border border-border-muted rounded-xl py-3 pl-10 pr-4 text-xs outline-none focus:border-cyan-primary/50 focus:ring-1 focus:ring-cyan-primary/20 transition-all text-slate-200"
+            className="w-full bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-xl py-3 pl-10 pr-4 text-xs outline-none focus:border-cyan-primary/50 focus:ring-1 focus:ring-cyan-primary/20 transition-all text-slate-200"
           />
         </div>
       </section>
@@ -351,7 +357,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       {/* Submit Button */}
       <button 
         onClick={handleSubmit}
-        className="w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 shadow-xl active:scale-[0.98] transition-all uppercase tracking-[0.2em]"
+        className="w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 shadow-xl active:scale-[0.98] transition-all uppercase tracking-[0.2em] relative z-10"
         style={{ backgroundColor: selectedSubstance?.color || '#fff', color: selectedSubstance?.color ? '#000' : '#000' }}
       >
         <Fingerprint size={20} />
@@ -359,7 +365,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       </button>
 
       {/* Advanced Settings (Compact) */}
-      <section className="pt-4 border-t border-border-muted/50">
+      <section className="pt-4 border-t border-white/5 relative z-10">
         <div className="flex items-center justify-between px-2">
           <div className="flex gap-4">
             <div className="flex flex-col">

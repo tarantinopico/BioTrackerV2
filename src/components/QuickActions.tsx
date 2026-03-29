@@ -65,7 +65,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             >
               <button
                 onClick={() => onUseShortcut(shortcut)}
-                className="w-full flex flex-col items-start gap-1 p-3 bg-white/[0.03] backdrop-blur-2xl border border-white/[0.05] rounded-2xl hover:border-white/20 transition-all active:scale-[0.97] text-left relative overflow-hidden group shadow-lg"
+                className="w-full flex flex-col items-start gap-1 p-3 bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-2xl hover:border-white/20 transition-all active:scale-[0.97] text-left relative overflow-hidden group shadow-lg"
               >
                 {/* Background Glow */}
                 <div 

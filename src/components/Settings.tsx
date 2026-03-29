@@ -14,7 +14,11 @@ import {
   Clock,
   Settings as SettingsIcon,
   ShieldCheck,
-  Smartphone
+  Smartphone,
+  Info,
+  Github,
+  Heart,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -105,9 +109,15 @@ export default function Settings({
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 scrollbar-hide space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-hide space-y-6 relative">
+          {/* Background Decorative Elements */}
+          <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+            <div className="absolute top-[5%] right-[-5%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+            <div className="absolute bottom-[15%] left-[-5%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+          </div>
+
           {/* User Profile */}
-          <div className="space-y-3">
+          <div className="space-y-3 relative z-10">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 px-1">
               <User size={10} className="text-cyan-primary" /> Biometrický profil
             </h3>
@@ -118,7 +128,7 @@ export default function Settings({
                   type="number" 
                   value={localSettings.userWeight} 
                   onChange={e => setLocalSettings(prev => ({ ...prev, userWeight: parseInt(e.target.value) }))}
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
+                  className="w-full p-3 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
                 />
               </div>
               <div className="space-y-1.5">
@@ -127,7 +137,7 @@ export default function Settings({
                   type="number" 
                   value={localSettings.userAge} 
                   onChange={e => setLocalSettings(prev => ({ ...prev, userAge: parseInt(e.target.value) }))}
-                  className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
+                  className="w-full p-3 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
                 />
               </div>
             </div>
@@ -136,7 +146,7 @@ export default function Settings({
               <select 
                 value={localSettings.userMetabolism} 
                 onChange={e => setLocalSettings(prev => ({ ...prev, userMetabolism: e.target.value as any }))}
-                className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 h-[46px] font-bold"
+                className="w-full p-3 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 h-[46px] font-bold"
               >
                 <option value="slow">Pomalý (-20%)</option>
                 <option value="normal">Normální</option>
@@ -149,13 +159,13 @@ export default function Settings({
                 type="number" 
                 value={localSettings.weeklyBudget || 1000} 
                 onChange={e => setLocalSettings(prev => ({ ...prev, weeklyBudget: parseInt(e.target.value) }))}
-                className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
+                className="w-full p-3 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
               />
             </div>
           </div>
 
           {/* Display Settings */}
-          <div className="space-y-3">
+          <div className="space-y-3 relative z-10">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 px-1">
               <Monitor size={10} className="text-cyan-primary" /> Rozhraní
             </h3>
@@ -169,10 +179,10 @@ export default function Settings({
                   key={item.id} 
                   onClick={() => setLocalSettings(prev => ({ ...prev, [item.id]: !(prev as any)[item.id] }))}
                   className={cn(
-                    "w-full flex items-center justify-between p-3 rounded-xl border transition-all",
+                    "w-full flex items-center justify-between p-3 rounded-xl border transition-all backdrop-blur-md",
                     (localSettings as any)[item.id] 
                       ? "bg-cyan-primary/10 border-cyan-primary/30 text-cyan-primary" 
-                      : "bg-slate-950 border-border-muted text-slate-400"
+                      : "bg-slate-950/40 border-white/5 text-slate-400"
                   )}
                 >
                   <div className="flex items-center gap-2.5">
@@ -194,23 +204,23 @@ export default function Settings({
           </div>
 
           {/* Custom Effects */}
-          <div className="space-y-3">
+          <div className="space-y-3 relative z-10">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 px-1">
               <Sparkles size={10} className="text-cyan-primary" /> Knihovna účinků
             </h3>
-            <div className="flex flex-col gap-2.5 p-3 bg-slate-950 border border-border-muted rounded-2xl">
+            <div className="flex flex-col gap-2.5 p-3 bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-2xl">
               <div className="flex gap-1.5">
                 <input 
                   type="text" 
                   value={newEffectName} 
                   onChange={e => setNewEffectName(e.target.value)}
-                  className="flex-1 p-2.5 rounded-lg bg-slate-900 border border-border-muted text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
+                  className="flex-1 p-2.5 rounded-lg bg-slate-900/50 border border-white/5 text-xs outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold" 
                   placeholder="Nový účinek..." 
                 />
                 <select 
                   value={newEffectType} 
                   onChange={e => setNewEffectType(e.target.value as Valence)}
-                  className="p-2.5 rounded-lg bg-slate-900 border border-border-muted text-[10px] outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold"
+                  className="p-2.5 rounded-lg bg-slate-900/50 border border-white/5 text-[10px] outline-none focus:border-cyan-primary transition-all text-slate-200 font-bold"
                 >
                   <option value="positive">Pozit.</option>
                   <option value="negative">Negat.</option>
@@ -229,9 +239,9 @@ export default function Settings({
                   <p className="text-[9px] text-slate-700 font-black uppercase tracking-[0.2em] text-center py-3">Žádné vlastní účinky</p>
                 ) : (
                   customEffects.map((effect, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 bg-slate-900/50 rounded-lg border border-border-muted">
+                    <div key={i} className="flex items-center justify-between p-2.5 bg-slate-900/30 rounded-lg border border-white/5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-950 border border-border-muted">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-950/50 border border-white/5">
                           <Activity size={12} style={{ color: effect.color }} />
                         </div>
                         <div>
@@ -258,19 +268,19 @@ export default function Settings({
           </div>
 
           {/* Data Management */}
-          <div className="space-y-3">
+          <div className="space-y-3 relative z-10">
             <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 px-1">
               <Database size={10} className="text-cyan-primary" /> Správa dat
             </h3>
             <div className="grid grid-cols-2 gap-2.5">
               <button 
                 onClick={onExport}
-                className="py-3 px-3 rounded-xl bg-slate-950 border border-border-muted hover:bg-slate-900 flex flex-col items-center justify-center gap-1.5 transition-all group"
+                className="py-3 px-3 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 hover:bg-slate-900/60 flex flex-col items-center justify-center gap-1.5 transition-all group"
               >
                 <Download className="text-slate-500 group-hover:text-cyan-primary transition-colors" size={18} />
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Export</span>
               </button>
-              <label className="py-3 px-3 rounded-xl bg-slate-950 border border-border-muted hover:bg-slate-900 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all group">
+              <label className="py-3 px-3 rounded-xl bg-slate-950/40 backdrop-blur-md border border-white/5 hover:bg-slate-900/60 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all group">
                 <Upload className="text-slate-500 group-hover:text-cyan-primary transition-colors" size={18} />
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Import</span>
                 <input type="file" accept=".json" onChange={onImport} className="hidden" />
@@ -282,6 +292,46 @@ export default function Settings({
             >
               <Trash2 size={14} /> Smazat všechna data
             </button>
+          </div>
+
+          {/* About App Section */}
+          <div className="space-y-3 relative z-10 pt-4 border-t border-white/5">
+            <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2 px-1">
+              <Info size={10} className="text-cyan-primary" /> O Aplikaci
+            </h3>
+            <div className="p-4 rounded-2xl bg-slate-950/40 backdrop-blur-md border border-white/5 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                  <Activity size={24} className="text-white" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black text-white uppercase tracking-tight">BioTracker Pro</h4>
+                  <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Verze 2.4.0 "Glass Edition"</p>
+                </div>
+              </div>
+              
+              <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                BioTracker je pokročilý nástroj pro monitorování biometrických dat, kinetiky látek a analýzu trendů. 
+                Navržen pro maximální soukromí a efektivitu. Všechna data jsou uložena lokálně ve vašem prohlížeči.
+              </p>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+                  <Github size={12} className="text-slate-500 group-hover:text-white" />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-200">GitHub</span>
+                </button>
+                <button className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors group">
+                  <ExternalLink size={12} className="text-slate-500 group-hover:text-white" />
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-200">Web</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-center gap-1.5 pt-2">
+                <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">Made with</span>
+                <Heart size={8} className="text-rose-500 fill-rose-500" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">for better health</span>
+              </div>
+            </div>
           </div>
         </div>
         
