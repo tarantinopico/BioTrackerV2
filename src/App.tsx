@@ -351,24 +351,33 @@ export default function App() {
   }, [activeDoses, substances, doses, settings, currentTime]);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col relative bg-dark-bg text-slate-200 font-sans selection:bg-cyan-500/30 pb-24">
+    <div className={cn(
+      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-cyan-500/30 pb-24 transition-colors duration-300",
+      settings.theme === 'dark' ? "bg-dark-bg text-slate-200" : "bg-slate-50 text-slate-900"
+    )}>
       {/* Header */}
-      <header className="p-4 flex justify-between items-center sticky top-0 z-50 bg-dark-bg/80 backdrop-blur-xl border-b border-white/5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-cyan-primary flex items-center justify-center shadow-[0_0_15px_rgba(0,209,255,0.3)]">
-            <HeartPulse className="text-dark-bg" size={18} strokeWidth={2.5} />
+      <header className={cn(
+        "p-4 flex justify-between items-center sticky top-0 z-50 backdrop-blur-2xl border-b border-white/10 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)]",
+        settings.theme === 'dark' ? "bg-dark-bg/85" : "bg-white/85"
+      )}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.4)] transition-transform hover:scale-105">
+            <HeartPulse className="text-dark-bg" size={20} strokeWidth={3} />
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tighter text-white leading-none">BioTracker</h1>
-            <div className="flex items-center gap-1 mt-0.5">
-              <div className={cn("w-1 h-1 rounded-full animate-pulse", systemLoad.color)} />
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{systemLoad.label} MODE</span>
+            <h1 className={cn("text-xl font-black tracking-tighter leading-none transition-colors", settings.theme === 'dark' ? "text-white" : "text-slate-900")}>BioTracker</h1>
+            <div className="flex items-center gap-1.5 mt-1">
+              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]", systemLoad.color)} />
+              <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">{systemLoad.label} MODE</span>
             </div>
           </div>
         </div>
         <button 
           onClick={() => setIsSettingsOpen(true)}
-          className="p-2 rounded-lg bg-card-bg border border-border-muted hover:bg-slate-800 transition-all text-slate-400 hover:text-white"
+          className={cn(
+            "p-2.5 rounded-xl border transition-all active:scale-90 shadow-lg",
+            settings.theme === 'dark' ? "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10" : "bg-slate-200 border-slate-300 text-slate-600 hover:text-slate-900"
+          )}
         >
           <SettingsIcon className="w-4 h-4" />
         </button>
@@ -421,6 +430,7 @@ export default function App() {
                 substances={substances} 
                 doses={doses} 
                 settings={settings} 
+                onToggleTheme={() => setSettings(prev => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }))}
               />
             )}
             {view === 'substances' && (
@@ -440,7 +450,10 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-dark-bg/80 backdrop-blur-xl border-t border-border-muted px-4 py-2 flex justify-between items-center z-50">
+      <nav className={cn(
+        "fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md backdrop-blur-2xl border border-white/10 rounded-[2.5rem] px-6 py-3 flex justify-between items-center z-50 transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.4)]",
+        settings.theme === 'dark' ? "bg-dark-bg/85" : "bg-white/85"
+      )}>
         {[
           { id: 'dashboard', icon: Activity, label: 'Status' },
           { id: 'logger', icon: Plus, label: 'Zápis' },
@@ -453,11 +466,19 @@ export default function App() {
             <button
               key={item.id}
               onClick={() => setView(item.id as ViewType)}
-              className={`relative flex flex-col items-center gap-0.5 transition-colors ${isActive ? 'text-cyan-primary' : 'text-slate-500'}`}
+              className={cn(
+                "relative flex flex-col items-center gap-1 transition-all active:scale-90",
+                isActive ? 'text-cyan-primary' : 'text-slate-500 hover:text-slate-300'
+              )}
             >
-              {isActive && <div className="nav-active-indicator" />}
-              <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[9px] font-black uppercase tracking-tighter">{item.label}</span>
+              {isActive && (
+                <motion.div 
+                  layoutId="navIndicator"
+                  className="absolute -top-3 w-8 h-1 bg-cyan-primary rounded-full shadow-[0_0_10px_rgba(0,209,255,0.8)]"
+                />
+              )}
+              <item.icon size={22} strokeWidth={isActive ? 3 : 2} className={cn("transition-transform", isActive && "scale-110")} />
+              <span className="text-[8px] font-black uppercase tracking-[0.1em]">{item.label}</span>
             </button>
           );
         })}

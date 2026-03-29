@@ -14,7 +14,8 @@ import {
   Shield,
   Scale,
   Zap,
-  AlertCircle
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import { 
   XAxis as ReXAxis, 
@@ -346,41 +347,47 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        className="relative bg-card-bg rounded-t-3xl md:rounded-3xl w-full max-w-2xl h-[90vh] md:h-auto md:max-h-[85vh] overflow-hidden flex flex-col shadow-2xl border-t md:border border-border-muted"
+        className="relative bg-dark-bg/95 backdrop-blur-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-2xl h-[92vh] md:h-auto md:max-h-[88vh] overflow-hidden flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-t md:border border-white/10"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-muted bg-slate-900/50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-cyan-primary/10 flex items-center justify-center border border-cyan-primary/20">
-              <Settings2 className="text-cyan-primary" size={16} />
+        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+          <div className="flex items-center gap-4">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)]">
+              <Settings2 className="text-dark-bg" size={20} strokeWidth={3} />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-100 uppercase tracking-tight">
+              <h2 className="text-xl font-black text-white uppercase tracking-tighter">
                 {substanceId && substanceId !== 'new' ? 'Upravit látku' : 'Nová látka'}
               </h2>
-              <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.2em]">Konfigurace parametrů</p>
+              <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em] mt-0.5">Konfigurace parametrů</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-800 transition-colors text-slate-500">
-            <X size={20} />
+          <button onClick={onClose} className="p-2.5 rounded-xl hover:bg-white/10 transition-all text-slate-400 hover:text-white active:scale-90">
+            <X size={24} />
           </button>
         </div>
         
         {/* Tabs */}
-        <div className="flex border-b border-border-muted overflow-x-auto scrollbar-hide bg-slate-900/30">
+        <div className="flex border-b border-white/10 overflow-x-auto scrollbar-hide bg-white/2 px-2">
           {tabs.map(tab => (
             <button 
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-4 py-3 text-[9px] font-black uppercase tracking-[0.15em] whitespace-nowrap flex items-center gap-1.5 border-b-2 transition-all",
+                "px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap flex flex-col items-center gap-2 border-b-2 transition-all relative",
                 activeTab === tab.id 
                   ? "border-cyan-primary text-cyan-primary bg-cyan-primary/5" 
                   : "border-transparent text-slate-500 hover:text-slate-300"
               )}
             >
-              <tab.icon size={12} />
+              <tab.icon size={16} className={cn("transition-transform", activeTab === tab.id && "scale-110")} />
               {tab.label}
+              {activeTab === tab.id && (
+                <motion.div 
+                  layoutId="activeTabIndicator"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-primary shadow-[0_0_10px_rgba(0,209,255,0.8)]"
+                />
+              )}
             </button>
           ))}
         </div>
@@ -390,13 +397,13 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
           <form id="substance-form" onSubmit={handleSave} className="space-y-6">
             {activeTab === 'basic' && (
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Název látky</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1">Název látky</label>
                   <input 
                     type="text" 
                     value={formData.name || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none transition-all text-slate-200 font-bold text-sm" 
+                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:border-cyan-primary/50 focus:bg-white/10 outline-none transition-all text-white font-bold text-base shadow-inner" 
                     placeholder="Např. Kofein"
                     required 
                   />
@@ -1391,19 +1398,20 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
         </div>
         
         {/* Footer */}
-        <div className="p-6 border-t border-border-muted bg-slate-900/80 backdrop-blur-xl flex gap-4">
+        <div className="p-6 border-t border-white/10 bg-white/5 flex gap-4 backdrop-blur-2xl">
           <button 
             type="button" 
             onClick={onClose} 
-            className="flex-1 py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] border border-border-muted text-slate-400 hover:bg-slate-800 transition-all"
+            className="flex-1 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white transition-all active:scale-95"
           >
             Zrušit
           </button>
           <button 
             form="substance-form"
             type="submit" 
-            className="flex-1 py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] bg-cyan-primary text-black shadow-lg shadow-cyan-primary/20 active:scale-[0.98] transition-all"
+            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-gradient-to-r from-cyan-500 to-cyan-600 text-dark-bg shadow-[0_0_20px_rgba(0,209,255,0.3)] hover:shadow-[0_0_30px_rgba(0,209,255,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2"
           >
+            <CheckCircle size={16} strokeWidth={3} />
             Uložit konfiguraci
           </button>
         </div>

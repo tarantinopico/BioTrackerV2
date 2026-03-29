@@ -319,7 +319,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   interactionWarnings: true, 
   doseWarnings: true, 
   reminders: false, 
-  comedownWarnings: true 
+  comedownWarnings: true,
+  theme: 'dark'
 };
 
 export const DEFAULT_EFFECTS: CustomEffect[] = [

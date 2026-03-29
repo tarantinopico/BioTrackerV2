@@ -22,7 +22,9 @@ import {
   Filter,
   Layers,
   Search,
-  X
+  X,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -49,14 +51,37 @@ interface AnalyticsProps {
   substances: Substance[];
   doses: Dose[];
   settings: UserSettings;
+  onToggleTheme?: () => void;
 }
 
 type Period = 7 | 30 | 90 | 365;
 
-export default function Analytics({ substances, doses, settings }: AnalyticsProps) {
+const calculatePredictions = (doses: Dose[], substances: Substance[], period: number) => {
+  const calculateCost = (dosesList: Dose[]) => {
+    return dosesList.reduce((sum, d) => {
+      const substance = substances.find(s => s.id === d.substanceId);
+      if (!substance) return sum;
+      const strainPrice = d.strainId ? substance.strains.find(s => s.name === d.strainId)?.price : null;
+      const price = strainPrice || substance.price || 0;
+      return sum + (d.amount * price);
+    }, 0);
+  };
+
+  const totalCost = calculateCost(doses);
+  const daily = doses.length > 0 ? totalCost / period : 0;
+  
+  return {
+    daily,
+    monthly: daily * 30,
+    yearly: daily * 365
+  };
+};
+
+export default function Analytics({ substances, doses, settings, onToggleTheme }: AnalyticsProps) {
   const [selectedSubstanceId, setSelectedSubstanceId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>(30);
   const [searchQuery, setSearchQuery] = useState('');
+  const [detailTab, setDetailTab] = useState<'trends' | 'distribution' | 'history' | 'finance'>('trends');
 
   const now = Date.now();
   const dayMs = 86400000;
@@ -106,6 +131,22 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
     }));
   }, [filteredDoses]);
 
+  const activityHeatmap = useMemo(() => {
+    const days = 28; // Last 4 weeks
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(now - i * dayMs);
+      const dayStart = new Date(date.setHours(0, 0, 0, 0)).getTime();
+      const dayEnd = dayStart + dayMs;
+      const count = doses.filter(d => {
+        const ts = new Date(d.timestamp).getTime();
+        return ts >= dayStart && ts < dayEnd;
+      }).length;
+      data.push({ date, count });
+    }
+    return data;
+  }, [doses, now, dayMs]);
+
   const trendData = useMemo(() => {
     const data = [];
     const days = period === 7 ? 7 : period === 30 ? 30 : period === 90 ? 12 : 12;
@@ -152,6 +193,33 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
       };
     }).filter(s => s.count > 0 || s.isFavorite).sort((a, b) => b.count - a.count);
   }, [substances, filteredDoses, doses]);
+
+  const spendingStats = useMemo(() => {
+    const now = Date.now();
+    const periods = [
+      { label: '7 dní', days: 7 },
+      { label: '30 dní', days: 30 },
+      { label: '90 dní', days: 90 }
+    ];
+
+    return periods.map(p => {
+      const startTime = now - p.days * 86400000;
+      const periodDoses = doses.filter(d => new Date(d.timestamp).getTime() >= startTime);
+      const total = calculateCost(periodDoses);
+      return { ...p, total };
+    });
+  }, [doses, substances]);
+
+  const predictions = useMemo(() => 
+    calculatePredictions(filteredDoses, substances, period),
+    [filteredDoses, substances, period]
+  );
+
+  const predictionData = useMemo(() => [
+    { name: 'Denně', value: predictions.daily },
+    { name: 'Měsíčně', value: predictions.monthly },
+    { name: 'Ročně', value: predictions.yearly }
+  ], [predictions]);
 
   const filteredSubstanceStats = substanceStats.filter(s => 
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -229,6 +297,62 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
     return data;
   }, [selectedSubstanceDoses, period, now, selectedSubstanceId, substances, doses]);
 
+  const substanceRouteStats = useMemo(() => {
+    if (!selectedSubstanceId) return [];
+    const data: Record<string, number> = {};
+    selectedSubstanceDoses.forEach(d => {
+      data[d.route] = (data[d.route] || 0) + 1;
+    });
+    return Object.entries(data).map(([name, value]) => ({ name, value }));
+  }, [selectedSubstanceDoses, selectedSubstanceId]);
+
+  const substanceTimeStats = useMemo(() => {
+    if (!selectedSubstanceId) return [];
+    const hours = Array(24).fill(0);
+    selectedSubstanceDoses.forEach(d => {
+      const hour = new Date(d.timestamp).getHours();
+      hours[hour]++;
+    });
+    return hours.map((count, hour) => ({ hour: `${hour}h`, count }));
+  }, [selectedSubstanceDoses, selectedSubstanceId]);
+
+  const dosageDistribution = useMemo(() => {
+    if (!selectedSubstanceId) return [];
+    const amounts = selectedSubstanceDoses.map(d => d.amount);
+    if (amounts.length === 0) return [];
+    
+    const min = Math.min(...amounts);
+    const max = Math.max(...amounts);
+    const range = max - min;
+    const bins = 8;
+    const binSize = range / bins || 1;
+    
+    const distribution = Array(bins).fill(0).map((_, i) => ({
+      range: `${(min + i * binSize).toFixed(1)}`,
+      count: 0
+    }));
+    
+    amounts.forEach(d => {
+      const binIndex = Math.min(Math.floor((d - min) / binSize), bins - 1);
+      distribution[binIndex].count++;
+    });
+    
+    return distribution;
+  }, [selectedSubstanceDoses, selectedSubstanceId]);
+
+  const lastDosesInfo = useMemo(() => {
+    const lastDoses: Record<string, { name: string, hoursAgo: number, color: string }> = {};
+    substances.forEach(s => {
+      const sDoses = doses.filter(d => d.substanceId === s.id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      if (sDoses.length > 0) {
+        const lastTs = new Date(sDoses[0].timestamp).getTime();
+        const hoursAgo = (now - lastTs) / (1000 * 60 * 60);
+        lastDoses[s.id] = { name: s.name, hoursAgo, color: s.color || '#00d1ff' };
+      }
+    });
+    return Object.values(lastDoses).sort((a, b) => a.hoursAgo - b.hoursAgo).slice(0, 5);
+  }, [doses, substances, now]);
+
   const renderOverview = () => (
     <div className="space-y-4 relative">
       {/* Background Decorative Elements */}
@@ -237,203 +361,208 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
         <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Period Selector */}
-      <div className="flex bg-slate-950/40 backdrop-blur-md p-1 rounded-xl border border-white/5 overflow-x-auto no-scrollbar relative z-10">
-        {[7, 30, 90, 365].map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p as Period)}
-            className={cn(
-              "flex-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-              period === p ? "bg-cyan-primary text-black shadow-lg shadow-cyan-500/20" : "text-slate-500 hover:text-slate-300"
-            )}
-          >
-            {p === 365 ? 'Rok' : `${p} Dní`}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 relative z-10">
-        <div className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:bg-slate-900/60 transition-all">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 blur-2xl rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
-          <div className="text-[7px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">Celková útrata</div>
-          <div className="text-xl font-black text-white">{totalCost.toFixed(0)} <span className="text-[10px] text-slate-500">Kč</span></div>
-          <div className="flex items-center gap-1 mt-1">
-            <TrendingUp size={8} className="text-emerald-400" />
-            <span className="text-[7px] font-bold text-emerald-400 uppercase">V limitu</span>
+      {/* Header with Theme Toggle */}
+      <div className="flex items-center justify-between px-1 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)]">
+            <BarChart2 className="text-dark-bg" size={20} strokeWidth={3} />
+          </div>
+          <div>
+            <h1 className="text-lg font-black text-white tracking-tighter leading-none mb-1 uppercase">Analýza</h1>
+            <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Hloubková Data</span>
           </div>
         </div>
-        <div className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden group hover:bg-slate-900/60 transition-all">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-primary/10 blur-2xl rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
-          <div className="text-[7px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">Počet záznamů</div>
-          <div className="text-xl font-black text-white">{filteredDoses.length}</div>
-          <div className="flex items-center gap-1 mt-1">
-            <Activity size={8} className="text-cyan-primary" />
-            <span className="text-[7px] font-bold text-cyan-primary uppercase">Aktivní profil</span>
+        <div className="flex items-center gap-2">
+          {onToggleTheme && (
+            <button 
+              onClick={onToggleTheme}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all active:scale-90"
+            >
+              {settings.theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          )}
+          <div className="flex bg-white/5 backdrop-blur-3xl p-1 rounded-xl border border-white/10 shadow-xl">
+            {[7, 30, 90].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p as Period)}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300",
+                  period === p 
+                    ? "bg-cyan-primary text-black shadow-[0_0_15px_rgba(0,209,255,0.3)]" 
+                    : "text-slate-500 hover:text-slate-300"
+                )}
+              >
+                {p}D
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Trend Chart */}
-      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-            <TrendingUp size={10} className="text-cyan-primary" /> Trend Výdajů
-          </h2>
-          <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Průměr: {(totalCost / period).toFixed(0)} Kč/den</span>
+      {/* Last Used Horizontal Scroll */}
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-3 px-2">
+          <Clock size={12} className="text-slate-500" />
+          <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Naposledy užito</h3>
         </div>
-        <div className="h-32 w-full -ml-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData}>
-              <defs>
-                <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00d1ff" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#00d1ff" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-              <XAxis dataKey="name" stroke="#475569" fontSize={7} tickLine={false} axisLine={false} tick={{ fill: '#475569', fontWeight: 800 }} />
-              <YAxis hide />
-              <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
-                itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
-              />
-              <Area type="monotone" dataKey="cost" stroke="#00d1ff" fillOpacity={1} fill="url(#colorCost)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      {/* Category Breakdown */}
-      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
-        <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-          <Layers size={10} className="text-indigo-400" /> Podle kategorií
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {categoryBreakdown.map((cat, i) => (
-            <div key={i} className="bg-slate-900/30 p-3 rounded-xl border border-white/5 flex justify-between items-center hover:bg-slate-900/50 transition-colors">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 px-1">
+          {lastDosesInfo.map((item, i) => (
+            <div key={i} className="flex-shrink-0 bg-white/5 backdrop-blur-3xl rounded-2xl p-3 border border-white/10 flex items-center gap-3 min-w-[140px] shadow-lg">
+              <div className="w-1.5 h-6 rounded-full" style={{ backgroundColor: item.color }} />
               <div>
-                <div className="text-[9px] font-black text-white uppercase tracking-widest">{cat.name}</div>
-                <div className="text-[7px] text-slate-500 font-bold uppercase mt-0.5">{cat.count}× záznamů</div>
-              </div>
-              <div className="text-right">
-                <div className="text-[10px] font-black text-cyan-primary">{cat.cost.toFixed(0)} Kč</div>
+                <div className="text-[10px] font-black text-white uppercase tracking-tight truncate max-w-[80px]">{item.name}</div>
+                <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest">
+                  {item.hoursAgo < 1 ? 'Před chvílí' : `Před ${item.hoursAgo.toFixed(0)}h`}
+                </div>
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
+
+      {/* Main Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 relative z-10">
+        <div className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-4 border border-white/10 relative overflow-hidden group hover:bg-white/10 transition-all duration-500 shadow-xl">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-[50px] rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-1000" />
+          <div className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Útrata</div>
+          <div className="text-2xl font-black text-white tracking-tighter">{totalCost.toFixed(0)} <span className="text-[10px] text-slate-500 font-bold uppercase ml-1">Kč</span></div>
+        </div>
+        <div className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-4 border border-white/10 relative overflow-hidden group hover:bg-white/10 transition-all duration-500 shadow-xl">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-primary/10 blur-[50px] rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-1000" />
+          <div className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Záznamy</div>
+          <div className="text-2xl font-black text-white tracking-tighter">{filteredDoses.length}</div>
+        </div>
+      </div>
+
+      {/* Compact Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-          <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-            <PieChartIcon size={10} className="text-purple-400" /> Podle látek
-          </h2>
-          <div className="h-32 w-full">
+        {/* Trend Chart */}
+        <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={12} className="text-cyan-primary" />
+              <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Trend Výdajů</h2>
+            </div>
+            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{(totalCost / period).toFixed(0)} Kč/den</span>
+          </div>
+          <div className="h-32 w-full -ml-4">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={costBySubstance}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={35}
-                  outerRadius={50}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {costBySubstance.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
+              <AreaChart data={trendData}>
+                <defs>
+                  <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00d1ff" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#00d1ff" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" vertical={false} />
+                <XAxis dataKey="name" hide />
+                <YAxis hide />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
-                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
+                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.95)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}
+                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: '900' }}
                 />
-              </PieChart>
+                <Area type="monotone" dataKey="cost" stroke="#00d1ff" fillOpacity={1} fill="url(#colorCost)" strokeWidth={3} />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-2 space-y-1">
-            {costBySubstance.slice(0, 4).map((item, i) => (
-              <div key={i} className="flex items-center justify-between text-[8px] font-bold uppercase tracking-widest">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="text-slate-400">{item.name}</span>
-                </div>
-                <span className="text-white">{item.value.toFixed(0)} Kč</span>
+        </section>
+
+        {/* Activity Heatmap */}
+        <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar size={12} className="text-emerald-400" />
+            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Aktivita</h2>
+          </div>
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            {activityHeatmap.map((day, i) => (
+              <div 
+                key={i} 
+                className="w-3.5 h-3.5 rounded-sm relative group transition-all duration-300 hover:scale-125 cursor-help"
+                style={{ 
+                  backgroundColor: day.count > 0 ? `rgba(0, 209, 255, ${0.1 + (day.count * 0.2)})` : 'rgba(255, 255, 255, 0.02)',
+                  border: day.count > 0 ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.01)'
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {/* Category Breakdown & Predictions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+        <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Layers size={12} className="text-indigo-400" />
+            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Kategorie</h2>
+          </div>
+          <div className="space-y-2">
+            {categoryBreakdown.slice(0, 3).map((cat, i) => (
+              <div key={i} className="flex justify-between items-center p-2 rounded-xl bg-white/5 border border-white/5">
+                <span className="text-[9px] font-black text-white uppercase tracking-widest">{cat.name}</span>
+                <span className="text-[10px] font-black text-white tracking-tighter">{cat.cost.toFixed(0)} Kč</span>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5">
-          <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-            <Clock size={10} className="text-amber-400" /> Časová aktivita
-          </h2>
-          <div className="h-32 w-full -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={usageByTimeOfDay}>
-                <XAxis dataKey="hour" hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
-                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
-                />
-                <Bar dataKey="count" fill="#fbbf24" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap size={12} className="text-cyan-primary" />
+            <h2 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Predikce</h2>
           </div>
-          <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest text-center mt-2">
-            Špička: {usageByTimeOfDay.sort((a, b) => b.count - a.count)[0].hour}
-          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {predictionData.map((p, i) => (
+              <div key={i} className="text-center p-2 rounded-xl bg-white/5 border border-white/5">
+                <div className="text-[7px] text-slate-500 font-black uppercase mb-1">{p.name}</div>
+                <div className="text-[10px] font-black text-white tracking-tighter">{p.value.toFixed(0)}</div>
+              </div>
+            ))}
+          </div>
         </section>
       </div>
 
-      {/* Substance List */}
-      <section className="space-y-3 relative z-10">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Detailní Analýza Látek</h3>
-          <div className="relative">
-            <Search size={10} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Hledat..."
-              className="bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-full py-1.5 pl-7 pr-3 text-[9px] outline-none focus:border-cyan-primary/50 transition-all w-32 text-white font-bold"
-            />
-          </div>
+      {/* Substance List Header */}
+      <div className="flex items-center justify-between px-2 pt-2 relative z-10">
+        <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Látky</h3>
+        <div className="relative group">
+          <Search size={10} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input 
+            type="text" 
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Hledat..."
+            className="bg-white/5 border border-white/10 rounded-xl py-1.5 pl-8 pr-3 text-[10px] outline-none focus:border-cyan-primary/50 transition-all w-32 text-white font-black uppercase tracking-widest"
+          />
         </div>
-        
-        <div className="space-y-2">
-          {filteredSubstanceStats.map((s) => (
-            <button 
-              key={s.id}
-              onClick={() => setSelectedSubstanceId(s.id)}
-              className="w-full bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 flex items-center justify-between group hover:bg-slate-900/60 transition-all text-left"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] group-hover:scale-105 transition-transform">
-                  <Activity size={16} style={{ color: s.color || '#00d1ff' }} />
-                </div>
-                <div>
-                  <div className="text-xs font-black text-slate-100">{s.name}</div>
-                  <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                    {s.count} záznamů • {s.cost.toFixed(0)} Kč
-                  </div>
-                </div>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-3 relative z-10 pb-20">
+        {filteredSubstanceStats.map((s) => (
+          <button 
+            key={s.id}
+            onClick={() => setSelectedSubstanceId(s.id)}
+            className="w-full bg-white/5 backdrop-blur-3xl rounded-[1.5rem] p-4 border border-white/10 flex items-center justify-between group hover:bg-white/10 transition-all duration-300 text-left shadow-lg relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 w-1 h-full opacity-40 group-hover:opacity-100 transition-opacity" style={{ backgroundColor: s.color || '#00d1ff' }} />
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] group-hover:scale-110 transition-transform relative">
+                <Activity size={16} style={{ color: s.color || '#00d1ff' }} className="relative z-10" />
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-[9px] font-black text-white mb-0.5">{s.tolerance.toFixed(1)}%</div>
-                  <div className="w-12 h-1 bg-white/[0.05] rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-primary" style={{ width: `${s.tolerance}%`, backgroundColor: s.color }} />
-                  </div>
-                </div>
-                <ChevronRight size={14} className="text-slate-700 group-hover:text-cyan-primary transition-colors" />
+              <div>
+                <div className="text-sm font-black text-white tracking-tight">{s.name}</div>
+                <div className="text-[8px] text-slate-500 font-black uppercase tracking-widest">{s.count}× záznamů</div>
               </div>
-            </button>
-          ))}
-        </div>
-      </section>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-right hidden sm:block">
+                <div className="text-[9px] font-black text-white tracking-tighter">{s.tolerance.toFixed(0)}%</div>
+              </div>
+              <ChevronRight size={16} className="text-slate-600 group-hover:text-cyan-primary transition-colors" />
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 
@@ -445,145 +574,251 @@ export default function Analytics({ substances, doses, settings }: AnalyticsProp
     const totalAmount = sDoses.reduce((sum, d) => sum + d.amount, 0);
     const cost = calculateCost(sDoses);
     const tolerance = calculateTolerance(substanceId, substances, doses);
+    const substancePredictions = calculatePredictions(sDoses, substances, period);
     
     return (
-      <div className="space-y-4 relative">
+      <div className="space-y-6 relative pb-20">
         {/* Background Decorative Elements */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <div 
-            className="absolute top-[20%] right-[-10%] w-[45%] h-[45%] blur-[130px] rounded-full animate-pulse opacity-20" 
+            className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] blur-[150px] rounded-full animate-pulse opacity-20" 
             style={{ backgroundColor: substance.color }}
           />
+          <div className="absolute bottom-[10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
         </div>
 
-        <button 
-          onClick={() => setSelectedSubstanceId(null)}
-          className="flex items-center gap-2 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-cyan-primary transition-colors mb-1 relative z-10"
-        >
-          <ChevronLeft size={12} /> Zpět na přehled
-        </button>
+        <div className="flex items-center justify-between relative z-10">
+          <button 
+            onClick={() => setSelectedSubstanceId(null)}
+            className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hover:text-cyan-primary transition-all group"
+          >
+            <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:bg-cyan-primary/10 transition-colors">
+              <ChevronLeft size={14} />
+            </div>
+            Zpět
+          </button>
+          {onToggleTheme && (
+            <button 
+              onClick={onToggleTheme}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all active:scale-90"
+            >
+              {settings.theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          )}
+        </div>
 
-        <div className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden z-10">
-          <div className="absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full -mr-12 -mt-12 opacity-20" style={{ backgroundColor: substance.color }} />
+        {/* Substance Header Card */}
+        <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 relative z-10 shadow-2xl overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full -mr-16 -mt-16 opacity-20" style={{ backgroundColor: substance.color }} />
           
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-              <Activity size={24} style={{ color: substance.color || '#00d1ff' }} />
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl relative group" style={{ backgroundColor: `${substance.color}11` }}>
+              <div className="absolute inset-0 blur-xl opacity-50 rounded-full" style={{ backgroundColor: substance.color }} />
+              <Activity size={24} style={{ color: substance.color }} className="relative z-10 group-hover:scale-110 transition-transform" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white">{substance.name}</h2>
-              <div className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em]">{substance.category}</div>
+              <h2 className="text-2xl font-black text-white tracking-tighter mb-1">{substance.name}</h2>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                  {substance.category}
+                </span>
+                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                  {sDoses.length} záznamů
+                </span>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
-              <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Celkem užito</div>
-              <div className="text-lg font-black text-white">{totalAmount.toFixed(1)} <span className="text-[10px] text-slate-500">{substance.unit}</span></div>
-            </div>
-            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
-              <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Tolerance</div>
-              <div className="text-lg font-black text-amber-400">{tolerance.toFixed(1)}%</div>
-            </div>
-            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
-              <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Náklady</div>
-              <div className="text-lg font-black text-white">{cost.toFixed(0)} <span className="text-[10px] text-slate-500">Kč</span></div>
-            </div>
-            <div className="bg-slate-900/30 rounded-xl p-3 border border-white/5">
-              <div className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Prům. dávka</div>
-              <div className="text-lg font-black text-cyan-primary">{(totalAmount / (sDoses.length || 1)).toFixed(1)} <span className="text-[10px] text-slate-500">{substance.unit}</span></div>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex bg-white/5 backdrop-blur-3xl p-1 rounded-2xl border border-white/10 relative z-10 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'trends', label: 'Trendy', icon: TrendingUp },
+            { id: 'distribution', label: 'Dávkování', icon: GitMerge },
+            { id: 'finance', label: 'Finance', icon: Wallet },
+            { id: 'history', label: 'Historie', icon: History },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setDetailTab(tab.id as any)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                detailTab === tab.id 
+                  ? "bg-white/10 text-white shadow-lg border border-white/10" 
+                  : "text-slate-500 hover:text-slate-300"
+              )}
+            >
+              <tab.icon size={12} />
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {/* Usage & Tolerance Trend Chart */}
-        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
-          <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-            <LineChartIcon size={10} className="text-cyan-primary" /> Trend Užívání a Tolerance
-          </h2>
-          <div className="h-48 w-full -ml-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dailyTrend}>
-                <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorTolerance" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                <XAxis dataKey="name" stroke="#475569" fontSize={7} tickLine={false} axisLine={false} />
-                <YAxis yAxisId="left" hide />
-                <YAxis yAxisId="right" hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.8)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)' }}
-                  itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '7px', textTransform: 'uppercase', fontWeight: 900, letterSpacing: '0.1em', paddingTop: '15px' }} />
-                <Area yAxisId="left" type="monotone" name={`Množství (${substance.unit})`} dataKey="amount" stroke={substance.color} fillOpacity={1} fill="url(#colorAmount)" strokeWidth={2} />
-                <Area yAxisId="right" type="monotone" name="Tolerance (%)" dataKey="tolerance" stroke="#f59e0b" fillOpacity={1} fill="url(#colorTolerance)" strokeWidth={1.5} strokeDasharray="5 5" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* Strain Breakdown */}
-        {strainUsage.length > 0 && (
-          <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
-            <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-              <Layers size={10} className="text-purple-400" /> Rozdělení podle druhů
-            </h2>
-            <div className="space-y-3">
-              {strainUsage.map((strain, i) => (
-                <div key={i} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
-                    <span className="text-slate-300">{strain.name}</span>
-                    <span className="text-white">{strain.amount.toFixed(1)} {substance.unit}</span>
-                  </div>
-                  <div className="h-1 bg-white/[0.02] rounded-full overflow-hidden border border-white/[0.05]">
-                    <div 
-                      className="h-full rounded-full" 
-                      style={{ 
-                        width: `${(strain.amount / totalAmount) * 100}%`, 
-                        backgroundColor: substance.color 
-                      }} 
-                    />
-                  </div>
-                  <div className="flex justify-between text-[7px] font-bold text-slate-500 uppercase tracking-widest">
-                    <span>{strain.count}× záznamů</span>
-                    <span>{strain.cost.toFixed(0)} Kč</span>
-                  </div>
+        <AnimatePresence mode="wait">
+          {detailTab === 'trends' && (
+            <motion.div
+              key="trends"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4 relative z-10"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 backdrop-blur-3xl rounded-[1.5rem] p-4 border border-white/10">
+                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Tolerance</div>
+                  <div className="text-xl font-black text-white tracking-tighter">{tolerance.toFixed(0)}%</div>
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* History for this substance */}
-        <section className="space-y-3 relative z-10">
-          <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Poslední záznamy</h3>
-          <div className="space-y-2">
-            {sDoses.slice(0, 5).map(dose => (
-              <div key={dose.id} className="bg-slate-950/40 backdrop-blur-md rounded-xl p-3 border border-white/5 flex items-center justify-between hover:bg-slate-900/60 transition-colors">
-                <div>
-                  <div className="text-xs font-bold text-slate-200">
-                    {dose.amount} {substance.unit}
-                    {dose.strainId && <span className="text-[9px] text-slate-500 ml-1.5">({dose.strainId})</span>}
-                  </div>
-                  <div className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                    {new Date(dose.timestamp).toLocaleDateString('cs-CZ')} • {new Date(dose.timestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-                <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest">
-                  {dose.route}
+                <div className="bg-white/5 backdrop-blur-3xl rounded-[1.5rem] p-4 border border-white/10">
+                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Celkem</div>
+                  <div className="text-xl font-black text-white tracking-tighter">{totalAmount.toFixed(1)} <span className="text-[10px] text-slate-500">{substance.unit}</span></div>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+
+              <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp size={12} className="text-cyan-primary" />
+                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Vývoj užívání</h3>
+                </div>
+                <div className="h-48 w-full -ml-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData.map(d => ({ ...d, amount: sDoses.filter(dose => new Date(dose.timestamp).toLocaleDateString() === d.name).reduce((sum, dose) => sum + dose.amount, 0) }))}>
+                      <defs>
+                        <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" vertical={false} />
+                      <XAxis dataKey="name" hide />
+                      <YAxis hide />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.95)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}
+                        itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: '900' }}
+                      />
+                      <Area type="monotone" dataKey="amount" stroke={substance.color} fillOpacity={1} fill="url(#colorAmount)" strokeWidth={3} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            </motion.div>
+          )}
+
+          {detailTab === 'distribution' && (
+            <motion.div
+              key="distribution"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4 relative z-10"
+            >
+              <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <GitMerge size={12} className="text-purple-400" />
+                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Distribuce dávek</h3>
+                </div>
+                <div className="h-48 w-full -ml-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dosageDistribution}>
+                      <XAxis dataKey="range" stroke="#475569" fontSize={8} tickLine={false} axisLine={false} tick={{ fill: '#475569', fontWeight: 900 }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(2, 6, 23, 0.95)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)' }}
+                        itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: '900' }}
+                      />
+                      <Bar dataKey="count" fill={substance.color} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+            </motion.div>
+          )}
+
+          {detailTab === 'finance' && (
+            <motion.div
+              key="finance"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4 relative z-10"
+            >
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 backdrop-blur-3xl rounded-[1.5rem] p-4 border border-white/10">
+                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Celková útrata</div>
+                  <div className="text-xl font-black text-white tracking-tighter">{cost.toFixed(0)} Kč</div>
+                </div>
+                <div className="bg-white/5 backdrop-blur-3xl rounded-[1.5rem] p-4 border border-white/10">
+                  <div className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Průměr/dávka</div>
+                  <div className="text-xl font-black text-white tracking-tighter">{(cost / (sDoses.length || 1)).toFixed(0)} Kč</div>
+                </div>
+              </div>
+
+              <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <Zap size={12} className="text-cyan-primary" />
+                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Predikce výdajů</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Denně', value: substancePredictions.daily },
+                    { label: 'Měsíčně', value: substancePredictions.monthly },
+                    { label: 'Ročně', value: substancePredictions.yearly },
+                  ].map((p, i) => (
+                    <div key={i} className="text-center p-3 rounded-2xl bg-white/5 border border-white/5">
+                      <div className="text-[7px] text-slate-500 font-black uppercase mb-1">{p.label}</div>
+                      <div className="text-xs font-black text-white tracking-tighter">{p.value.toFixed(0)} Kč</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </motion.div>
+          )}
+
+          {detailTab === 'history' && (
+            <motion.div
+              key="history"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4 relative z-10"
+            >
+              <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-5 border border-white/10 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <History size={12} className="text-slate-400" />
+                  <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Poslední záznamy</h3>
+                </div>
+                <div className="space-y-3 max-h-[400px] overflow-y-auto no-scrollbar">
+                  {sDoses.slice(0, 10).map((dose) => (
+                    <div key={dose.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
+                          <Clock size={16} className="text-slate-500" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-black text-white tracking-tight">
+                            {dose.amount} {substance.unit}
+                            {dose.strainId && <span className="text-[10px] text-cyan-primary ml-2 font-black uppercase tracking-widest">({dose.strainId})</span>}
+                          </div>
+                          <div className="text-[9px] text-slate-500 font-black uppercase tracking-[0.2em] mt-0.5">
+                            {new Date(dose.timestamp).toLocaleDateString('cs-CZ')} • {new Date(dose.timestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                          {dose.route}
+                        </div>
+                        {dose.cost && (
+                          <div className="text-[10px] font-black text-emerald-400 tracking-tighter">
+                            {dose.cost} Kč
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };

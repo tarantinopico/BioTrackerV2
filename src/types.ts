@@ -126,6 +126,7 @@ export interface UserSettings {
   doseWarnings: boolean;
   reminders: boolean;
   comedownWarnings: boolean;
+  theme: 'dark' | 'light';
 }
 
 export interface CustomEffect {

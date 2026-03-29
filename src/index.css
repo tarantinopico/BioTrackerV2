@@ -10,7 +10,7 @@
 
 @layer base {
   body {
-    @apply bg-dark-bg text-slate-200 antialiased;
+    @apply antialiased;
     font-feature-settings: "cv02", "cv05", "cv11";
   }
 }

@@ -52,7 +52,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         <AnimatePresence mode="popLayout">
           {shortcuts.map((shortcut) => (
             <motion.div
@@ -65,40 +65,40 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             >
               <button
                 onClick={() => onUseShortcut(shortcut)}
-                className="w-full flex flex-col items-start gap-1 p-3 bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-2xl hover:border-white/20 transition-all active:scale-[0.97] text-left relative overflow-hidden group shadow-lg"
+                className="w-full flex flex-col items-start gap-1 p-4 bg-slate-950/40 backdrop-blur-xl border border-white/10 rounded-[2rem] hover:border-white/20 transition-all active:scale-[0.97] text-left relative overflow-hidden group shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]"
               >
                 {/* Background Glow */}
                 <div 
-                  className="absolute -top-3 -right-3 w-12 h-12 opacity-[0.08] blur-xl rounded-full group-hover:opacity-[0.15] transition-opacity"
+                  className="absolute -top-6 -right-6 w-20 h-20 opacity-[0.05] blur-2xl rounded-full group-hover:opacity-[0.15] transition-opacity"
                   style={{ backgroundColor: shortcut.color }}
                 />
                 
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <div className="p-1 rounded-lg bg-white/5 border border-white/5">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="p-1.5 rounded-xl bg-white/5 border border-white/5 shadow-inner">
                     <Zap 
-                      size={10} 
-                      className="transition-transform group-hover:scale-110"
-                      style={{ color: shortcut.color }} 
+                      size={12} 
+                      className="transition-transform group-hover:scale-125"
+                      style={{ color: shortcut.color, filter: `drop-shadow(0 0 5px ${shortcut.color}66)` }} 
                     />
                   </div>
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest truncate max-w-[70px]">
+                  <span className="text-[10px] font-black text-slate-200 uppercase tracking-[0.15em] truncate max-w-[80px]">
                     {shortcut.name}
                   </span>
                 </div>
                 
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-black text-white tracking-tight">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl font-black text-white tracking-tighter tabular-nums" style={{ textShadow: `0 0 10px ${shortcut.color}33` }}>
                     {shortcut.amount}
                   </span>
-                  <span className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest opacity-60">
                     {substances.find(s => s.id === shortcut.substanceId)?.unit || ''}
                   </span>
                 </div>
 
                 {/* Subtle progress-like line at bottom */}
                 <div 
-                  className="absolute bottom-0 left-0 h-0.5 opacity-30 transition-all group-hover:opacity-100"
-                  style={{ backgroundColor: shortcut.color, width: '100%' }}
+                  className="absolute bottom-0 left-0 h-1 opacity-20 transition-all group-hover:opacity-60 group-hover:h-1.5"
+                  style={{ backgroundColor: shortcut.color, width: '100%', boxShadow: `0 0 10px ${shortcut.color}44` }}
                 />
               </button>
               
@@ -107,9 +107,9 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                   e.stopPropagation();
                   onRemoveShortcut(shortcut.id);
                 }}
-                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-lg border border-white/10 z-10"
+                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-lg border border-white/20 z-10"
               >
-                <X size={10} strokeWidth={3} />
+                <X size={12} strokeWidth={3} />
               </button>
             </motion.div>
           ))}
@@ -118,10 +118,12 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         {shortcuts.length === 0 && (
           <button
             onClick={() => setIsAdding(true)}
-            className="col-span-2 py-6 rounded-2xl bg-white/[0.01] border border-dashed border-white/10 flex flex-col items-center justify-center gap-1.5 text-slate-600 hover:text-cyan-primary hover:border-cyan-primary/50 transition-all active:scale-95"
+            className="col-span-2 py-8 rounded-[2rem] bg-white/[0.01] border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 text-slate-600 hover:text-cyan-primary hover:border-cyan-primary/50 transition-all active:scale-95 group"
           >
-            <Plus size={20} strokeWidth={1.5} />
-            <span className="text-[9px] font-bold uppercase tracking-widest">Přidat první zkratku</span>
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform">
+              <Plus size={20} strokeWidth={2} />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Přidat první zkratku</span>
           </button>
         )}
       </div>

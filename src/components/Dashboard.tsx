@@ -131,9 +131,23 @@ export default function Dashboard({
       const substance = substances.find(s => s.id === id);
       const level = calculateSubstanceLevelAtTime(id, now, substances, doses, settings);
       const tolerance = calculateTolerance(id, substances, doses);
-      return { substance, level, tolerance };
+      
+      const substanceDoses = doses.filter(d => d.substanceId === id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const lastDose = substanceDoses[0];
+      const lastUsedHours = lastDose ? (now - new Date(lastDose.timestamp).getTime()) / 3600000 : null;
+
+      return { substance, level, tolerance, lastUsedHours };
     }).filter(item => item.substance !== undefined && item.level > 0.1);
   }, [activeDoses, substances, doses, settings, now]);
+
+  const allSubstancesLastUsed = useMemo(() => {
+    return substances.map(s => {
+      const substanceDoses = doses.filter(d => d.substanceId === s.id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const lastDose = substanceDoses[0];
+      const lastUsedHours = lastDose ? (now - new Date(lastDose.timestamp).getTime()) / 3600000 : null;
+      return { id: s.id, name: s.name, lastUsedHours, color: s.color };
+    }).filter(s => s.lastUsedHours !== null);
+  }, [substances, doses, now]);
 
   const activeEffects = useMemo(() => {
     const effectTypes = Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || [])));
@@ -248,148 +262,131 @@ export default function Dashboard({
         <div className="absolute top-[40%] right-[10%] w-[25%] h-[25%] bg-amber-500/5 blur-[80px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
       </div>
 
-      {/* Main Status Header - Glassmorphism */}
-      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative overflow-hidden shadow-2xl z-10">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-primary/10 blur-[60px] rounded-full -mr-16 -mt-16" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/5 blur-[40px] rounded-full -ml-12 -mb-12" />
-        
-        <div className="flex items-center justify-between mb-6 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className={cn("p-3 rounded-xl backdrop-blur-md border border-white/5", systemLoad.bg)}>
-              <systemLoad.icon className={cn("w-5 h-5", systemLoad.color)} />
-            </div>
+      {/* Main Status & Last Used - Side by Side */}
+      <div className="grid grid-cols-2 gap-3 relative z-10">
+        <section className="bg-slate-950/40 backdrop-blur-xl rounded-[2rem] p-4 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative overflow-hidden group transition-all hover:border-white/20">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 blur-2xl rounded-full -mr-8 -mt-8 group-hover:bg-cyan-500/20 transition-all" />
+          <div className="flex items-center gap-2 mb-3 opacity-50">
+            <Activity size={10} className="text-cyan-primary animate-pulse" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-300">Status</span>
+          </div>
+          <div className="space-y-3">
             <div>
-              <h2 className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Systémový Status</h2>
-              <div className={cn("text-lg font-black tracking-tight", systemLoad.color, systemLoad.pulse && "animate-pulse")}>
+              <div className={cn("text-[11px] font-black tracking-widest uppercase leading-none mb-1", systemLoad.color)}>
                 {systemLoad.label}
               </div>
+              <div className="text-lg font-black text-white cyan-text-glow leading-none">
+                {cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}
+              </div>
+            </div>
+            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, activeSubstanceDetails.reduce((acc, s) => acc + s.level, 0))}%` }}
+                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+              />
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">K detoxu</div>
-            <div className="text-xl font-black text-white cyan-text-glow">
-              {cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}
-            </div>
-          </div>
-        </div>
+        </section>
 
-        <div className="space-y-3 relative z-10">
-          {activeSubstanceDetails.length > 0 ? (
-            activeSubstanceDetails.map(({ substance, level, tolerance }) => (
+        <section className="bg-slate-950/40 backdrop-blur-xl rounded-[2rem] p-4 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative overflow-hidden group transition-all hover:border-white/20">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 blur-2xl rounded-full -mr-8 -mt-8 group-hover:bg-purple-500/20 transition-all" />
+          <div className="flex items-center gap-2 mb-3 opacity-50">
+            <Clock size={10} className="text-purple-400" />
+            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-300">Historie</span>
+          </div>
+          <div className="space-y-2 max-h-[56px] overflow-y-auto scrollbar-hide">
+            {allSubstancesLastUsed.slice(0, 3).map(s => (
+              <div key={s.id} className="flex justify-between items-center leading-none">
+                <span className="text-[9px] font-black uppercase truncate max-w-[60px] tracking-wider" style={{ color: s.color }}>{s.name}</span>
+                <span className="text-[9px] font-black text-slate-400 tabular-nums">
+                  {s.lastUsedHours! < 1 ? 'TEĎ' : `-${Math.round(s.lastUsedHours!)}h`}
+                </span>
+              </div>
+            ))}
+            {allSubstancesLastUsed.length === 0 && (
+              <div className="text-[8px] font-bold text-slate-600 italic uppercase tracking-widest">Žádná data</div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* Active Substances - More Compact */}
+      {activeSubstanceDetails.length > 0 && (
+        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-3 border border-white/5 relative z-10">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+            {activeSubstanceDetails.map(({ substance, level, tolerance }) => (
               <div 
                 key={substance!.id} 
-                className="space-y-1.5 cursor-pointer group"
+                className="space-y-1 cursor-pointer group"
                 onClick={() => setSelectedDetailsId(substance!.id)}
               >
-                <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-300 group-hover:text-white transition-colors">{substance!.name}</span>
-                    {tolerance > 10 && (
-                      <span className="text-[7px] px-1.5 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/5">
-                        TOL: {tolerance.toFixed(1)}%
-                      </span>
-                    )}
-                  </div>
-                  <span style={{ color: substance!.color }}>{level.toFixed(1)}%</span>
+                <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest">
+                  <span className="text-slate-300 truncate max-w-[60px]">{substance!.name}</span>
+                  <span style={{ color: substance!.color }}>{level.toFixed(0)}%</span>
                 </div>
-                <div className="h-1.5 bg-white/[0.02] rounded-full overflow-hidden border border-white/[0.05]">
+                <div className="h-1 bg-white/[0.02] rounded-full overflow-hidden border border-white/[0.05]">
                   <motion.div 
-                    initial={{ width: 0 }}
                     animate={{ width: `${level}%` }}
-                    className="h-full rounded-full relative"
+                    className="h-full rounded-full"
                     style={{ backgroundColor: substance!.color || '#00d1ff' }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                  </motion.div>
+                  />
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="py-6 text-center border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
-              <span className="text-[9px] text-slate-600 font-bold uppercase tracking-[0.3em]">Všechny systémy čisté</span>
-            </div>
-          )}
-        </div>
-
-        {/* Interaction Alerts */}
-        {interactions.length > 0 && (
-          <div className="mt-6 space-y-2 relative z-10">
-            {interactions.map((alert, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={cn(
-                  "p-3 rounded-xl border backdrop-blur-md flex items-start gap-3",
-                  alert.severity === 'high' ? "bg-red-500/5 border-red-500/20" : "bg-amber-500/5 border-amber-500/20"
-                )}
-              >
-                <div className={cn("p-1.5 rounded-lg", alert.severity === 'high' ? "bg-red-500/10" : "bg-amber-500/10")}>
-                  <AlertCircle className={cn("w-3.5 h-3.5", alert.severity === 'high' ? "text-red-500" : "text-amber-500")} />
-                </div>
-                <div>
-                  <div className={cn("text-[9px] font-black uppercase tracking-widest", alert.severity === 'high' ? "text-red-500" : "text-amber-500")}>
-                    {alert.type}
-                  </div>
-                  <div className="text-[10px] text-slate-400 leading-tight mt-0.5 font-medium">
-                    {alert.message}
-                  </div>
-                </div>
-              </motion.div>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* Active Effects - New Section */}
-      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 shadow-xl relative z-10">
+      {/* Active Effects - More Compact */}
+      <section className="bg-slate-950/40 backdrop-blur-xl rounded-[2rem] p-4 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative z-10 overflow-hidden group">
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full -ml-12 -mb-12 group-hover:bg-amber-500/10 transition-all" />
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-            <Sparkles size={10} className="text-amber-400" /> Aktuální Účinky
+            <Sparkles size={10} className="text-amber-400 animate-pulse" /> Účinky
           </h2>
-          {activeEffects.length > 0 && (
-            <span className="text-[7px] font-black text-amber-400/60 uppercase tracking-widest">
-              {activeEffects.length} AKTIVNÍ
-            </span>
-          )}
+          <span className="text-[8px] font-black text-amber-400/60 uppercase tracking-[0.3em]">
+            {activeEffects.length} AKTIVNÍ
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
-          {activeEffects.length > 0 ? (
-            activeEffects.map((effect) => {
-              const Icon = EFFECT_ICONS[effect.type] || Activity;
-              return (
-                <div key={effect.type} className="flex items-center gap-3 group">
-                  <div className={cn(
-                    "w-8 h-8 rounded-xl flex items-center justify-center border border-white/5 transition-transform group-hover:scale-110",
-                    effect.valence === 'positive' ? "bg-emerald-500/10 text-emerald-400" : 
-                    effect.valence === 'negative' ? "bg-red-500/10 text-red-400" : "bg-slate-500/10 text-slate-400"
-                  )}>
-                    <Icon size={14} />
+        <div className="grid grid-cols-2 gap-3">
+          {activeEffects.slice(0, 4).map((effect) => {
+            const Icon = EFFECT_ICONS[effect.type] || Activity;
+            const color = EFFECT_COLORS[effect.type] || '#94a3b8';
+            return (
+              <div key={effect.type} className="flex items-center gap-3 bg-white/[0.03] rounded-2xl p-2.5 border border-white/5 transition-all hover:bg-white/[0.06] hover:border-white/10 group/item">
+                <div className={cn(
+                  "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover/item:scale-110",
+                  effect.valence === 'positive' ? "bg-emerald-500/10 text-emerald-400 shadow-emerald-500/5" : 
+                  effect.valence === 'negative' ? "bg-red-500/10 text-red-400 shadow-red-500/5" : "bg-slate-500/10 text-slate-400 shadow-slate-500/5"
+                )}>
+                  <Icon size={14} style={{ filter: `drop-shadow(0 0 5px ${color}44)` }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[9px] font-black text-slate-200 uppercase truncate leading-none tracking-wider">{effect.type}</span>
+                    <span className="text-[9px] font-black text-white leading-none tabular-nums">{Math.round(effect.intensity)}%</span>
                   </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{effect.type}</span>
-                      <span className="text-[9px] font-black text-white">{effect.intensity.toFixed(1)}%</span>
-                    </div>
-                    <div className="h-1 bg-white/[0.02] rounded-full overflow-hidden border border-white/[0.05]">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${effect.intensity}%` }}
-                        className={cn(
-                          "h-full rounded-full",
-                          effect.valence === 'positive' ? "bg-emerald-500" : 
-                          effect.valence === 'negative' ? "bg-red-500" : "bg-slate-500"
-                        )}
-                      />
-                    </div>
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden border border-white/[0.02]">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${effect.intensity}%` }}
+                      className={cn(
+                        "h-full rounded-full",
+                        effect.valence === 'positive' ? "bg-emerald-500" : 
+                        effect.valence === 'negative' ? "bg-red-500" : "bg-slate-500"
+                      )}
+                      style={{ boxShadow: `0 0 8px ${color}66` }}
+                    />
                   </div>
                 </div>
-              );
-            })
-          ) : (
-            <div className="py-4 text-center bg-white/[0.01] rounded-xl border border-dashed border-white/5">
-              <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">Žádné znatelné účinky</span>
+              </div>
+            );
+          })}
+          {activeEffects.length === 0 && (
+            <div className="col-span-2 py-4 text-center text-[9px] font-black text-slate-700 italic uppercase tracking-[0.3em] bg-white/[0.01] rounded-2xl border border-dashed border-white/5">
+              Žádné aktivní účinky
             </div>
           )}
         </div>

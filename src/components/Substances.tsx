@@ -42,37 +42,37 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
 
       {/* Search Bar */}
       <div className="relative group z-10">
-        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <Search size={14} className="text-slate-500 group-focus-within:text-cyan-primary transition-colors" />
+        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+          <Search size={16} className="text-slate-500 group-focus-within:text-cyan-primary transition-colors" />
         </div>
         <input 
           type="text" 
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Hledat látku..."
-          className="w-full bg-slate-950/40 backdrop-blur-md border border-white/5 rounded-xl py-3 pl-10 pr-10 text-xs outline-none focus:border-cyan-primary/50 focus:ring-1 focus:ring-cyan-primary/20 transition-all text-slate-200"
+          className="w-full bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-sm outline-none focus:border-cyan-primary/50 focus:bg-white/10 transition-all text-white shadow-inner"
         />
         {search && (
           <button 
             onClick={() => setSearch('')}
-            className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-white transition-colors"
+            className="absolute inset-y-0 right-4 flex items-center text-slate-500 hover:text-white transition-colors active:scale-90"
           >
-            <X size={14} />
+            <X size={18} />
           </button>
         )}
       </div>
 
       {/* Category Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1 relative z-10">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1 relative z-10">
         {categories.map(cat => (
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
             className={cn(
-              "px-3 py-1.5 rounded-lg border text-[9px] font-bold uppercase tracking-widest transition-all whitespace-nowrap",
+              "px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap active:scale-95",
               selectedCategory === cat 
-                ? "bg-cyan-primary border-transparent text-dark-bg shadow-[0_0_10px_rgba(0,209,255,0.2)]" 
-                : "bg-slate-950/40 backdrop-blur-md border-white/5 text-slate-500 hover:text-slate-300"
+                ? "bg-cyan-primary border-transparent text-dark-bg shadow-[0_0_15px_rgba(0,209,255,0.4)] scale-105" 
+                : "bg-white/5 backdrop-blur-xl border-white/10 text-slate-500 hover:text-slate-300 hover:bg-white/10"
             )}
           >
             {cat === 'all' ? 'Vše' : cat}
@@ -81,80 +81,80 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
       </div>
 
       {/* My Substances */}
-      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-xl bg-cyan-primary/10">
-              <Database className="w-4 h-4 text-cyan-primary" />
+      <section className="bg-white/5 backdrop-blur-3xl rounded-[2rem] p-6 border border-white/10 relative z-10 shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-cyan-primary/10 shadow-[0_0_15px_rgba(0,209,255,0.1)]">
+              <Database className="w-5 h-5 text-cyan-primary" />
             </div>
             <div>
-              <h2 className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Databáze</h2>
-              <div className="text-base font-black text-white leading-tight">Moje látky</div>
+              <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Databáze</h2>
+              <div className="text-xl font-black text-white leading-tight tracking-tighter">Moje látky</div>
             </div>
           </div>
           <button 
             onClick={() => onEditSubstance('new')}
-            className="w-8 h-8 rounded-lg bg-cyan-primary flex items-center justify-center shadow-[0_0_10px_rgba(0,209,255,0.2)] active:scale-95 transition-all"
+            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)] active:scale-90 transition-all hover:scale-105"
           >
-            <Plus className="w-5 h-5 text-dark-bg" />
+            <Plus className="w-6 h-6 text-dark-bg" strokeWidth={3} />
           </button>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-3">
           {filteredSubstances.length === 0 ? (
-            <div className="py-8 text-center border border-dashed border-white/10 rounded-xl">
-              <span className="text-[10px] text-slate-600 font-medium uppercase tracking-widest">Žádné látky</span>
+            <div className="py-12 text-center border border-dashed border-white/10 rounded-2xl bg-white/2">
+              <span className="text-[11px] text-slate-600 font-black uppercase tracking-[0.3em]">Žádné látky</span>
             </div>
           ) : (
             filteredSubstances.map(substance => (
               <div 
                 key={substance.id} 
                 onClick={() => onEditSubstance(substance.id)}
-                className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-white/[0.05] transition-all group relative overflow-hidden"
+                className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-white/10 transition-all group relative overflow-hidden shadow-sm"
               >
-                <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: substance.color || '#00d1ff' }} />
+                <div className="absolute top-0 left-0 w-1.5 h-full shadow-[2px_0_10px_rgba(0,0,0,0.2)]" style={{ backgroundColor: substance.color || '#00d1ff' }} />
                 
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border border-white/5">
-                  <Activity size={16} style={{ color: substance.color || '#00d1ff' }} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 shadow-inner">
+                  <Activity size={20} style={{ color: substance.color || '#00d1ff' }} />
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <h3 className="font-bold text-slate-200 truncate text-xs">{substance.name}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-black text-white truncate text-sm tracking-tight">{substance.name}</h3>
                     <span className={cn(
-                      "text-[6px] uppercase font-black tracking-widest px-1 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5"
+                      "text-[7px] uppercase font-black tracking-[0.2em] px-1.5 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/10"
                     )}>
                       {substance.category}
                     </span>
                   </div>
-                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                    T₁/₂: {substance.halfLife}h • Tmax: {substance.tmax}h
+                  <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.1em]">
+                    T₁/₂: <span className="text-slate-300">{substance.halfLife}h</span> • Tmax: <span className="text-slate-300">{substance.tmax}h</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-1">
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleFavorite(substance.id);
                     }}
                     className={cn(
-                      "p-1.5 rounded-lg transition-colors",
-                      substance.isFavorite ? "text-amber-400 bg-amber-400/10" : "text-slate-600 hover:text-amber-400 hover:bg-amber-400/5"
+                      "p-2 rounded-xl transition-all active:scale-90",
+                      substance.isFavorite ? "text-amber-400 bg-amber-400/10 shadow-[0_0_15px_rgba(251,191,36,0.2)]" : "text-slate-600 hover:text-amber-400 hover:bg-amber-400/5"
                     )}
                   >
-                    <Star size={12} fill={substance.isFavorite ? "currentColor" : "none"} />
+                    <Star size={16} fill={substance.isFavorite ? "currentColor" : "none"} />
                   </button>
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       onDeleteSubstance(substance.id);
                     }}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-colors"
+                    className="p-2 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-all active:scale-90"
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={16} />
                   </button>
-                  <ChevronRight size={14} className="text-slate-700 group-hover:text-cyan-primary transition-colors" />
+                  <ChevronRight size={18} className="text-slate-700 group-hover:text-cyan-primary transition-all group-hover:translate-x-1" />
                 </div>
               </div>
             ))
