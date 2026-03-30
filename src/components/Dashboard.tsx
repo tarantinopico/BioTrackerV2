@@ -309,7 +309,7 @@ export default function Dashboard({
             <div className={cn("text-[9px] font-bold uppercase tracking-wider mb-0.5", systemLoad.color)}>
               {systemLoad.label}
             </div>
-            <div className="text-lg font-bold text-white tracking-tight leading-none">
+            <div className="text-lg font-bold text-theme-text tracking-tight leading-none">
               {cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}
             </div>
           </div>
@@ -324,7 +324,7 @@ export default function Dashboard({
             <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 text-ios-gray">
               Utraceno
             </div>
-            <div className="text-lg font-bold text-white tracking-tight leading-none">
+            <div className="text-lg font-bold text-theme-text tracking-tight leading-none">
               {dailyCost.toLocaleString('cs-CZ')} Kč
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function Dashboard({
             {dailyStats.map(s => (
               <div key={s.name} className="flex flex-col min-w-fit">
                 <span className="text-[8px] font-bold text-ios-gray uppercase mb-0.5">{s.name}</span>
-                <span className="text-sm font-bold text-white tabular-nums leading-none">
+                <span className="text-sm font-bold text-theme-text tabular-nums leading-none">
                   {s.amount}<span className="text-[9px] text-ios-gray ml-0.5">{s.unit}</span>
                 </span>
               </div>
@@ -360,7 +360,13 @@ export default function Dashboard({
               <div key={s.id} className="flex justify-between items-center leading-none">
                 <span className="text-[10px] font-bold uppercase truncate max-w-[60px]" style={{ color: s.color }}>{s.name}</span>
                 <span className="text-[10px] font-bold text-ios-gray tabular-nums">
-                  {s.lastUsedHours! < 1 ? 'TEĎ' : `-${Math.round(s.lastUsedHours!)}h`}
+                  {(() => {
+                    const hrs = Math.floor(s.lastUsedHours!);
+                    const mins = Math.floor((s.lastUsedHours! - hrs) * 60);
+                    if (hrs === 0 && mins === 0) return 'TEĎ';
+                    if (hrs === 0) return `-${mins}m`;
+                    return `-${hrs}h ${mins}m`;
+                  })()}
                 </span>
               </div>
             ))}
@@ -430,10 +436,10 @@ export default function Dashboard({
                 )}
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-              <XAxis dataKey="time" hide />
+              <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} hide />
               <YAxis hide domain={[0, maxChartValue]} />
               <Tooltip 
-                contentStyle={{ backgroundColor: '#1c1c1e', border: 'none', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', fontSize: '12px' }}
+                contentStyle={{ backgroundColor: 'var(--ios-card)', border: 'none', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', fontSize: '12px', color: 'var(--ios-text)' }}
                 itemStyle={{ padding: '2px 0' }}
                 labelFormatter={(time) => new Date(time).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
               />
@@ -485,10 +491,10 @@ export default function Dashboard({
               className="flex-shrink-0 ios-card p-2.5 min-w-[110px] text-left ios-button"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-white uppercase truncate max-w-[60px]">{substance!.name}</span>
+                <span className="text-[10px] font-bold text-theme-text uppercase truncate max-w-[60px]">{substance!.name}</span>
                 <span className="text-[11px] font-bold" style={{ color: substance!.color }}>{level.toFixed(0)}%</span>
               </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+              <div className="h-1 bg-theme-subtle rounded-full overflow-hidden">
                 <motion.div animate={{ width: `${level}%` }} className="h-full" style={{ backgroundColor: substance!.color }} />
               </div>
             </button>
@@ -510,7 +516,7 @@ export default function Dashboard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedDetailsId(null)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              className="absolute inset-0 bg-theme-bg/60 backdrop-blur-md"
             />
             <motion.div 
               initial={{ y: "100%", opacity: 0 }}
@@ -526,28 +532,28 @@ export default function Dashboard({
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+                        <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center border border-theme-border">
                           <Activity size={24} style={{ color: substance!.color || '#00d1ff' }} />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-white">{substance!.name}</h3>
+                          <h3 className="text-lg font-bold text-theme-text">{substance!.name}</h3>
                           <div className="text-[10px] text-ios-gray font-bold uppercase tracking-widest">Biometrická Analýza</div>
                         </div>
                       </div>
                       <button 
                         onClick={() => setSelectedDetailsId(null)}
-                        className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-white transition-all hover:rotate-90 ios-button"
+                        className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-theme-text transition-all hover:rotate-90 ios-button"
                       >
                         <X size={20} />
                       </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-6">
-                      <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                      <div className="bg-theme-subtle rounded-2xl p-4 border border-theme-border">
                         <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">Hladina</div>
                         <div className="text-xl font-bold text-ios-blue">{level.toFixed(2)}%</div>
                       </div>
-                      <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                      <div className="bg-theme-subtle rounded-2xl p-4 border border-theme-border">
                         <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">Tolerance</div>
                         <div className="text-xl font-bold text-ios-orange">{tolerance.toFixed(2)}%</div>
                       </div>
@@ -559,19 +565,19 @@ export default function Dashboard({
                         { icon: Zap, label: 'Nástup účinku', value: `${substance!.onset}m` },
                         { icon: Activity, label: 'Doba trvání', value: `${substance!.duration}h` }
                       ].map((row, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <div key={i} className="flex items-center justify-between p-3 bg-theme-subtle rounded-xl border border-theme-border">
                           <div className="flex items-center gap-2">
                             <row.icon size={14} className="text-ios-gray" />
                             <span className="text-xs font-bold text-ios-gray">{row.label}</span>
                           </div>
-                          <span className="text-xs font-bold text-white">{row.value}</span>
+                          <span className="text-xs font-bold text-theme-text">{row.value}</span>
                         </div>
                       ))}
                     </div>
 
                     <button 
                       onClick={() => setSelectedDetailsId(null)}
-                      className="w-full mt-6 py-4 rounded-2xl bg-ios-blue text-white text-sm font-bold uppercase tracking-wider ios-button"
+                      className="w-full mt-6 py-4 rounded-2xl bg-ios-blue text-theme-text text-sm font-bold uppercase tracking-wider ios-button"
                     >
                       Zavřít Analýzu
                     </button>
@@ -586,7 +592,7 @@ export default function Dashboard({
       <div className="fixed bottom-20 right-4 z-[100] md:hidden">
         <button 
           onClick={() => setIsQuickLogOpen(true)}
-          className="w-14 h-14 rounded-2xl bg-cyan-primary text-black shadow-[0_0_25px_rgba(0,209,255,0.4)] flex items-center justify-center active:scale-90 transition-all border border-white/20"
+          className="w-14 h-14 rounded-2xl bg-cyan-primary text-black shadow-[0_0_25px_rgba(0,209,255,0.4)] flex items-center justify-center active:scale-90 transition-all border border-theme-border"
         >
           <Plus size={28} strokeWidth={3} />
         </button>
@@ -607,11 +613,11 @@ export default function Dashboard({
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="relative ios-card rounded-t-[2.5rem] rounded-b-none w-full max-w-xl p-6 border-t border-white/10 shadow-2xl"
+              className="relative ios-card rounded-t-[2.5rem] rounded-b-none w-full max-w-xl p-6 border-t border-theme-border shadow-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-white uppercase tracking-tight">Rychlý Záznam</h2>
-                <button onClick={() => setIsQuickLogOpen(false)} className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-white transition-all ios-button">
+                <h2 className="text-lg font-bold text-theme-text uppercase tracking-tight">Rychlý Záznam</h2>
+                <button onClick={() => setIsQuickLogOpen(false)} className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-theme-text transition-all ios-button">
                   <X size={20} />
                 </button>
               </div>
@@ -634,12 +640,12 @@ export default function Dashboard({
                       onAddDose(newDose);
                       setIsQuickLogOpen(false);
                     }}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-left ios-button"
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle-hover transition-all text-left ios-button"
                   >
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 border border-white/10">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-theme-subtle border border-theme-border">
                       <Zap size={14} style={{ color: s.color }} />
                     </div>
-                    <div className="text-xs font-bold text-white uppercase tracking-tight truncate">{s.name}</div>
+                    <div className="text-xs font-bold text-theme-text uppercase tracking-tight truncate">{s.name}</div>
                   </button>
                 ))}
               </div>

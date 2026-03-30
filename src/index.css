@@ -1,9 +1,24 @@
 @import "tailwindcss";
 
 @theme {
-  --color-dark-bg: #000000;
-  --color-ios-card: #1c1c1e;
-  --color-ios-secondary: #2c2c2e;
+  --color-ios-bg: var(--ios-bg);
+  --color-ios-text: var(--ios-text);
+  --color-ios-card: var(--ios-card);
+  --color-ios-secondary: var(--ios-secondary);
+  --color-ios-border: var(--ios-border);
+  --color-ios-glass: var(--ios-glass);
+  --color-ios-subtle: var(--ios-subtle);
+  --color-ios-subtle-hover: var(--ios-subtle-hover);
+
+  --color-theme-bg: var(--ios-bg);
+  --color-theme-text: var(--ios-text);
+  --color-theme-card: var(--ios-card);
+  --color-theme-secondary: var(--ios-secondary);
+  --color-theme-border: var(--ios-border);
+  --color-theme-glass: var(--ios-glass);
+  --color-theme-subtle: var(--ios-subtle);
+  --color-theme-subtle-hover: var(--ios-subtle-hover);
+
   --color-ios-blue: #0a84ff;
   --color-ios-green: #30d158;
   --color-ios-red: #ff453a;
@@ -14,8 +29,29 @@
 }
 
 @layer base {
+  :root {
+    --ios-bg: #f2f2f7;
+    --ios-text: #000000;
+    --ios-card: #ffffff;
+    --ios-secondary: #e5e5ea;
+    --ios-border: rgba(0, 0, 0, 0.05);
+    --ios-glass: rgba(255, 255, 255, 0.8);
+    --ios-subtle: rgba(0, 0, 0, 0.05);
+    --ios-subtle-hover: rgba(0, 0, 0, 0.1);
+  }
+  .dark {
+    --ios-bg: #000000;
+    --ios-text: #ffffff;
+    --ios-card: #1c1c1e;
+    --ios-secondary: #2c2c2e;
+    --ios-border: rgba(255, 255, 255, 0.1);
+    --ios-glass: rgba(28, 28, 30, 0.8);
+    --ios-subtle: rgba(255, 255, 255, 0.05);
+    --ios-subtle-hover: rgba(255, 255, 255, 0.1);
+  }
+
   body {
-    @apply antialiased bg-black text-white selection:bg-ios-blue/30;
+    @apply antialiased bg-ios-bg text-ios-text selection:bg-ios-blue/30;
     -webkit-tap-highlight-color: transparent;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
@@ -23,19 +59,19 @@
 
 @layer utilities {
   .ios-glass {
-    @apply bg-[#1c1c1e]/70 backdrop-blur-2xl border border-white/10;
+    @apply bg-ios-glass backdrop-blur-2xl border border-ios-border;
   }
   .ios-glass-light {
-    @apply bg-white/5 backdrop-blur-xl border border-white/5;
+    @apply bg-ios-glass backdrop-blur-xl border border-ios-border;
   }
   .ios-card {
-    @apply bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl;
+    @apply bg-ios-card rounded-[2rem] border border-ios-border shadow-xl;
   }
   .ios-button {
     @apply active:scale-[0.97] transition-all duration-200 cursor-pointer;
   }
   .ios-input {
-    @apply bg-[#2c2c2e] border-none rounded-xl px-4 py-3 text-white placeholder:text-ios-gray focus:ring-2 focus:ring-ios-blue/50 outline-none transition-all;
+    @apply bg-ios-secondary border-none rounded-xl px-4 py-3 text-ios-text placeholder:text-ios-gray focus:ring-2 focus:ring-ios-blue/50 outline-none transition-all;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -65,10 +101,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--ios-subtle-hover);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--ios-border);
 }

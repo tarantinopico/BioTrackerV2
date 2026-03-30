@@ -149,6 +149,20 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('biotracker_pro_settings', JSON.stringify(settings));
+    
+    // Apply theme
+    const root = document.documentElement;
+    if (settings.theme === 'dark') {
+      root.classList.add('dark');
+    } else if (settings.theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
   }, [settings]);
 
   useEffect(() => {
@@ -371,20 +385,20 @@ export default function App() {
 
   return (
     <div className={cn(
-      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-ios-blue/30 pb-28 transition-colors duration-500 bg-black text-white"
+      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-ios-blue/30 pb-28 transition-colors duration-500"
     )}>
       {/* Header */}
-      <header className="px-4 pt-10 pb-3 flex justify-between items-end sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
+      <header className="px-4 pt-10 pb-3 flex justify-between items-end sticky top-0 z-50 bg-ios-bg/80 backdrop-blur-xl border-b border-ios-border">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", systemLoad.color.replace('bg-', 'bg-'))} />
             <span className="text-[9px] font-bold text-ios-gray uppercase tracking-widest">{systemLoad.label}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">BioTracker</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ios-text">BioTracker</h1>
         </div>
         <button 
           onClick={() => setIsSettingsOpen(true)}
-          className="p-1.5 rounded-full bg-ios-secondary ios-button text-ios-gray hover:text-white"
+          className="p-1.5 rounded-full bg-ios-secondary ios-button text-ios-gray hover:text-ios-text"
         >
           <SettingsIcon size={20} />
         </button>
@@ -460,7 +474,7 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation - iOS Style Tab Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#1c1c1e]/80 backdrop-blur-2xl border-t border-white/10 px-2 pt-2 pb-6 flex justify-around items-center z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-ios-card/80 backdrop-blur-2xl border-t border-ios-border px-2 pt-2 pb-6 flex justify-around items-center z-50">
         {[
           { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
           { id: 'logger', icon: PlusCircle, label: 'Záznam' },

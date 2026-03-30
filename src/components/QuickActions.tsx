@@ -96,7 +96,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                 onClick={() => onUseShortcut(shortcut)}
                 className="w-full flex flex-col items-center gap-1.5 p-2 ios-card ios-button text-center relative overflow-hidden"
               >
-                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center mb-0.5">
+                <div className="w-8 h-8 rounded-xl bg-theme-subtle flex items-center justify-center mb-0.5">
                   <Zap 
                     size={14} 
                     style={{ color: shortcut.color }} 
@@ -104,11 +104,11 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                 </div>
                 
                 <div className="w-full">
-                  <div className="text-[9px] font-bold text-white uppercase tracking-tight truncate mb-0.5">
+                  <div className="text-[9px] font-bold text-theme-text uppercase tracking-tight truncate mb-0.5">
                     {shortcut.name}
                   </div>
                   <div className="flex items-baseline justify-center gap-0.5">
-                    <span className="text-xs font-bold text-white tabular-nums">
+                    <span className="text-xs font-bold text-theme-text tabular-nums">
                       {shortcut.amount}
                     </span>
                     <span className="text-[7px] font-medium text-ios-gray uppercase">
@@ -150,9 +150,9 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         {shortcuts.length === 0 && (
           <button
             onClick={() => setIsAdding(true)}
-            className="col-span-3 py-8 ios-card border-dashed border-white/10 flex flex-col items-center justify-center gap-3 text-ios-gray hover:text-ios-blue hover:border-ios-blue/50 transition-all ios-button"
+            className="col-span-3 py-8 ios-card border-dashed border-theme-border flex flex-col items-center justify-center gap-3 text-ios-gray hover:text-ios-blue hover:border-ios-blue/50 transition-all ios-button"
           >
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-theme-subtle flex items-center justify-center">
               <Plus size={20} strokeWidth={2} />
             </div>
             <span className="text-xs font-bold uppercase tracking-widest">Přidat zkratku</span>
@@ -169,17 +169,17 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAdding(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              className="absolute inset-0 bg-theme-bg/60 backdrop-blur-md"
             />
             <motion.div 
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="w-full max-w-md bg-[#1c1c1e]/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 relative z-10 shadow-2xl"
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto no-scrollbar bg-ios-card/90 backdrop-blur-3xl border border-theme-border rounded-[2.5rem] p-6 sm:p-8 relative z-10 shadow-2xl"
             >
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-white">{editingShortcutId ? 'Upravit zkratku' : 'Nová zkratka'}</h2>
-                <button onClick={() => setIsAdding(false)} className="p-2 rounded-full bg-white/5 text-ios-gray hover:text-white transition-all">
+                <h2 className="text-2xl font-bold text-theme-text">{editingShortcutId ? 'Upravit zkratku' : 'Nová zkratka'}</h2>
+                <button onClick={() => setIsAdding(false)} className="p-2 rounded-full bg-theme-subtle text-ios-gray hover:text-theme-text transition-all">
                   <X size={20} />
                 </button>
               </div>
@@ -205,9 +205,9 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                         onChange={(e) => setNewShortcut(prev => ({ ...prev, substanceId: e.target.value }))}
                         className="w-full ios-input appearance-none pr-10"
                       >
-                        <option value="" className="bg-[#1c1c1e]">Vyberte</option>
+                        <option value="" className="bg-theme-card">Vyberte</option>
                         {substances.map(s => (
-                          <option key={s.id} value={s.id} className="bg-[#1c1c1e]">{s.name}</option>
+                          <option key={s.id} value={s.id} className="bg-theme-card">{s.name}</option>
                         ))}
                       </select>
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ios-gray">
@@ -243,15 +243,15 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                         onChange={(e) => setNewShortcut(prev => ({ ...prev, route: e.target.value }))}
                         className="w-full ios-input appearance-none pr-10"
                       >
-                        <option value="oral" className="bg-[#1c1c1e]">Orálně</option>
-                        <option value="sublingual" className="bg-[#1c1c1e]">Pod jazyk</option>
-                        <option value="insufflated" className="bg-[#1c1c1e]">Nos</option>
-                        <option value="inhaled" className="bg-[#1c1c1e]">Inhalace</option>
-                        <option value="intravenous" className="bg-[#1c1c1e]">IV</option>
-                        <option value="intramuscular" className="bg-[#1c1c1e]">IM</option>
-                        <option value="subcutaneous" className="bg-[#1c1c1e]">SC</option>
-                        <option value="rectal" className="bg-[#1c1c1e]">Rektálně</option>
-                        <option value="topical" className="bg-[#1c1c1e]">Topicky</option>
+                        <option value="oral" className="bg-theme-card">Orálně</option>
+                        <option value="sublingual" className="bg-theme-card">Pod jazyk</option>
+                        <option value="insufflated" className="bg-theme-card">Nos</option>
+                        <option value="inhaled" className="bg-theme-card">Inhalace</option>
+                        <option value="intravenous" className="bg-theme-card">IV</option>
+                        <option value="intramuscular" className="bg-theme-card">IM</option>
+                        <option value="subcutaneous" className="bg-theme-card">SC</option>
+                        <option value="rectal" className="bg-theme-card">Rektálně</option>
+                        <option value="topical" className="bg-theme-card">Topicky</option>
                       </select>
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ios-gray">
                         <ChevronDown size={16} />
@@ -268,9 +268,9 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                           onChange={(e) => setNewShortcut(prev => ({ ...prev, strainId: e.target.value || null }))}
                           className="w-full ios-input appearance-none pr-10"
                         >
-                          <option value="" className="bg-[#1c1c1e]">Základní</option>
+                          <option value="" className="bg-theme-card">Základní</option>
                           {selectedSubstance.strains.map(s => (
-                            <option key={s.name} value={s.name} className="bg-[#1c1c1e]">{s.name}</option>
+                            <option key={s.name} value={s.name} className="bg-theme-card">{s.name}</option>
                           ))}
                         </select>
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-ios-gray">
@@ -284,14 +284,14 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                 <div className="flex gap-4 pt-4">
                   <button
                     onClick={() => setIsAdding(false)}
-                    className="flex-1 py-4 rounded-2xl bg-ios-secondary text-white font-bold ios-button"
+                    className="flex-1 py-4 rounded-2xl bg-ios-secondary text-theme-text font-bold ios-button"
                   >
                     Zrušit
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={!newShortcut.name || !newShortcut.substanceId || (newShortcut.amount ?? 0) <= 0}
-                    className="flex-1 py-4 rounded-2xl bg-ios-blue text-white font-bold ios-button disabled:opacity-50"
+                    className="flex-1 py-4 rounded-2xl bg-ios-blue text-theme-text font-bold ios-button disabled:opacity-50"
                   >
                     {editingShortcutId ? 'Uložit' : 'Vytvořit'}
                   </button>

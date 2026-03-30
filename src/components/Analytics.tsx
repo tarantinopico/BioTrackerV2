@@ -359,7 +359,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       {/* Header */}
       <div className="flex items-center justify-between px-2 relative z-10">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Analýza</h1>
+          <h1 className="text-3xl font-bold text-theme-text tracking-tight">Analýza</h1>
           <p className="text-sm font-medium text-ios-gray">Přehled vašich dat</p>
         </div>
         <div className="flex bg-ios-secondary p-1 rounded-xl">
@@ -370,8 +370,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               className={cn(
                 "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
                 period === p 
-                  ? "bg-white/10 text-white shadow-sm" 
-                  : "text-ios-gray hover:text-white"
+                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+                  : "text-ios-gray hover:text-theme-text"
               )}
             >
               {p}D
@@ -389,7 +389,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             </div>
             <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">Útrata ({period}D)</span>
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-bold text-theme-text tracking-tight">
             {totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-ios-gray">Kč</span>
           </div>
         </div>
@@ -400,7 +400,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             </div>
             <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">Celkem</span>
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
+          <div className="text-2xl font-bold text-theme-text tracking-tight">
             {allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-ios-gray">Kč</span>
           </div>
         </div>
@@ -411,7 +411,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <TrendingUp size={16} className="text-ios-blue" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest">Trend Výdajů</h2>
+            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Trend Výdajů</h2>
           </div>
           <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">{(totalCost / period).toFixed(0)} Kč / den</span>
         </div>
@@ -467,7 +467,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         <section className="ios-card p-6">
           <div className="flex items-center gap-2 mb-6">
             <Calendar size={16} className="text-ios-green" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest">Aktivita</h2>
+            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Aktivita</h2>
           </div>
           <div className="flex flex-wrap gap-2 justify-center">
             {activityHeatmap.map((day, i) => (
@@ -485,13 +485,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         <section className="ios-card p-6">
           <div className="flex items-center gap-2 mb-6">
             <Zap size={16} className="text-ios-orange" />
-            <h2 className="text-sm font-bold text-white uppercase tracking-widest">Predikce</h2>
+            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce</h2>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {predictionData.map((p, i) => (
-              <div key={i} className="text-center p-3 rounded-2xl bg-white/5">
+              <div key={i} className="text-center p-3 rounded-2xl bg-theme-subtle">
                 <div className="text-[8px] text-ios-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
-                <div className="text-sm font-bold text-white tracking-tight">{p.value.toFixed(0)} Kč</div>
+                <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} Kč</div>
               </div>
             ))}
           </div>
@@ -509,7 +509,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Hledat..."
-              className="bg-ios-secondary border-none rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-1 focus:ring-ios-blue/50 transition-all w-40 text-white font-medium"
+              className="bg-ios-secondary border-none rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-1 focus:ring-ios-blue/50 transition-all w-40 text-theme-text font-medium"
             />
           </div>
         </div>
@@ -522,18 +522,18 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               className="w-full ios-card p-4 flex items-center justify-between ios-button text-left"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center relative">
+                <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative">
                   <div className="absolute inset-0 blur-lg opacity-20 rounded-full" style={{ backgroundColor: s.color }} />
                   <Activity size={20} style={{ color: s.color }} className="relative z-10" />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-white tracking-tight">{s.name}</div>
+                  <div className="text-base font-bold text-theme-text tracking-tight">{s.name}</div>
                   <div className="text-xs text-ios-gray font-medium">{s.count} záznamů</div>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <div className="text-xs font-bold text-white">{s.tolerance.toFixed(0)}%</div>
+                  <div className="text-xs font-bold text-theme-text">{s.tolerance.toFixed(0)}%</div>
                   <div className="text-[8px] font-bold text-ios-gray uppercase tracking-widest">Tolerance</div>
                 </div>
                 <ChevronRight size={20} className="text-ios-gray" />
@@ -566,14 +566,14 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             <ChevronLeft size={24} />
             <span>Zpět</span>
           </button>
-          <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-2xl bg-theme-subtle flex items-center justify-center">
             <Activity size={20} style={{ color: substance.color }} />
           </div>
         </div>
 
         {/* Substance Title Card */}
         <div className="px-2">
-          <h2 className="text-3xl font-bold text-white tracking-tight mb-1">{substance.name}</h2>
+          <h2 className="text-3xl font-bold text-theme-text tracking-tight mb-1">{substance.name}</h2>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 rounded-lg bg-ios-secondary text-[10px] font-bold text-ios-gray uppercase tracking-widest">
               {substance.category}
@@ -599,8 +599,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap",
                 detailTab === tab.id 
-                  ? "bg-white/10 text-white shadow-sm" 
-                  : "text-ios-gray hover:text-white"
+                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+                  : "text-ios-gray hover:text-theme-text"
               )}
             >
               <tab.icon size={14} />
@@ -621,11 +621,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <div className="grid grid-cols-2 gap-4">
                 <div className="ios-card p-5">
                   <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Tolerance</div>
-                  <div className="text-2xl font-bold text-white tracking-tight">{tolerance.toFixed(0)}%</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{tolerance.toFixed(0)}%</div>
                 </div>
                 <div className="ios-card p-5">
                   <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Celkem</div>
-                  <div className="text-2xl font-bold text-white tracking-tight">
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {totalAmount.toFixed(1)} <span className="text-sm font-medium text-ios-gray">{substance.unit}</span>
                   </div>
                 </div>
@@ -634,7 +634,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="ios-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp size={16} className="text-ios-blue" />
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest">Množství za den</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Množství za den</h3>
                 </div>
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -695,7 +695,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="ios-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Clock size={16} className="text-ios-blue" />
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest">Kdy užívám nejvíc</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kdy užívám nejvíc</h3>
                 </div>
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -744,7 +744,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="ios-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <GitMerge size={16} className="text-ios-purple" />
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest">Distribuce dávek</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Distribuce dávek</h3>
                 </div>
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -793,18 +793,18 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <div className="grid grid-cols-2 gap-4">
                 <div className="ios-card p-5">
                   <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Celková útrata</div>
-                  <div className="text-2xl font-bold text-white tracking-tight">{cost.toFixed(0)} Kč</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{cost.toFixed(0)} Kč</div>
                 </div>
                 <div className="ios-card p-5">
                   <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
-                  <div className="text-2xl font-bold text-white tracking-tight">{(cost / (sDoses.length || 1)).toFixed(0)} Kč</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{(cost / (sDoses.length || 1)).toFixed(0)} Kč</div>
                 </div>
               </div>
 
               <section className="ios-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Zap size={16} className="text-ios-orange" />
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest">Predikce výdajů</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce výdajů</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   {[
@@ -812,9 +812,9 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     { label: 'Měsíčně', value: substancePredictions.monthly },
                     { label: 'Ročně', value: substancePredictions.yearly },
                   ].map((p, i) => (
-                    <div key={i} className="text-center p-4 rounded-2xl bg-white/5">
+                    <div key={i} className="text-center p-4 rounded-2xl bg-theme-subtle">
                       <div className="text-[8px] text-ios-gray font-bold uppercase mb-1 tracking-wider">{p.label}</div>
-                      <div className="text-sm font-bold text-white tracking-tight">{p.value.toFixed(0)} Kč</div>
+                      <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} Kč</div>
                     </div>
                   ))}
                 </div>
@@ -833,17 +833,17 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="ios-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <History size={16} className="text-ios-gray" />
-                  <h3 className="text-sm font-bold text-white uppercase tracking-widest">Poslední záznamy</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Poslední záznamy</h3>
                 </div>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto no-scrollbar">
                   {sDoses.slice(0, 10).map((dose) => (
-                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all">
+                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border group hover:bg-theme-subtle-hover transition-all">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 rounded-xl bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform">
                           <Clock size={16} className="text-ios-gray" />
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-white tracking-tight">
+                          <div className="text-sm font-bold text-theme-text tracking-tight">
                             {dose.amount} {substance.unit}
                             {dose.strainId && <span className="text-[10px] text-ios-blue ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
                           </div>

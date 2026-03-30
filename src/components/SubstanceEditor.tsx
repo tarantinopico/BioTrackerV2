@@ -59,23 +59,23 @@ const KineticsPreview = ({ halfLife, tmax, onset, color }: { halfLife: number; t
   const maxLevel = 100;
 
   return (
-    <div className="h-48 w-full bg-slate-900/40 backdrop-blur-3xl rounded-3xl border border-white/10 p-4 relative overflow-hidden shadow-2xl group">
+    <div className="h-48 w-full bg-theme-secondary/40 backdrop-blur-3xl rounded-3xl border border-theme-border p-4 relative overflow-hidden shadow-2xl group">
       <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-primary/10 blur-[60px] rounded-full -mr-24 -mt-24 transition-all group-hover:bg-cyan-primary/20" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/5 blur-[50px] rounded-full -ml-16 -mb-16" />
       
       <div className="flex justify-between items-start relative z-10 mb-2">
         <div>
           <div className="text-[9px] font-black text-cyan-primary uppercase tracking-[0.3em]">Kinetická Predikce</div>
-          <div className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Simulace plazmatické koncentrace</div>
+          <div className="text-[7px] text-ios-gray font-bold uppercase tracking-widest mt-0.5">Simulace plazmatické koncentrace</div>
         </div>
         <div className="flex gap-3">
           <div className="text-right">
-            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Tmax</div>
-            <div className="text-[10px] font-black text-slate-200">{tmax}h</div>
+            <div className="text-[7px] text-ios-gray font-black uppercase tracking-widest">Tmax</div>
+            <div className="text-[10px] font-black text-theme-text">{tmax}h</div>
           </div>
           <div className="text-right">
-            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">T1/2</div>
-            <div className="text-[10px] font-black text-slate-200">{halfLife}h</div>
+            <div className="text-[7px] text-ios-gray font-black uppercase tracking-widest">T1/2</div>
+            <div className="text-[10px] font-black text-theme-text">{halfLife}h</div>
           </div>
         </div>
       </div>
@@ -96,8 +96,8 @@ const KineticsPreview = ({ halfLife, tmax, onset, color }: { halfLife: number; t
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 p-2 rounded-lg shadow-2xl">
-                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{payload[0].payload.time}h</p>
+                    <div className="bg-theme-card/90 backdrop-blur-xl border border-theme-border p-2 rounded-lg shadow-2xl">
+                      <p className="text-[8px] font-black text-ios-gray uppercase tracking-widest mb-1">{payload[0].payload.time}h</p>
                       <p className="text-xs font-black text-cyan-primary">{payload[0].value?.toString().slice(0, 4)}%</p>
                     </div>
                   );
@@ -179,23 +179,23 @@ const MetabolismPreview = ({ type, beta, color, customCurve }: { type: Metabolis
   const maxLevel = Math.max(...data.map(d => d.level), 100);
 
   return (
-    <div className="h-48 w-full bg-slate-900/40 backdrop-blur-3xl rounded-3xl border border-white/10 p-4 relative overflow-hidden shadow-2xl group">
+    <div className="h-48 w-full bg-theme-secondary/40 backdrop-blur-3xl rounded-3xl border border-theme-border p-4 relative overflow-hidden shadow-2xl group">
       <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 blur-[60px] rounded-full -mr-24 -mt-24 transition-all group-hover:bg-amber-400/20" />
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-500/5 blur-[50px] rounded-full -ml-16 -mb-16" />
       
       <div className="flex justify-between items-start relative z-10 mb-2">
         <div>
           <div className="text-[9px] font-black text-amber-400 uppercase tracking-[0.3em]">Metabolická Analýza</div>
-          <div className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Predikce eliminace a rozkladu</div>
+          <div className="text-[7px] text-ios-gray font-bold uppercase tracking-widest mt-0.5">Predikce eliminace a rozkladu</div>
         </div>
         <div className="flex gap-3">
           <div className="text-right">
-            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Typ</div>
-            <div className="text-[10px] font-black text-slate-200 capitalize">{type}</div>
+            <div className="text-[7px] text-ios-gray font-black uppercase tracking-widest">Typ</div>
+            <div className="text-[10px] font-black text-theme-text capitalize">{type}</div>
           </div>
           <div className="text-right">
-            <div className="text-[7px] text-slate-500 font-black uppercase tracking-widest">Beta</div>
-            <div className="text-[10px] font-black text-slate-200">{beta}</div>
+            <div className="text-[7px] text-ios-gray font-black uppercase tracking-widest">Beta</div>
+            <div className="text-[10px] font-black text-theme-text">{beta}</div>
           </div>
         </div>
       </div>
@@ -216,8 +216,8 @@ const MetabolismPreview = ({ type, beta, color, customCurve }: { type: Metabolis
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   return (
-                    <div className="bg-slate-950/90 backdrop-blur-xl border border-white/10 p-2 rounded-lg shadow-2xl">
-                      <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">{payload[0].payload.time}h</p>
+                    <div className="bg-theme-card/90 backdrop-blur-xl border border-theme-border p-2 rounded-lg shadow-2xl">
+                      <p className="text-[8px] font-black text-ios-gray uppercase tracking-widest mb-1">{payload[0].payload.time}h</p>
                       <p className="text-xs font-black text-amber-400">{payload[0].value?.toString().slice(0, 4)}%</p>
                     </div>
                   );
@@ -341,34 +341,34 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-dark-bg/90 backdrop-blur-md"
+        className="absolute inset-0 bg-theme-bg/90 backdrop-blur-md"
       />
       <motion.div 
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        className="relative bg-dark-bg/95 backdrop-blur-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-2xl h-[92vh] md:h-auto md:max-h-[88vh] overflow-hidden flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-t md:border border-white/10"
+        className="relative bg-theme-bg/95 backdrop-blur-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-2xl h-[92vh] md:h-auto md:max-h-[88vh] overflow-hidden flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-t md:border border-theme-border"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+        <div className="flex items-center justify-between p-6 border-b border-theme-border bg-theme-subtle">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)]">
-              <Settings2 className="text-dark-bg" size={20} strokeWidth={3} />
+              <Settings2 className="text-black" size={20} strokeWidth={3} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+              <h2 className="text-xl font-black text-theme-text uppercase tracking-tighter">
                 {substanceId && substanceId !== 'new' ? 'Upravit látku' : 'Nová látka'}
               </h2>
-              <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.3em] mt-0.5">Konfigurace parametrů</p>
+              <p className="text-[9px] text-ios-gray font-black uppercase tracking-[0.3em] mt-0.5">Konfigurace parametrů</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2.5 rounded-xl hover:bg-white/10 transition-all text-slate-400 hover:text-white active:scale-90">
+          <button onClick={onClose} className="p-2.5 rounded-xl hover:bg-theme-subtle-hover transition-all text-ios-gray hover:text-theme-text active:scale-90">
             <X size={24} />
           </button>
         </div>
         
         {/* Tabs */}
-        <div className="flex border-b border-white/10 overflow-x-auto scrollbar-hide bg-white/2 px-2">
+        <div className="flex border-b border-theme-border overflow-x-auto scrollbar-hide bg-theme-subtle px-2">
           {tabs.map(tab => (
             <button 
               key={tab.id}
@@ -377,7 +377,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 "px-5 py-4 text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap flex flex-col items-center gap-2 border-b-2 transition-all relative",
                 activeTab === tab.id 
                   ? "border-cyan-primary text-cyan-primary bg-cyan-primary/5" 
-                  : "border-transparent text-slate-500 hover:text-slate-300"
+                  : "border-transparent text-ios-gray hover:text-theme-text"
               )}
             >
               <tab.icon size={16} className={cn("transition-transform", activeTab === tab.id && "scale-110")} />
@@ -398,12 +398,12 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
             {activeTab === 'basic' && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 ml-1">Název látky</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-ios-gray ml-1">Název látky</label>
                   <input 
                     type="text" 
                     value={formData.name || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 focus:border-cyan-primary/50 focus:bg-white/10 outline-none transition-all text-white font-bold text-base shadow-inner" 
+                    className="w-full p-4 rounded-2xl bg-theme-subtle border border-theme-border focus:border-cyan-primary/50 focus:bg-theme-subtle-hover outline-none transition-all text-theme-text font-bold text-base shadow-inner" 
                     placeholder="Např. Kofein"
                     required 
                   />
@@ -411,23 +411,23 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Barva identity</label>
-                    <div className="flex items-center gap-2.5 p-1.5 rounded-xl bg-slate-950 border border-border-muted">
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-ios-gray ml-1">Barva identity</label>
+                    <div className="flex items-center gap-2.5 p-1.5 rounded-xl bg-theme-card border border-theme-border">
                       <input 
                         type="color" 
                         value={formData.color || '#00d1ff'} 
                         onChange={e => setFormData(prev => ({ ...prev, color: e.target.value }))}
                         className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none p-0" 
                       />
-                      <span className="text-[10px] font-mono text-slate-400 uppercase">{formData.color}</span>
+                      <span className="text-[10px] font-mono text-ios-gray uppercase">{formData.color}</span>
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Kategorie</label>
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-ios-gray ml-1">Kategorie</label>
                     <select 
                       value={formData.category || 'other'} 
                       onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as SubstanceCategory }))}
-                      className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200 h-[46px] text-xs font-bold"
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[46px] text-xs font-bold"
                     >
                       <option value="stimulant">Stimulans</option>
                       <option value="depressant">Depresans</option>
@@ -445,11 +445,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Jednotka</label>
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-ios-gray ml-1">Jednotka</label>
                     <select 
                       value={formData.unit || 'mg'} 
                       onChange={e => setFormData(prev => ({ ...prev, unit: e.target.value }))}
-                      className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200 h-[46px] text-xs font-bold"
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[46px] text-xs font-bold"
                     >
                       <option value="mg">mg</option>
                       <option value="g">g</option>
@@ -461,37 +461,37 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Krok dávkování</label>
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-ios-gray ml-1">Krok dávkování</label>
                     <input 
                       type="number" 
                       value={formData.step || 0.1} 
                       onChange={e => setFormData(prev => ({ ...prev, step: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0.01" 
-                      className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200 text-xs font-bold" 
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Cena za jednotku (Kč)</label>
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-ios-gray ml-1">Cena za jednotku (Kč)</label>
                   <input 
                     type="number" 
                     value={formData.price || 0} 
                     onChange={e => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
                     step="0.01" 
                     min="0" 
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200 text-xs font-bold" 
+                    className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
                   />
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Popis látky</label>
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-ios-gray ml-1">Popis látky</label>
                   <textarea 
                     value={formData.description || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={2} 
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none resize-none text-slate-200 text-xs font-medium" 
+                    className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none resize-none text-theme-text text-xs font-medium" 
                     placeholder="Volitelný popis látky..."
                   />
                 </div>
@@ -501,7 +501,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
             {activeTab === 'strains' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between px-1">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Varianty / Druhy</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray">Varianty / Druhy</h3>
                   <button 
                     type="button" 
                     onClick={() => setFormData(prev => ({ ...prev, strains: [...(prev.strains || []), { name: '', price: 0 }] }))}
@@ -513,12 +513,12 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 
                 <div className="space-y-3">
                   {(formData.strains || []).length === 0 ? (
-                    <div className="p-8 text-center bg-slate-950/50 rounded-3xl border border-border-muted border-dashed">
-                      <p className="text-xs text-slate-600 font-medium uppercase tracking-widest">Žádné varianty nejsou definovány</p>
+                    <div className="p-8 text-center bg-theme-card/50 rounded-3xl border border-theme-border border-dashed">
+                      <p className="text-xs text-ios-gray font-medium uppercase tracking-widest">Žádné varianty nejsou definovány</p>
                     </div>
                   ) : (
                     (formData.strains || []).map((strain, i) => (
-                      <div key={i} className="bg-slate-950 border border-border-muted rounded-2xl p-4 flex items-center gap-4">
+                      <div key={i} className="bg-theme-card border border-theme-border rounded-2xl p-4 flex items-center gap-4">
                         <div className="flex-1 grid grid-cols-2 gap-3">
                           <input 
                             type="text" 
@@ -528,7 +528,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                               next[i].name = e.target.value;
                               setFormData(prev => ({ ...prev, strains: next }));
                             }}
-                            className="w-full p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary transition-all" 
+                            className="w-full p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all" 
                             placeholder="Název varianty" 
                           />
                           <input 
@@ -539,14 +539,14 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                               next[i].price = parseFloat(e.target.value);
                               setFormData(prev => ({ ...prev, strains: next }));
                             }}
-                            className="w-full p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary transition-all" 
+                            className="w-full p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all" 
                             placeholder="Cena" 
                           />
                         </div>
                         <button 
                           type="button" 
                           onClick={() => setFormData(prev => ({ ...prev, strains: prev.strains?.filter((_, idx) => idx !== i) }))}
-                          className="p-3 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-colors"
+                          className="p-3 rounded-xl hover:bg-red-500/10 text-ios-gray hover:text-red-500 transition-colors"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -567,31 +567,31 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 />
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Poločas rozpadu T₁/₂ (h)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Poločas rozpadu T₁/₂ (h)</label>
                     <input 
                       type="number" 
                       value={formData.halfLife || 4} 
                       onChange={e => setFormData(prev => ({ ...prev, halfLife: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0.1" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Tmax (h)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Tmax (h)</label>
                     <input 
                       type="number" 
                       value={formData.tmax || 1} 
                       onChange={e => setFormData(prev => ({ ...prev, tmax: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0.1" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Bioavailabilita (%)</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Bioavailabilita (%)</label>
                   <input 
                     type="number" 
                     value={formData.bioavailability || 100} 
@@ -599,31 +599,31 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     step="1" 
                     min="1" 
                     max="100" 
-                    className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Onset (min)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Onset (min)</label>
                     <input 
                       type="number" 
                       value={formData.onset || 15} 
                       onChange={e => setFormData(prev => ({ ...prev, onset: parseFloat(e.target.value) }))}
                       step="1" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Offset (h)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Offset (h)</label>
                     <input 
                       type="number" 
                       value={formData.offset || 2} 
                       onChange={e => setFormData(prev => ({ ...prev, offset: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                 </div>
@@ -639,11 +639,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   customCurve={formData.customCurve}
                 />
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Typ metabolické křivky</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Typ metabolické křivky</label>
                   <select 
                     value={formData.metabolismCurve || 'standard'} 
                     onChange={e => setFormData(prev => ({ ...prev, metabolismCurve: e.target.value as MetabolismCurveType }))}
-                    className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200 h-[58px]"
+                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[58px]"
                   >
                     <option value="standard">Standardní (lineární)</option>
                     <option value="exponential">Exponenciální</option>
@@ -657,7 +657,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 {formData.metabolismCurve === 'custom' ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between px-1">
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Body křivky</h4>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray">Body křivky</h4>
                       <button 
                         type="button" 
                         onClick={() => setFormData(prev => ({ ...prev, customCurve: [...(prev.customCurve || []), { time: 0, level: 0 }] }))}
@@ -679,11 +679,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                   next[i].time = parseFloat(e.target.value);
                                   setFormData(prev => ({ ...prev, customCurve: next }));
                                 }}
-                                className="w-full p-3 pr-8 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary" 
+                                className="w-full p-3 pr-8 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary" 
                                 step="0.1" 
                                 min="0" 
                               />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-600">h</span>
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-ios-gray">h</span>
                             </div>
                             <div className="relative">
                               <input 
@@ -694,49 +694,49 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                   next[i].level = parseFloat(e.target.value);
                                   setFormData(prev => ({ ...prev, customCurve: next }));
                                 }}
-                                className="w-full p-3 pr-8 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary" 
+                                className="w-full p-3 pr-8 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary" 
                                 min="0" 
                                 max="100" 
                               />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-600">%</span>
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-ios-gray">%</span>
                             </div>
                           </div>
                           <button 
                             type="button" 
                             onClick={() => setFormData(prev => ({ ...prev, customCurve: prev.customCurve?.filter((_, idx) => idx !== i) }))}
-                            className="p-2 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-colors"
+                            className="p-2 rounded-xl hover:bg-red-500/10 text-ios-gray hover:text-red-500 transition-colors"
                           >
                             <Trash2 size={16} />
                           </button>
                         </div>
                       ))}
                       {(formData.customCurve || []).length === 0 && (
-                        <p className="text-[10px] text-slate-700 font-bold uppercase tracking-widest text-center py-2">Žádné body definovány</p>
+                        <p className="text-[10px] text-ios-gray font-bold uppercase tracking-widest text-center py-2">Žádné body definovány</p>
                       )}
                     </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Beta (eliminace)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Beta (eliminace)</label>
                       <input 
                         type="number" 
                         value={formData.beta || 0.1} 
                         onChange={e => setFormData(prev => ({ ...prev, beta: parseFloat(e.target.value) }))}
                         step="0.01" 
                         min="0.01" 
-                        className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                        className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Ka (absorpce)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Ka (absorpce)</label>
                       <input 
                         type="number" 
                         value={formData.ka || 1} 
                         onChange={e => setFormData(prev => ({ ...prev, ka: parseFloat(e.target.value) }))}
                         step="0.01" 
                         min="0.01" 
-                        className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                        className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                       />
                     </div>
                   </div>
@@ -747,7 +747,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
             {activeTab === 'effects' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between px-1">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Profil účinků</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray">Profil účinků</h3>
                   <button 
                     type="button" 
                     onClick={() => setFormData(prev => ({ ...prev, effects: [...(prev.effects || []), { type: 'Stimulace', intensity: 5, onset: 0.5, duration: 2, valence: 'positive' }] }))}
@@ -759,20 +759,20 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 
                 <div className="space-y-4">
                   {(formData.effects || []).length === 0 ? (
-                    <div className="p-8 text-center bg-slate-950/50 rounded-3xl border border-border-muted border-dashed">
-                      <p className="text-xs text-slate-600 font-medium uppercase tracking-widest">Žádné účinky nejsou definovány</p>
+                    <div className="p-8 text-center bg-theme-card/50 rounded-3xl border border-theme-border border-dashed">
+                      <p className="text-xs text-ios-gray font-medium uppercase tracking-widest">Žádné účinky nejsou definovány</p>
                     </div>
                   ) : (
                     (formData.effects || []).map((effect, i) => (
                       <div key={i} className={cn(
-                        "bg-slate-950 border border-border-muted rounded-3xl p-5 space-y-4 relative overflow-hidden",
+                        "bg-theme-card border border-theme-border rounded-3xl p-5 space-y-4 relative overflow-hidden",
                         effect.valence === 'positive' && "border-l-4 border-l-emerald-500",
                         effect.valence === 'negative' && "border-l-4 border-l-rose-500",
                         effect.valence === 'neutral' && "border-l-4 border-l-cyan-primary"
                       )}>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600 ml-1">Typ účinku</label>
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Typ účinku</label>
                             <select 
                               value={effect.type} 
                               onChange={e => {
@@ -780,13 +780,13 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                 next[i].type = e.target.value;
                                 setFormData(prev => ({ ...prev, effects: next }));
                               }}
-                              className="w-full p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary"
+                              className="w-full p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary"
                             >
                               {customEffects.map(ce => <option key={ce.name} value={ce.name}>{ce.name}</option>)}
                             </select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600 ml-1">Intenzita (1-10)</label>
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Intenzita (1-10)</label>
                             <input 
                               type="number" 
                               value={effect.intensity} 
@@ -795,7 +795,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                 next[i].intensity = parseFloat(e.target.value);
                                 setFormData(prev => ({ ...prev, effects: next }));
                               }}
-                              className="w-full p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary" 
+                              className="w-full p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary" 
                               min="1" 
                               max="10" 
                             />
@@ -803,7 +803,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600 ml-1">Onset (h)</label>
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Onset (h)</label>
                             <input 
                               type="number" 
                               value={effect.onset} 
@@ -812,13 +812,13 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                 next[i].onset = parseFloat(e.target.value);
                                 setFormData(prev => ({ ...prev, effects: next }));
                               }}
-                              className="w-full p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary" 
+                              className="w-full p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary" 
                               step="0.1" 
                               min="0" 
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-600 ml-1">Trvání (h)</label>
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Trvání (h)</label>
                             <input 
                               type="number" 
                               value={effect.duration} 
@@ -827,7 +827,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                 next[i].duration = parseFloat(e.target.value);
                                 setFormData(prev => ({ ...prev, effects: next }));
                               }}
-                              className="w-full p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary" 
+                              className="w-full p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary" 
                               step="0.1" 
                               min="0.1" 
                             />
@@ -850,7 +850,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                     ? v === 'positive' ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" :
                                       v === 'negative' ? "bg-rose-500/20 border-rose-500 text-rose-400" :
                                       "bg-cyan-primary/20 border-cyan-primary text-cyan-primary"
-                                    : "bg-slate-900 border-border-muted text-slate-500"
+                                    : "bg-theme-secondary border-theme-border text-ios-gray"
                                 )}
                               >
                                 {v === 'positive' ? 'Pozitivní' : v === 'negative' ? 'Negativní' : 'Neutrální'}
@@ -871,7 +871,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                               }}
                               className={cn(
                                 "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest border transition-all",
-                                effect.customCurve ? "bg-cyan-primary/20 border-cyan-primary text-cyan-primary" : "bg-slate-900 border-border-muted text-slate-500"
+                                effect.customCurve ? "bg-cyan-primary/20 border-cyan-primary text-cyan-primary" : "bg-theme-secondary border-theme-border text-ios-gray"
                               )}
                             >
                               Vlastní křivka
@@ -879,7 +879,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                             <button 
                               type="button" 
                               onClick={() => setFormData(prev => ({ ...prev, effects: prev.effects?.filter((_, idx) => idx !== i) }))}
-                              className="p-2 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-colors"
+                              className="p-2 rounded-xl hover:bg-red-500/10 text-ios-gray hover:text-red-500 transition-colors"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -887,9 +887,9 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         </div>
 
                         {effect.customCurve && (
-                          <div className="pt-4 space-y-3 border-t border-white/5">
+                          <div className="pt-4 space-y-3 border-t border-theme-border">
                             <div className="flex items-center justify-between px-1">
-                              <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Body účinku</h4>
+                              <h4 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray">Body účinku</h4>
                               <button 
                                 type="button" 
                                 onClick={() => {
@@ -917,11 +917,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                           next[i].customCurve = nextCurve;
                                           setFormData(prev => ({ ...prev, effects: next }));
                                         }}
-                                        className="w-full p-2 pr-6 rounded-lg bg-slate-900 border border-border-muted text-[10px] outline-none focus:border-cyan-primary" 
+                                        className="w-full p-2 pr-6 rounded-lg bg-theme-secondary border border-theme-border text-[10px] outline-none focus:border-cyan-primary" 
                                         step="0.1" 
                                         min="0" 
                                       />
-                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-600">h</span>
+                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-ios-gray">h</span>
                                     </div>
                                     <div className="relative">
                                       <input 
@@ -934,11 +934,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                           next[i].customCurve = nextCurve;
                                           setFormData(prev => ({ ...prev, effects: next }));
                                         }}
-                                        className="w-full p-2 pr-6 rounded-lg bg-slate-900 border border-border-muted text-[10px] outline-none focus:border-cyan-primary" 
+                                        className="w-full p-2 pr-6 rounded-lg bg-theme-secondary border border-theme-border text-[10px] outline-none focus:border-cyan-primary" 
                                         min="0" 
                                         max="100" 
                                       />
-                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-slate-600">%</span>
+                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] font-bold text-ios-gray">%</span>
                                     </div>
                                   </div>
                                   <button 
@@ -948,7 +948,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                       next[i].customCurve = next[i].customCurve?.filter((_, idx) => idx !== pi);
                                       setFormData(prev => ({ ...prev, effects: next }));
                                     }}
-                                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-colors"
+                                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-ios-gray hover:text-red-500 transition-colors"
                                   >
                                     <Trash2 size={12} />
                                   </button>
@@ -973,13 +973,13 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     "w-full p-6 rounded-[32px] border flex items-center justify-between transition-all",
                     formData.comedownEnabled 
                       ? "bg-cyan-primary/10 border-cyan-primary/30 text-cyan-primary" 
-                      : "bg-slate-950 border-border-muted text-slate-500"
+                      : "bg-theme-card border-theme-border text-ios-gray"
                   )}
                 >
                   <div className="flex items-center gap-4">
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all",
-                      formData.comedownEnabled ? "bg-cyan-primary/20 border-cyan-primary/30" : "bg-slate-900 border-border-muted"
+                      formData.comedownEnabled ? "bg-cyan-primary/20 border-cyan-primary/30" : "bg-theme-secondary border-theme-border"
                     )}>
                       <ArrowDown size={24} />
                     </div>
@@ -990,7 +990,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   </div>
                   <div className={cn(
                     "w-12 h-6 rounded-full relative transition-all",
-                    formData.comedownEnabled ? "bg-cyan-primary" : "bg-slate-800"
+                    formData.comedownEnabled ? "bg-cyan-primary" : "bg-theme-border"
                   )}>
                     <div className={cn(
                       "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
@@ -1003,22 +1003,22 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="space-y-6 bg-slate-950 border border-border-muted rounded-[32px] p-6"
+                    className="space-y-6 bg-theme-card border border-theme-border rounded-[32px] p-6"
                   >
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Délka dojezdu (h)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Délka dojezdu (h)</label>
                       <input 
                         type="number" 
                         value={formData.comedownDuration || 4} 
                         onChange={e => setFormData(prev => ({ ...prev, comedownDuration: parseFloat(e.target.value) }))}
                         step="0.5" 
                         min="0" 
-                        className="w-full p-4 rounded-2xl bg-slate-900 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                        className="w-full p-4 rounded-2xl bg-theme-secondary border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                       />
                     </div>
                     
                     <div className="space-y-4">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Intenzita dojezdu</label>
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Intenzita dojezdu</label>
                       <div className="px-2">
                         <input 
                           type="range" 
@@ -1027,9 +1027,9 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                           min="1" 
                           max="10" 
                           step="1" 
-                          className="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-cyan-primary" 
+                          className="w-full h-2 bg-theme-secondary rounded-lg appearance-none cursor-pointer accent-cyan-primary" 
                         />
-                        <div className="flex justify-between text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-4">
+                        <div className="flex justify-between text-[10px] text-ios-gray font-bold uppercase tracking-widest mt-4">
                           <span>Mírný</span>
                           <span className="text-cyan-primary text-sm">{formData.comedownIntensity}</span>
                           <span>Silný</span>
@@ -1039,7 +1039,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     
                     <div className="space-y-4 pt-2">
                       <div className="flex items-center justify-between px-1">
-                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Symptomy</h4>
+                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray">Symptomy</h4>
                         <button 
                           type="button" 
                           onClick={() => setFormData(prev => ({ ...prev, comedownSymptoms: [...(prev.comedownSymptoms || []), ''] }))}
@@ -1050,7 +1050,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       </div>
                       <div className="space-y-2">
                         {(formData.comedownSymptoms || []).length === 0 ? (
-                          <p className="text-[10px] text-slate-700 font-bold uppercase tracking-widest text-center py-2">Žádné symptomy</p>
+                          <p className="text-[10px] text-ios-gray font-bold uppercase tracking-widest text-center py-2">Žádné symptomy</p>
                         ) : (
                           (formData.comedownSymptoms || []).map((symptom, i) => (
                             <div key={i} className="flex items-center gap-2">
@@ -1062,13 +1062,13 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                   next[i] = e.target.value;
                                   setFormData(prev => ({ ...prev, comedownSymptoms: next }));
                                 }}
-                                className="flex-1 p-3 rounded-xl bg-slate-900 border border-border-muted text-sm outline-none focus:border-cyan-primary" 
+                                className="flex-1 p-3 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary" 
                                 placeholder="Např. Bolest hlavy" 
                               />
                               <button 
                                 type="button" 
                                 onClick={() => setFormData(prev => ({ ...prev, comedownSymptoms: prev.comedownSymptoms?.filter((_, idx) => idx !== i) }))}
-                                className="p-3 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-colors"
+                                className="p-3 rounded-xl hover:bg-red-500/10 text-ios-gray hover:text-red-500 transition-colors"
                               >
                                 <X size={16} />
                               </button>
@@ -1085,7 +1085,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
             {activeTab === 'interactions' && (
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-1">Kritické interakce</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray px-1">Kritické interakce</h3>
                   <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto scrollbar-hide pr-2">
                     {substances.filter(s => s.id !== formData.id).map(s => {
                       const isSelected = (formData.interactions || []).includes(s.id);
@@ -1103,20 +1103,20 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                             "flex items-center justify-between p-4 rounded-2xl border transition-all",
                             isSelected 
                               ? "bg-rose-500/10 border-rose-500/50 text-rose-200" 
-                              : "bg-slate-950 border-border-muted text-slate-400"
+                              : "bg-theme-card border-theme-border text-ios-gray"
                           )}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-900 border border-border-muted">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-theme-secondary border border-theme-border">
                               <Activity size={16} style={{ color: s.color }} />
                             </div>
                             <span className="text-sm font-bold">{s.name}</span>
                           </div>
                           <div className={cn(
                             "w-5 h-5 rounded-full border flex items-center justify-center transition-all",
-                            isSelected ? "bg-rose-500 border-rose-500" : "border-slate-700"
+                            isSelected ? "bg-rose-500 border-rose-500" : "border-theme-border"
                           )}>
-                            {isSelected && <X size={12} className="text-white" />}
+                            {isSelected && <X size={12} className="text-theme-text" />}
                           </div>
                         </button>
                       );
@@ -1125,12 +1125,12 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Varovná zpráva</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Varovná zpráva</label>
                   <textarea 
                     value={formData.interactionMessage || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, interactionMessage: e.target.value }))}
                     rows={2} 
-                    className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none resize-none text-slate-200" 
+                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none resize-none text-theme-text" 
                     placeholder="Specifické varování pro tuto kombinaci..."
                   />
                 </div>
@@ -1142,13 +1142,13 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     "w-full p-6 rounded-[32px] border flex items-center justify-between transition-all",
                     formData.isSevere 
                       ? "bg-rose-500/10 border-rose-500/30 text-rose-500" 
-                      : "bg-slate-950 border-border-muted text-slate-500"
+                      : "bg-theme-card border-theme-border text-ios-gray"
                   )}
                 >
                   <div className="flex items-center gap-4">
                     <div className={cn(
                       "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all",
-                      formData.isSevere ? "bg-rose-500/20 border-rose-500/30" : "bg-slate-900 border-border-muted"
+                      formData.isSevere ? "bg-rose-500/20 border-rose-500/30" : "bg-theme-secondary border-theme-border"
                     )}>
                       <AlertTriangle size={24} />
                     </div>
@@ -1159,7 +1159,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   </div>
                   <div className={cn(
                     "w-12 h-6 rounded-full relative transition-all",
-                    formData.isSevere ? "bg-rose-500" : "bg-slate-800"
+                    formData.isSevere ? "bg-rose-500" : "bg-theme-border"
                   )}>
                     <div className={cn(
                       "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
@@ -1173,7 +1173,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
             {activeTab === 'advanced' && (
               <div className="space-y-6">
                 <div className="space-y-4">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 px-1">Cross-tolerance</h3>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-ios-gray px-1">Cross-tolerance</h3>
                   <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto scrollbar-hide pr-2">
                     {substances.filter(s => s.id !== formData.id).map(s => {
                       const isSelected = (formData.crossTolerance || []).includes(s.id);
@@ -1191,31 +1191,31 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                             "flex items-center justify-between p-3 rounded-xl border transition-all",
                             isSelected 
                               ? "bg-amber-500/10 border-amber-500/50 text-amber-200" 
-                              : "bg-slate-950 border-border-muted text-slate-400"
+                              : "bg-theme-card border-theme-border text-ios-gray"
                           )}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-slate-900 border border-border-muted">
+                            <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-theme-secondary border border-theme-border">
                               <Activity size={12} style={{ color: s.color }} />
                             </div>
                             <span className="text-xs font-bold">{s.name}</span>
                           </div>
                           <div className={cn(
                             "w-4 h-4 rounded-full border flex items-center justify-center transition-all",
-                            isSelected ? "bg-amber-500 border-amber-500" : "border-slate-700"
+                            isSelected ? "bg-amber-500 border-amber-500" : "border-theme-border"
                           )}>
-                            {isSelected && <X size={10} className="text-white" />}
+                            {isSelected && <X size={10} className="text-theme-text" />}
                           </div>
                         </button>
                       );
                     })}
                   </div>
-                  <p className="text-[9px] text-slate-600 font-medium px-1">Užívání vybraných látek bude zvyšovat toleranci i pro tuto látku.</p>
+                  <p className="text-[9px] text-ios-gray font-medium px-1">Užívání vybraných látek bude zvyšovat toleranci i pro tuto látku.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Vazba na proteiny (%)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Vazba na proteiny (%)</label>
                     <input 
                       type="number" 
                       value={formData.proteinBinding || 0} 
@@ -1223,77 +1223,77 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="1" 
                       min="0" 
                       max="100"
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Distribuční objem (L/kg)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Distribuční objem (L/kg)</label>
                     <input 
                       type="number" 
                       value={formData.volumeOfDistribution || 0.7} 
                       onChange={e => setFormData(prev => ({ ...prev, volumeOfDistribution: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0.01" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Clearance (L/h/kg)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Clearance (L/h/kg)</label>
                     <input 
                       type="number" 
                       value={formData.clearanceRate || 0} 
                       onChange={e => setFormData(prev => ({ ...prev, clearanceRate: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Molární hmotnost (g/mol)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Molární hmotnost (g/mol)</label>
                     <input 
                       type="number" 
                       value={formData.molarMass || 0} 
                       onChange={e => setFormData(prev => ({ ...prev, molarMass: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">pKa</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">pKa</label>
                     <input 
                       type="number" 
                       value={formData.pKa || 7.4} 
                       onChange={e => setFormData(prev => ({ ...prev, pKa: parseFloat(e.target.value) }))}
                       step="0.1" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">logP (Lipofilicita)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">logP (Lipofilicita)</label>
                     <input 
                       type="number" 
                       value={formData.logP || 0} 
                       onChange={e => setFormData(prev => ({ ...prev, logP: parseFloat(e.target.value) }))}
                       step="0.1" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Potenciál závislosti</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Potenciál závislosti</label>
                     <select 
                       value={formData.addictionPotential || 'low'} 
                       onChange={e => setFormData(prev => ({ ...prev, addictionPotential: e.target.value as any }))}
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200 h-[58px]"
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[58px]"
                     >
                       <option value="low">Nízký</option>
                       <option value="moderate">Střední</option>
@@ -1302,44 +1302,44 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Legální status</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Legální status</label>
                     <input 
                       type="text" 
                       value={formData.legalityStatus || 'legal'} 
                       onChange={e => setFormData(prev => ({ ...prev, legalityStatus: e.target.value }))}
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                       placeholder="Např. Legální / Rx / Schedule I"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Poločas tolerance (dny)</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Poločas tolerance (dny)</label>
                   <input 
                     type="number" 
                     value={formData.toleranceHalfLife || 7} 
                     onChange={e => setFormData(prev => ({ ...prev, toleranceHalfLife: parseFloat(e.target.value) }))}
                     step="1" 
                     min="1" 
-                    className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Prahová toxicita (násobek běžné dávky)</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Prahová toxicita (násobek běžné dávky)</label>
                   <input 
                     type="number" 
                     value={formData.toxicity || 5} 
                     onChange={e => setFormData(prev => ({ ...prev, toxicity: parseFloat(e.target.value) }))}
                     step="0.1" 
                     min="1" 
-                    className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Tolerance faktor (%/den)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Tolerance faktor (%/den)</label>
                     <input 
                       type="number" 
                       value={formData.toleranceRate || 10} 
@@ -1347,18 +1347,18 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="0.1" 
                       min="0" 
                       max="100" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Doba návratu (dní)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ios-gray ml-1">Doba návratu (dní)</label>
                     <input 
                       type="number" 
                       value={formData.toleranceReset || 14} 
                       onChange={e => setFormData(prev => ({ ...prev, toleranceReset: parseFloat(e.target.value) }))}
                       step="1" 
                       min="1" 
-                      className="w-full p-4 rounded-2xl bg-slate-950 border border-border-muted focus:border-cyan-primary outline-none text-slate-200" 
+                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
                     />
                   </div>
                 </div>
@@ -1369,11 +1369,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     onClick={() => setFormData(prev => ({ ...prev, isPrescription: !prev.isPrescription }))}
                     className={cn(
                       "p-4 rounded-2xl border flex items-center justify-between transition-all",
-                      formData.isPrescription ? "bg-cyan-primary/10 border-cyan-primary/30 text-cyan-primary" : "bg-slate-950 border-border-muted text-slate-500"
+                      formData.isPrescription ? "bg-cyan-primary/10 border-cyan-primary/30 text-cyan-primary" : "bg-theme-card border-theme-border text-ios-gray"
                     )}
                   >
                     <span className="text-sm font-bold">Pouze na předpis</span>
-                    <div className={cn("w-10 h-5 rounded-full relative transition-all", formData.isPrescription ? "bg-cyan-primary" : "bg-slate-800")}>
+                    <div className={cn("w-10 h-5 rounded-full relative transition-all", formData.isPrescription ? "bg-cyan-primary" : "bg-theme-border")}>
                       <div className={cn("absolute top-1 w-3 h-3 rounded-full bg-white transition-all", formData.isPrescription ? "right-1" : "left-1")} />
                     </div>
                   </button>
@@ -1383,11 +1383,11 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     onClick={() => setFormData(prev => ({ ...prev, isIllegal: !prev.isIllegal }))}
                     className={cn(
                       "p-4 rounded-2xl border flex items-center justify-between transition-all",
-                      formData.isIllegal ? "bg-rose-500/10 border-rose-500/30 text-rose-500" : "bg-slate-950 border-border-muted text-slate-500"
+                      formData.isIllegal ? "bg-rose-500/10 border-rose-500/30 text-rose-500" : "bg-theme-card border-theme-border text-ios-gray"
                     )}
                   >
                     <span className="text-sm font-bold">Nelegální látka</span>
-                    <div className={cn("w-10 h-5 rounded-full relative transition-all", formData.isIllegal ? "bg-rose-500" : "bg-slate-800")}>
+                    <div className={cn("w-10 h-5 rounded-full relative transition-all", formData.isIllegal ? "bg-rose-500" : "bg-theme-border")}>
                       <div className={cn("absolute top-1 w-3 h-3 rounded-full bg-white transition-all", formData.isIllegal ? "right-1" : "left-1")} />
                     </div>
                   </button>
@@ -1398,18 +1398,18 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
         </div>
         
         {/* Footer */}
-        <div className="p-6 border-t border-white/10 bg-white/5 flex gap-4 backdrop-blur-2xl">
+        <div className="p-6 border-t border-theme-border bg-theme-subtle flex gap-4 backdrop-blur-2xl">
           <button 
             type="button" 
             onClick={onClose} 
-            className="flex-1 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] border border-white/10 text-slate-400 hover:bg-white/5 hover:text-white transition-all active:scale-95"
+            className="flex-1 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] border border-theme-border text-ios-gray hover:bg-theme-subtle hover:text-theme-text transition-all active:scale-95"
           >
             Zrušit
           </button>
           <button 
             form="substance-form"
             type="submit" 
-            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-gradient-to-r from-cyan-500 to-cyan-600 text-dark-bg shadow-[0_0_20px_rgba(0,209,255,0.3)] hover:shadow-[0_0_30px_rgba(0,209,255,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-gradient-to-r from-cyan-500 to-cyan-600 text-black shadow-[0_0_20px_rgba(0,209,255,0.3)] hover:shadow-[0_0_30px_rgba(0,209,255,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle size={16} strokeWidth={3} />
             Uložit konfiguraci
