@@ -1,29 +1,63 @@
 @import "tailwindcss";
 
 @theme {
-  --color-dark-bg: #0a0a0c;
-  --color-card-bg: #141418;
-  --color-cyan-primary: #00d1ff;
-  --color-border-muted: rgba(255, 255, 255, 0.05);
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-dark-bg: #000000;
+  --color-ios-card: #1c1c1e;
+  --color-ios-secondary: #2c2c2e;
+  --color-ios-blue: #0a84ff;
+  --color-ios-green: #30d158;
+  --color-ios-red: #ff453a;
+  --color-ios-orange: #ff9f0a;
+  --color-ios-gray: #8e8e93;
+  --color-cyan-primary: #0a84ff;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
 }
 
 @layer base {
   body {
-    @apply antialiased;
-    font-feature-settings: "cv02", "cv05", "cv11";
+    @apply antialiased bg-black text-white selection:bg-ios-blue/30;
+    -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-@layer components {
-  .nav-active-indicator {
-    @apply absolute -top-1 w-1 h-1 rounded-full bg-cyan-primary shadow-[0_0_8px_rgba(0,209,255,0.8)];
+@layer utilities {
+  .ios-glass {
+    @apply bg-[#1c1c1e]/70 backdrop-blur-2xl border border-white/10;
+  }
+  .ios-glass-light {
+    @apply bg-white/5 backdrop-blur-xl border border-white/5;
+  }
+  .ios-card {
+    @apply bg-[#1c1c1e] rounded-[2rem] border border-white/5 shadow-2xl;
+  }
+  .ios-button {
+    @apply active:scale-[0.97] transition-all duration-200 cursor-pointer;
+  }
+  .ios-input {
+    @apply bg-[#2c2c2e] border-none rounded-xl px-4 py-3 text-white placeholder:text-ios-gray focus:ring-2 focus:ring-ios-blue/50 outline-none transition-all;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .text-glow-blue {
+    text-shadow: 0 0 20px rgba(10, 132, 255, 0.4);
+  }
+  .text-glow-green {
+    text-shadow: 0 0 20px rgba(48, 209, 88, 0.4);
+  }
+  .text-glow-red {
+    text-shadow: 0 0 20px rgba(255, 69, 58, 0.4);
   }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -31,10 +65,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
 }

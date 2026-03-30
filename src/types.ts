@@ -140,7 +140,9 @@ export interface Shortcut {
   id: string;
   name: string;
   substanceId: string;
+  strainId?: string | null;
   amount: number;
+  route: string;
   color: string;
   icon?: string;
 }

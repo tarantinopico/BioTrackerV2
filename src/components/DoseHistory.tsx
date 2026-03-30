@@ -1,15 +1,19 @@
-import { Clock, Trash2, Activity, Calendar } from 'lucide-react';
+import { Clock, Trash2, Activity, Calendar, Edit2, X, Check } from 'lucide-react';
+import { useState } from 'react';
 import { Dose, Substance } from '../types';
 import { cn } from '../lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface HistoryProps {
   doses: Dose[];
   substances: Substance[];
   onDeleteDose: (id: string) => void;
+  onEditDose: (dose: Dose) => void;
   onClearAll: () => void;
 }
 
-export default function History({ doses, substances, onDeleteDose, onClearAll }: HistoryProps) {
+export default function History({ doses, substances, onDeleteDose, onEditDose, onClearAll }: HistoryProps) {
+  const [editingDose, setEditingDose] = useState<Dose | null>(null);
   const sortedDoses = [...doses].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const groupedDoses = sortedDoses.reduce((groups: Record<string, Dose[]>, dose) => {
@@ -22,6 +26,13 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
     groups[date].push(dose);
     return groups;
   }, {});
+
+  const handleSaveEdit = () => {
+    if (editingDose) {
+      onEditDose(editingDose);
+      setEditingDose(null);
+    }
+  };
 
   return (
     <div className="space-y-4 relative">
@@ -101,12 +112,20 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
                         </div>
                       </div>
                       
-                      <button 
-                        onClick={() => onDeleteDose(dose.id)}
-                        className="p-2.5 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 active:scale-90"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => setEditingDose(dose)}
+                          className="p-2 rounded-xl hover:bg-cyan-primary/10 text-slate-600 hover:text-cyan-primary transition-all opacity-0 group-hover:opacity-100 active:scale-90"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          onClick={() => onDeleteDose(dose.id)}
+                          className="p-2 rounded-xl hover:bg-red-500/10 text-slate-600 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 active:scale-90"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -115,6 +134,64 @@ export default function History({ doses, substances, onDeleteDose, onClearAll }:
           ))}
         </div>
       )}
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editingDose && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingDose(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-xs bg-[#0e1217]/90 backdrop-blur-3xl border border-white/10 rounded-2xl p-6 relative z-10 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-sm font-black text-white uppercase tracking-widest">Upravit záznam</h3>
+                <button onClick={() => setEditingDose(null)} className="text-slate-500 hover:text-white">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Množství</label>
+                  <input
+                    type="number"
+                    value={editingDose.amount}
+                    onChange={(e) => setEditingDose({ ...editingDose, amount: Number(e.target.value) })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-primary/50"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Poznámka</label>
+                  <textarea
+                    value={editingDose.note || ''}
+                    onChange={(e) => setEditingDose({ ...editingDose, note: e.target.value })}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-primary/50 h-20 resize-none"
+                    placeholder="Přidat poznámku..."
+                  />
+                </div>
+
+                <button
+                  onClick={handleSaveEdit}
+                  className="w-full bg-cyan-primary text-dark-bg font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-400 transition-all active:scale-95 shadow-lg shadow-cyan-primary/20"
+                >
+                  <Check size={16} strokeWidth={3} />
+                  ULOŽIT ZMĚNY
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

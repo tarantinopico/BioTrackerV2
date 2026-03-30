@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   AlertCircle,
   X,
+  Plus,
   Info,
   Sparkles,
   Brain,
@@ -26,7 +27,8 @@ import {
   Crosshair,
   BatteryCharging,
   Frown,
-  ShieldAlert
+  ShieldAlert,
+  Wallet
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -62,6 +64,8 @@ interface DashboardProps {
   onUseShortcut: (shortcut: Shortcut) => void;
   onAddShortcut: (shortcut: Shortcut) => void;
   onRemoveShortcut: (id: string) => void;
+  onUpdateShortcut: (shortcut: Shortcut) => void;
+  onAddDose: (dose: Dose) => void;
 }
 
 const EFFECT_ICONS: Record<string, any> = {
@@ -119,11 +123,14 @@ export default function Dashboard({
   shortcuts,
   onUseShortcut,
   onAddShortcut,
-  onRemoveShortcut
+  onRemoveShortcut,
+  onUpdateShortcut,
+  onAddDose
 }: DashboardProps) {
   const now = currentTime.getTime();
   const [selectedDetailsId, setSelectedDetailsId] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'kinetic' | 'effects'>('kinetic');
+  const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   
   const activeSubstanceDetails = useMemo(() => {
     const activeIds = Array.from(new Set(activeDoses.map(d => d.substanceId)));
@@ -172,7 +179,7 @@ export default function Dashboard({
     const windowHours = settings.chartWindow;
     const startTime = now - (windowHours * 3600000) / 2;
     const endTime = now + (windowHours * 3600000) / 2;
-    const points = 60;
+    const points = 120;
     const step = (endTime - startTime) / points;
     
     const data = [];
@@ -202,6 +209,18 @@ export default function Dashboard({
     }
     return data;
   }, [substances, doses, settings, now, chartType]);
+
+  const maxChartValue = useMemo(() => {
+    let max = 0;
+    chartData.forEach(point => {
+      Object.keys(point).forEach(key => {
+        if (key !== 'time' && key !== 'timeStr' && typeof point[key] === 'number') {
+          if (point[key] > max) max = point[key];
+        }
+      });
+    });
+    return max > 0 ? max * 1.1 : 100;
+  }, [chartData]);
 
   const interactions = useMemo(() => {
     const activeIds = activeSubstanceDetails.map(d => d.substance!.id);
@@ -245,6 +264,30 @@ export default function Dashboard({
       }, 0);
   }, [doses, substances]);
 
+  const dailyStats = useMemo(() => {
+    const today = new Date().toDateString();
+    const todayDoses = doses.filter(d => new Date(d.timestamp).toDateString() === today);
+    
+    const stats: Record<string, { amount: number; unit: string; color: string; name: string }> = {};
+    
+    todayDoses.forEach(d => {
+      const substance = substances.find(s => s.id === d.substanceId);
+      if (!substance) return;
+      
+      if (!stats[d.substanceId]) {
+        stats[d.substanceId] = { 
+          amount: 0, 
+          unit: substance.unit || '', 
+          color: substance.color || '#fff',
+          name: substance.name
+        };
+      }
+      stats[d.substanceId].amount += d.amount;
+    });
+    
+    return Object.values(stats);
+  }, [doses, substances]);
+
   const systemLoad = useMemo(() => {
     const totalLoad = activeSubstanceDetails.reduce((sum, item) => sum + item.level, 0);
     if (totalLoad === 0) return { label: 'SYSTÉM ČISTÝ', color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: ShieldCheck };
@@ -254,315 +297,208 @@ export default function Dashboard({
   }, [activeSubstanceDetails]);
 
   return (
-    <div className="space-y-4 pb-16 relative">
-      {/* Decorative Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[20%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-[40%] right-[10%] w-[25%] h-[25%] bg-amber-500/5 blur-[80px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
-      </div>
-
-      {/* Main Status & Last Used - Side by Side */}
-      <div className="grid grid-cols-2 gap-3 relative z-10">
-        <section className="bg-slate-950/40 backdrop-blur-xl rounded-[2rem] p-4 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative overflow-hidden group transition-all hover:border-white/20">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-500/10 blur-2xl rounded-full -mr-8 -mt-8 group-hover:bg-cyan-500/20 transition-all" />
-          <div className="flex items-center gap-2 mb-3 opacity-50">
-            <Activity size={10} className="text-cyan-primary animate-pulse" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-300">Status</span>
+    <div className="space-y-6 pb-4 relative">
+      {/* Main Status & History - iOS Style Cards */}
+      <div className="grid grid-cols-2 gap-2">
+        <section className="ios-card p-3 flex flex-col justify-between min-h-[80px]">
+          <div className="flex items-center gap-1.5 mb-1 opacity-70">
+            <Activity size={12} className="text-ios-blue" />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Status</span>
           </div>
-          <div className="space-y-3">
-            <div>
-              <div className={cn("text-[11px] font-black tracking-widest uppercase leading-none mb-1", systemLoad.color)}>
-                {systemLoad.label}
-              </div>
-              <div className="text-lg font-black text-white cyan-text-glow leading-none">
-                {cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}
-              </div>
+          <div>
+            <div className={cn("text-[9px] font-bold uppercase tracking-wider mb-0.5", systemLoad.color)}>
+              {systemLoad.label}
             </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${Math.min(100, activeSubstanceDetails.reduce((acc, s) => acc + s.level, 0))}%` }}
-                className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.5)]"
-              />
+            <div className="text-lg font-bold text-white tracking-tight leading-none">
+              {cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}
             </div>
           </div>
         </section>
 
-        <section className="bg-slate-950/40 backdrop-blur-xl rounded-[2rem] p-4 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative overflow-hidden group transition-all hover:border-white/20">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 blur-2xl rounded-full -mr-8 -mt-8 group-hover:bg-purple-500/20 transition-all" />
-          <div className="flex items-center gap-2 mb-3 opacity-50">
-            <Clock size={10} className="text-purple-400" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-300">Historie</span>
+        <section className="ios-card p-3 flex flex-col justify-between min-h-[80px]">
+          <div className="flex items-center gap-1.5 mb-1 opacity-70">
+            <Wallet size={12} className="text-ios-green" />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Dnes</span>
           </div>
-          <div className="space-y-2 max-h-[56px] overflow-y-auto scrollbar-hide">
-            {allSubstancesLastUsed.slice(0, 3).map(s => (
+          <div>
+            <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 text-ios-gray">
+              Utraceno
+            </div>
+            <div className="text-lg font-bold text-white tracking-tight leading-none">
+              {dailyCost.toLocaleString('cs-CZ')} Kč
+            </div>
+          </div>
+        </section>
+
+        <section className="ios-card p-3 flex flex-col min-h-[80px]">
+          <div className="flex items-center gap-1.5 mb-2 opacity-70">
+            <TrendingUp size={12} className="text-ios-blue" />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Dnešní spotřeba</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {dailyStats.map(s => (
+              <div key={s.name} className="flex flex-col min-w-fit">
+                <span className="text-[8px] font-bold text-ios-gray uppercase mb-0.5">{s.name}</span>
+                <span className="text-sm font-bold text-white tabular-nums leading-none">
+                  {s.amount}<span className="text-[9px] text-ios-gray ml-0.5">{s.unit}</span>
+                </span>
+              </div>
+            ))}
+            {dailyStats.length === 0 && (
+              <span className="text-[10px] font-medium text-ios-gray italic">Nic</span>
+            )}
+          </div>
+        </section>
+
+        <section className="ios-card p-3 flex flex-col min-h-[80px]">
+          <div className="flex items-center gap-1.5 mb-2 opacity-70">
+            <Clock size={12} className="text-ios-purple" />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Historie</span>
+          </div>
+          <div className="space-y-1.5 max-h-[40px] overflow-hidden">
+            {allSubstancesLastUsed.slice(0, 2).map(s => (
               <div key={s.id} className="flex justify-between items-center leading-none">
-                <span className="text-[9px] font-black uppercase truncate max-w-[60px] tracking-wider" style={{ color: s.color }}>{s.name}</span>
-                <span className="text-[9px] font-black text-slate-400 tabular-nums">
+                <span className="text-[10px] font-bold uppercase truncate max-w-[60px]" style={{ color: s.color }}>{s.name}</span>
+                <span className="text-[10px] font-bold text-ios-gray tabular-nums">
                   {s.lastUsedHours! < 1 ? 'TEĎ' : `-${Math.round(s.lastUsedHours!)}h`}
                 </span>
               </div>
             ))}
             {allSubstancesLastUsed.length === 0 && (
-              <div className="text-[8px] font-bold text-slate-600 italic uppercase tracking-widest">Žádná data</div>
+              <div className="text-[10px] font-medium text-ios-gray italic">Žádná data</div>
             )}
           </div>
         </section>
       </div>
 
-      {/* Active Substances - More Compact */}
-      {activeSubstanceDetails.length > 0 && (
-        <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-3 border border-white/5 relative z-10">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {activeSubstanceDetails.map(({ substance, level, tolerance }) => (
-              <div 
-                key={substance!.id} 
-                className="space-y-1 cursor-pointer group"
-                onClick={() => setSelectedDetailsId(substance!.id)}
-              >
-                <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest">
-                  <span className="text-slate-300 truncate max-w-[60px]">{substance!.name}</span>
-                  <span style={{ color: substance!.color }}>{level.toFixed(0)}%</span>
-                </div>
-                <div className="h-1 bg-white/[0.02] rounded-full overflow-hidden border border-white/[0.05]">
-                  <motion.div 
-                    animate={{ width: `${level}%` }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: substance!.color || '#00d1ff' }}
-                  />
-                </div>
+      {/* Interaction Alerts */}
+      {interactions.length > 0 && (
+        <section className="bg-ios-red/10 rounded-2xl p-3 border border-ios-red/20">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle size={16} className="text-ios-red shrink-0 mt-0.5" />
+            <div>
+              <div className="text-[10px] font-bold text-ios-red uppercase tracking-wider mb-0.5">Varování: Interakce</div>
+              <div className="text-xs text-red-200/80 leading-snug">
+                {interactions[0].type}: {interactions[0].message}
               </div>
-            ))}
+            </div>
           </div>
         </section>
       )}
 
-      {/* Active Effects - More Compact */}
-      <section className="bg-slate-950/40 backdrop-blur-xl rounded-[2rem] p-4 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] relative z-10 overflow-hidden group">
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full -ml-12 -mb-12 group-hover:bg-amber-500/10 transition-all" />
+      {/* Kinetic & Effects Chart */}
+      <section className="ios-card p-3">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-            <Sparkles size={10} className="text-amber-400 animate-pulse" /> Účinky
-          </h2>
-          <span className="text-[8px] font-black text-amber-400/60 uppercase tracking-[0.3em]">
-            {activeEffects.length} AKTIVNÍ
-          </span>
+          <div className="flex bg-ios-secondary p-1 rounded-xl">
+            <button 
+              onClick={() => setChartType('kinetic')}
+              className={cn("px-3 py-1 rounded-lg text-[10px] font-bold transition-all", chartType === 'kinetic' ? "bg-ios-blue text-white shadow-lg" : "text-ios-gray")}
+            >
+              Kinetika
+            </button>
+            <button 
+              onClick={() => setChartType('effects')}
+              className={cn("px-3 py-1 rounded-lg text-[10px] font-bold transition-all", chartType === 'effects' ? "bg-ios-orange text-white shadow-lg" : "text-ios-gray")}
+            >
+              Účinky
+            </button>
+          </div>
+          <div className="flex gap-1.5 items-center px-2">
+            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", chartType === 'kinetic' ? "bg-ios-blue" : "bg-ios-orange")} />
+            <span className="text-[9px] font-bold text-ios-gray uppercase tracking-widest">Live</span>
+          </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {activeEffects.slice(0, 4).map((effect) => {
-            const Icon = EFFECT_ICONS[effect.type] || Activity;
-            const color = EFFECT_COLORS[effect.type] || '#94a3b8';
-            return (
-              <div key={effect.type} className="flex items-center gap-3 bg-white/[0.03] rounded-2xl p-2.5 border border-white/5 transition-all hover:bg-white/[0.06] hover:border-white/10 group/item">
-                <div className={cn(
-                  "w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-lg transition-transform group-hover/item:scale-110",
-                  effect.valence === 'positive' ? "bg-emerald-500/10 text-emerald-400 shadow-emerald-500/5" : 
-                  effect.valence === 'negative' ? "bg-red-500/10 text-red-400 shadow-red-500/5" : "bg-slate-500/10 text-slate-400 shadow-slate-500/5"
-                )}>
-                  <Icon size={14} style={{ filter: `drop-shadow(0 0 5px ${color}44)` }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[9px] font-black text-slate-200 uppercase truncate leading-none tracking-wider">{effect.type}</span>
-                    <span className="text-[9px] font-black text-white leading-none tabular-nums">{Math.round(effect.intensity)}%</span>
-                  </div>
-                  <div className="h-1 bg-white/5 rounded-full overflow-hidden border border-white/[0.02]">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${effect.intensity}%` }}
-                      className={cn(
-                        "h-full rounded-full",
-                        effect.valence === 'positive' ? "bg-emerald-500" : 
-                        effect.valence === 'negative' ? "bg-red-500" : "bg-slate-500"
-                      )}
-                      style={{ boxShadow: `0 0 8px ${color}66` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {activeEffects.length === 0 && (
-            <div className="col-span-2 py-4 text-center text-[9px] font-black text-slate-700 italic uppercase tracking-[0.3em] bg-white/[0.01] rounded-2xl border border-dashed border-white/5">
-              Žádné aktivní účinky
-            </div>
-          )}
+        
+        <div className="h-[260px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ left: -20, right: 0, top: 10, bottom: 0 }}>
+              <defs>
+                {chartType === 'kinetic' ? (
+                  substances.map(s => (
+                    <linearGradient key={s.id} id={`color-${s.id}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={s.color || '#0a84ff'} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={s.color || '#0a84ff'} stopOpacity={0}/>
+                    </linearGradient>
+                  ))
+                ) : (
+                  Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
+                    <linearGradient key={type} id={`color-effect-${type}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0}/>
+                    </linearGradient>
+                  ))
+                )}
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <XAxis dataKey="time" hide />
+              <YAxis hide domain={[0, maxChartValue]} />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1c1c1e', border: 'none', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', fontSize: '12px' }}
+                itemStyle={{ padding: '2px 0' }}
+                labelFormatter={(time) => new Date(time).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
+              />
+              {chartType === 'kinetic' ? (
+                substances.map(s => (
+                  <Area key={s.id} type="monotone" dataKey={s.id} stroke={s.color || '#0a84ff'} fillOpacity={1} fill={`url(#color-${s.id})`} strokeWidth={2} connectNulls animationDuration={500} />
+                ))
+              ) : (
+                Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
+                  <Area key={type} type="monotone" dataKey={type} stroke={EFFECT_COLORS[type] || '#ff9f0a'} fillOpacity={1} fill={`url(#color-effect-${type})`} strokeWidth={2} connectNulls animationDuration={500} />
+                ))
+              )}
+              <ReferenceLine 
+                x={now} 
+                stroke="#ff453a" 
+                strokeDasharray="4 4" 
+                strokeWidth={2} 
+                label={{ position: 'top', value: 'TEĎ', fill: '#ff453a', fontSize: 10, fontWeight: 'bold' }} 
+                isFront={true}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </section>
 
       {/* Quick Actions */}
-      <div className="relative z-10">
+      <section className="relative z-[60]">
         <QuickActions 
           shortcuts={shortcuts}
           substances={substances}
           onUseShortcut={onUseShortcut}
           onAddShortcut={onAddShortcut}
           onRemoveShortcut={onRemoveShortcut}
+          onUpdateShortcut={onUpdateShortcut}
         />
-      </div>
-
-      {/* Kinetic & Effects Chart */}
-      <section className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 shadow-xl relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex bg-white/[0.02] p-0.5 rounded-xl border border-white/[0.05]">
-            <button 
-              onClick={() => setChartType('kinetic')}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
-                chartType === 'kinetic' ? "bg-cyan-primary text-dark-bg shadow-lg" : "text-slate-500 hover:text-slate-300"
-              )}
-            >
-              Kinetika
-            </button>
-            <button 
-              onClick={() => setChartType('effects')}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all",
-                chartType === 'effects' ? "bg-amber-400 text-dark-bg shadow-lg" : "text-slate-500 hover:text-slate-300"
-              )}
-            >
-              Účinky
-            </button>
-          </div>
-          <div className="flex gap-1.5 items-center">
-            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", chartType === 'kinetic' ? "bg-cyan-primary" : "bg-amber-400")} />
-            <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Live Analysis</span>
-          </div>
-        </div>
-        
-        <div className="h-[160px] w-full -ml-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                {chartType === 'kinetic' ? (
-                  substances.map(s => (
-                    <linearGradient key={s.id} id={`color-${s.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={s.color || '#00d1ff'} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={s.color || '#00d1ff'} stopOpacity={0}/>
-                    </linearGradient>
-                  ))
-                ) : (
-                  Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
-                    <linearGradient key={type} id={`color-effect-${type}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={EFFECT_COLORS[type] || '#f59e0b'} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={EFFECT_COLORS[type] || '#f59e0b'} stopOpacity={0}/>
-                    </linearGradient>
-                  ))
-                )}
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-              <XAxis 
-                dataKey="timeStr" 
-                stroke="#475569" 
-                fontSize={7} 
-                tickLine={false} 
-                axisLine={false}
-                interval={15}
-                tick={{ fill: '#475569', fontWeight: 800 }}
-              />
-              <YAxis hide domain={[0, 100]} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(14, 18, 23, 0.8)', 
-                  backdropFilter: 'blur(12px)',
-                  borderColor: 'rgba(255,255,255,0.05)',
-                  borderRadius: '12px',
-                  fontSize: '9px',
-                  color: '#fff',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                }}
-                itemStyle={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '8px' }}
-              />
-              {chartType === 'kinetic' ? (
-                substances.map(s => (
-                  <Area
-                    key={s.id}
-                    type="monotone"
-                    dataKey={s.id}
-                    stroke={s.color || '#00d1ff'}
-                    fillOpacity={1}
-                    fill={`url(#color-${s.id})`}
-                    strokeWidth={2}
-                    connectNulls
-                    animationDuration={1000}
-                  />
-                ))
-              ) : (
-                Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
-                  <Area
-                    key={type}
-                    type="monotone"
-                    dataKey={type}
-                    stroke={EFFECT_COLORS[type] || '#f59e0b'}
-                    fillOpacity={1}
-                    fill={`url(#color-effect-${type})`}
-                    strokeWidth={2}
-                    connectNulls
-                    animationDuration={1000}
-                  />
-                ))
-              )}
-              <ReferenceLine x={chartData[30]?.timeStr} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="flex justify-between mt-4 px-4">
-          <div className="flex flex-col items-center">
-            <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Minulost</span>
-            <span className="text-[7px] font-bold text-slate-700">-{settings.chartWindow/2}h</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[8px] font-black text-white uppercase tracking-widest">Nyní</span>
-            <div className="w-1 h-1 rounded-full bg-white mt-0.5" />
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter">Predikce</span>
-            <span className="text-[7px] font-bold text-slate-700">+{settings.chartWindow/2}h</span>
-          </div>
-        </div>
       </section>
 
-      {/* Active Doses List - Glassmorphism */}
-      <section className="space-y-3 relative z-10">
-        <h3 className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] ml-1">Log Aktivních Dávek</h3>
-        {activeDoses.length > 0 ? (
-          activeDoses.map(dose => {
-            const substance = substances.find(s => s.id === dose.substanceId);
-            if (!substance) return null;
-            const level = calculateSubstanceLevelAtTime(substance.id, now, substances, doses, settings);
-            return (
-              <div key={dose.id} className="bg-slate-950/40 backdrop-blur-md rounded-2xl p-4 border border-white/5 flex items-center justify-between group hover:bg-white/[0.04] transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center border border-white/[0.05] group-hover:scale-105 transition-transform">
-                    <Activity size={16} style={{ color: substance.color || '#00d1ff' }} />
-                  </div>
-                  <div>
-                    <div className="text-xs font-black text-slate-100">{substance.name}</div>
-                    <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                      {dose.amount.toFixed(1)}{substance.unit} • {new Date(dose.timestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[10px] font-black text-white mb-1">{level.toFixed(1)}%</div>
-                  <div className="w-16 h-1 bg-white/[0.02] rounded-full overflow-hidden border border-white/[0.05]">
-                    <div 
-                      className="h-full rounded-full transition-all duration-1000" 
-                      style={{ width: `${level}%`, backgroundColor: substance.color || '#00d1ff' }}
-                    />
-                  </div>
-                </div>
+      {/* Active Substance Monitor */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">Aktivní látky</span>
+          <span className="text-[10px] font-medium text-ios-blue">{activeSubstanceDetails.length} aktivní</span>
+        </div>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          {activeSubstanceDetails.map(({ substance, level }) => (
+            <button 
+              key={substance!.id} 
+              onClick={() => setSelectedDetailsId(substance!.id)}
+              className="flex-shrink-0 ios-card p-2.5 min-w-[110px] text-left ios-button"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-white uppercase truncate max-w-[60px]">{substance!.name}</span>
+                <span className="text-[11px] font-bold" style={{ color: substance!.color }}>{level.toFixed(0)}%</span>
               </div>
-            );
-          })
-        ) : (
-          <div className="p-6 text-center bg-white/[0.01] rounded-2xl border border-white/5 border-dashed">
-            <span className="text-[9px] text-slate-700 font-bold uppercase tracking-[0.3em]">Žádná aktivní data</span>
-          </div>
-        )}
+              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                <motion.div animate={{ width: `${level}%` }} className="h-full" style={{ backgroundColor: substance!.color }} />
+              </div>
+            </button>
+          ))}
+          {activeSubstanceDetails.length === 0 && (
+            <div className="w-full ios-card p-4 text-center text-ios-gray italic text-xs">
+              Žádné aktivní látky v systému
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Substance Details Modal - Glassmorphism */}
@@ -580,68 +516,135 @@ export default function Dashboard({
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="w-full max-w-md bg-[#0e1217]/90 backdrop-blur-3xl border border-white/10 rounded-[40px] overflow-hidden relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+              className="w-full max-w-md ios-card overflow-hidden relative z-10 shadow-2xl"
             >
               {(() => {
                 const item = activeSubstanceDetails.find(d => d.substance?.id === selectedDetailsId);
                 if (!item) return null;
                 const { substance, level, tolerance } = item;
                 return (
-                  <div className="p-8">
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
-                          <Activity size={28} style={{ color: substance!.color || '#00d1ff' }} />
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+                          <Activity size={24} style={{ color: substance!.color || '#00d1ff' }} />
                         </div>
                         <div>
-                          <h3 className="text-xl font-black text-white">{substance!.name}</h3>
-                          <div className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Biometrická Analýza</div>
+                          <h3 className="text-lg font-bold text-white">{substance!.name}</h3>
+                          <div className="text-[10px] text-ios-gray font-bold uppercase tracking-widest">Biometrická Analýza</div>
                         </div>
                       </div>
                       <button 
                         onClick={() => setSelectedDetailsId(null)}
-                        className="p-3 rounded-full bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all hover:rotate-90"
+                        className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-white transition-all hover:rotate-90 ios-button"
                       >
                         <X size={20} />
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="bg-white/5 rounded-3xl p-5 border border-white/5">
-                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Hladina</div>
-                        <div className="text-2xl font-black text-cyan-primary">{level.toFixed(2)}%</div>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                      <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">Hladina</div>
+                        <div className="text-xl font-bold text-ios-blue">{level.toFixed(2)}%</div>
                       </div>
-                      <div className="bg-white/5 rounded-3xl p-5 border border-white/5">
-                        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Tolerance</div>
-                        <div className="text-2xl font-black text-amber-400">{tolerance.toFixed(2)}%</div>
+                      <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                        <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">Tolerance</div>
+                        <div className="text-xl font-bold text-ios-orange">{tolerance.toFixed(2)}%</div>
                       </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {[
                         { icon: Clock, label: 'Poločas rozpadu', value: `${substance!.halfLife}h` },
                         { icon: Zap, label: 'Nástup účinku', value: `${substance!.onset}m` },
                         { icon: Activity, label: 'Doba trvání', value: `${substance!.duration}h` }
                       ].map((row, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
-                          <div className="flex items-center gap-3">
-                            <row.icon size={16} className="text-slate-500" />
-                            <span className="text-xs font-bold text-slate-400">{row.label}</span>
+                        <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                          <div className="flex items-center gap-2">
+                            <row.icon size={14} className="text-ios-gray" />
+                            <span className="text-xs font-bold text-ios-gray">{row.label}</span>
                           </div>
-                          <span className="text-xs font-black text-white">{row.value}</span>
+                          <span className="text-xs font-bold text-white">{row.value}</span>
                         </div>
                       ))}
                     </div>
 
                     <button 
                       onClick={() => setSelectedDetailsId(null)}
-                      className="w-full mt-10 py-5 rounded-3xl bg-white/5 border border-white/10 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] hover:text-white hover:bg-white/10 transition-all active:scale-95"
+                      className="w-full mt-6 py-4 rounded-2xl bg-ios-blue text-white text-sm font-bold uppercase tracking-wider ios-button"
                     >
                       Zavřít Analýzu
                     </button>
                   </div>
                 );
               })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Floating Quick Log Button */}
+      <div className="fixed bottom-20 right-4 z-[100] md:hidden">
+        <button 
+          onClick={() => setIsQuickLogOpen(true)}
+          className="w-14 h-14 rounded-2xl bg-cyan-primary text-black shadow-[0_0_25px_rgba(0,209,255,0.4)] flex items-center justify-center active:scale-90 transition-all border border-white/20"
+        >
+          <Plus size={28} strokeWidth={3} />
+        </button>
+      </div>
+
+      {/* Quick Log Modal */}
+      <AnimatePresence>
+        {isQuickLogOpen && (
+          <div className="fixed inset-0 z-[110] flex items-end justify-center p-0">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsQuickLogOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              className="relative ios-card rounded-t-[2.5rem] rounded-b-none w-full max-w-xl p-6 border-t border-white/10 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-white uppercase tracking-tight">Rychlý Záznam</h2>
+                <button onClick={() => setIsQuickLogOpen(false)} className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-white transition-all ios-button">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                {substances.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      const newDose: Dose = {
+                        id: Date.now().toString(),
+                        substanceId: s.id,
+                        amount: s.dosage?.common || 1,
+                        timestamp: new Date().toISOString(),
+                        route: 'oral',
+                        note: 'Quick Log',
+                        bioavailabilityMultiplier: 1,
+                        tmaxMultiplier: 1
+                      };
+                      onAddDose(newDose);
+                      setIsQuickLogOpen(false);
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-left ios-button"
+                  >
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-white/5 border border-white/10">
+                      <Zap size={14} style={{ color: s.color }} />
+                    </div>
+                    <div className="text-xs font-bold text-white uppercase tracking-tight truncate">{s.name}</div>
+                  </button>
+                ))}
+              </div>
+              
+              <p className="text-[10px] text-ios-gray font-bold uppercase text-center tracking-widest">Vyberte látku pro okamžitý záznam výchozí dávky</p>
             </motion.div>
           </div>
         )}

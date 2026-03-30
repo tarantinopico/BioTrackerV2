@@ -127,7 +127,15 @@ export default function App() {
     if (savedEffects) setCustomEffects(JSON.parse(savedEffects));
 
     const savedShortcuts = localStorage.getItem('biotracker_pro_shortcuts');
-    if (savedShortcuts) setShortcuts(JSON.parse(savedShortcuts));
+    if (savedShortcuts) {
+      setShortcuts(JSON.parse(savedShortcuts));
+    } else {
+      const defaultShortcuts: Shortcut[] = [
+        { id: 'sc_coffee', name: 'Káva 100mg', substanceId: 'caffeine', amount: 100, route: 'oral', icon: 'zap', color: '#8b5cf6' }
+      ];
+      setShortcuts(defaultShortcuts);
+      localStorage.setItem('biotracker_pro_shortcuts', JSON.stringify(defaultShortcuts));
+    }
   }, []);
 
   // Save data
@@ -187,6 +195,11 @@ export default function App() {
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
       }
     });
+  };
+
+  const handleEditDose = (updatedDose: Dose) => {
+    setDoses(prev => prev.map(d => d.id === updatedDose.id ? updatedDose : d));
+    showToast('Záznam upraven', 'success');
   };
 
   const handleSaveSubstance = (substance: Substance) => {
@@ -254,6 +267,7 @@ export default function App() {
       message: 'Tato akce vymaže veškerou historii, látky a nastavení. Chcete pokračovat?',
       onConfirm: () => {
         setDoses([]);
+        setShortcuts([]);
         setSubstances(DEFAULT_SUBSTANCES);
         setSettings(DEFAULT_SETTINGS);
         setCustomEffects(DEFAULT_EFFECTS);
@@ -285,16 +299,16 @@ export default function App() {
     const substance = substances.find(s => s.id === shortcut.substanceId);
     if (!substance) return;
     
-    // Use default oral/full stomach multipliers to match Logger default
-    const routeMult = ROUTE_MULTIPLIERS.oral;
+    const routeMult = ROUTE_MULTIPLIERS[shortcut.route] || ROUTE_MULTIPLIERS.oral;
     const stomachMult = STOMACH_MULTIPLIERS.full;
     
     const dose: Dose = {
       id: Math.random().toString(36).substr(2, 9),
       substanceId: shortcut.substanceId,
+      strainId: shortcut.strainId,
       amount: shortcut.amount,
       timestamp: new Date().toISOString(),
-      route: 'oral',
+      route: shortcut.route,
       stomach: 'full',
       note: `Zkratka: ${shortcut.name}`,
       bioavailabilityMultiplier: routeMult.bioavailability * stomachMult.bioavailability,
@@ -312,6 +326,11 @@ export default function App() {
   const handleRemoveShortcut = (id: string) => {
     setShortcuts(prev => prev.filter(s => s.id !== id));
     showToast('Zkratka smazána', 'info');
+  };
+
+  const handleUpdateShortcut = (updatedShortcut: Shortcut) => {
+    setShortcuts(prev => prev.map(s => s.id === updatedShortcut.id ? updatedShortcut : s));
+    showToast('Zkratka upravena', 'success');
   };
 
   const activeDoses = useMemo(() => {
@@ -352,47 +371,35 @@ export default function App() {
 
   return (
     <div className={cn(
-      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-cyan-500/30 pb-24 transition-colors duration-300",
-      settings.theme === 'dark' ? "bg-dark-bg text-slate-200" : "bg-slate-50 text-slate-900"
+      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-ios-blue/30 pb-28 transition-colors duration-500 bg-black text-white"
     )}>
       {/* Header */}
-      <header className={cn(
-        "p-4 flex justify-between items-center sticky top-0 z-50 backdrop-blur-2xl border-b border-white/10 transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)]",
-        settings.theme === 'dark' ? "bg-dark-bg/85" : "bg-white/85"
-      )}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.4)] transition-transform hover:scale-105">
-            <HeartPulse className="text-dark-bg" size={20} strokeWidth={3} />
+      <header className="px-4 pt-10 pb-3 flex justify-between items-end sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", systemLoad.color.replace('bg-', 'bg-'))} />
+            <span className="text-[9px] font-bold text-ios-gray uppercase tracking-widest">{systemLoad.label}</span>
           </div>
-          <div>
-            <h1 className={cn("text-xl font-black tracking-tighter leading-none transition-colors", settings.theme === 'dark' ? "text-white" : "text-slate-900")}>BioTracker</h1>
-            <div className="flex items-center gap-1.5 mt-1">
-              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse shadow-[0_0_8px_currentColor]", systemLoad.color)} />
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">{systemLoad.label} MODE</span>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">BioTracker</h1>
         </div>
         <button 
           onClick={() => setIsSettingsOpen(true)}
-          className={cn(
-            "p-2.5 rounded-xl border transition-all active:scale-90 shadow-lg",
-            settings.theme === 'dark' ? "bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10" : "bg-slate-200 border-slate-300 text-slate-600 hover:text-slate-900"
-          )}
+          className="p-1.5 rounded-full bg-ios-secondary ios-button text-ios-gray hover:text-white"
         >
-          <SettingsIcon className="w-4 h-4" />
+          <SettingsIcon size={20} />
         </button>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4">
+      <main className="flex-1 px-4 pt-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={view}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-4"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="space-y-6"
           >
             {view === 'dashboard' && (
               <Dashboard 
@@ -402,9 +409,11 @@ export default function App() {
                 activeDoses={activeDoses}
                 currentTime={currentTime}
                 shortcuts={shortcuts}
+                onAddDose={handleAddDose}
                 onUseShortcut={handleUseShortcut}
                 onAddShortcut={handleAddShortcut}
                 onRemoveShortcut={handleRemoveShortcut}
+                onUpdateShortcut={handleUpdateShortcut}
               />
             )}
             {view === 'logger' && (
@@ -422,6 +431,7 @@ export default function App() {
                 doses={doses} 
                 substances={substances} 
                 onDeleteDose={handleDeleteDose}
+                onEditDose={handleEditDose}
                 onClearAll={handleClearAll}
               />
             )}
@@ -430,7 +440,7 @@ export default function App() {
                 substances={substances} 
                 doses={doses} 
                 settings={settings} 
-                onToggleTheme={() => setSettings(prev => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }))}
+                onToggleTheme={() => {}} // Theme is locked to dark for iOS overhaul
               />
             )}
             {view === 'substances' && (
@@ -449,16 +459,13 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className={cn(
-        "fixed bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-md backdrop-blur-2xl border border-white/10 rounded-[2.5rem] px-6 py-3 flex justify-between items-center z-50 transition-all duration-300 shadow-[0_10px_40px_rgba(0,0,0,0.4)]",
-        settings.theme === 'dark' ? "bg-dark-bg/85" : "bg-white/85"
-      )}>
+      {/* Bottom Navigation - iOS Style Tab Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#1c1c1e]/80 backdrop-blur-2xl border-t border-white/10 px-2 pt-2 pb-6 flex justify-around items-center z-50">
         {[
-          { id: 'dashboard', icon: Activity, label: 'Status' },
-          { id: 'logger', icon: Plus, label: 'Zápis' },
-          { id: 'history', icon: History, label: 'Log' },
-          { id: 'analytics', icon: BarChart3, label: 'Data' },
+          { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
+          { id: 'logger', icon: PlusCircle, label: 'Záznam' },
+          { id: 'history', icon: History, label: 'Historie' },
+          { id: 'analytics', icon: BarChart2, label: 'Analýza' },
           { id: 'substances', icon: FlaskConical, label: 'Látky' },
         ].map((item) => {
           const isActive = view === item.id;
@@ -467,18 +474,12 @@ export default function App() {
               key={item.id}
               onClick={() => setView(item.id as ViewType)}
               className={cn(
-                "relative flex flex-col items-center gap-1 transition-all active:scale-90",
-                isActive ? 'text-cyan-primary' : 'text-slate-500 hover:text-slate-300'
+                "flex flex-col items-center gap-1 w-16 ios-button",
+                isActive ? 'text-ios-blue' : 'text-ios-gray'
               )}
             >
-              {isActive && (
-                <motion.div 
-                  layoutId="navIndicator"
-                  className="absolute -top-3 w-8 h-1 bg-cyan-primary rounded-full shadow-[0_0_10px_rgba(0,209,255,0.8)]"
-                />
-              )}
-              <item.icon size={22} strokeWidth={isActive ? 3 : 2} className={cn("transition-transform", isActive && "scale-110")} />
-              <span className="text-[8px] font-black uppercase tracking-[0.1em]">{item.label}</span>
+              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-[9px] font-medium">{item.label}</span>
             </button>
           );
         })}
