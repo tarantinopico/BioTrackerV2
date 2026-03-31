@@ -6,14 +6,15 @@ import {
   Cigarette, 
   Coffee, 
   Activity, 
-  AlertTriangle, 
+  Clock,
+  ChevronRight,
+  ChevronDown,
   Fingerprint,
-  Clock
+  AlertTriangle
 } from 'lucide-react';
 import { Substance, Dose, UserSettings } from '../types';
 import { cn } from '../lib/utils';
 import { ROUTE_MULTIPLIERS, STOMACH_MULTIPLIERS } from '../constants';
-import { getMetabolismMultiplier } from '../services/pharmacology';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface LoggerProps {
@@ -29,10 +30,12 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
   const [selectedSubstanceId, setSelectedSubstanceId] = useState(substances[0]?.id || '');
   const [selectedStrainId, setSelectedStrainId] = useState('');
   const [amount, setAmount] = useState(0);
-  const [timeOffset, setTimeOffset] = useState(0); // in minutes
+  const [timeOffset, setTimeOffset] = useState(0);
   const [route, setRoute] = useState('oral');
   const [stomach, setStomach] = useState('full');
   const [note, setNote] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [warnings, setWarnings] = useState<{ title: string; message: string; severity: 'high' | 'low' }[]>([]);
 
   const selectedSubstance = useMemo(() => 
     substances.find(s => s.id === selectedSubstanceId), 
@@ -47,7 +50,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
 
   const handleAdjust = (direction: number) => {
     const step = selectedSubstance?.step || 1;
-    setAmount(prev => Math.max(0, prev + (direction * step)));
+    setAmount(prev => Math.max(0, parseFloat((prev + (direction * step)).toFixed(2))));
   };
 
   const handleSubmit = () => {
@@ -65,24 +68,24 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
 
     const timestamp = new Date(Date.now() - timeOffset * 60000).toISOString();
 
-      const dose: Dose = {
-        id: 'dose_' + Date.now(),
-        substanceId: selectedSubstanceId,
-        amount,
-        timestamp,
-        route,
-        stomach: route === 'oral' ? stomach : null,
-        note,
-        strainId: selectedStrainId || null,
-        bioavailabilityMultiplier,
-        tmaxMultiplier
-      };
-
-      onAddDose(dose);
-      // Reset offset and note but keep substance
-      setTimeOffset(0);
-      setNote('');
+    const dose: Dose = {
+      id: 'dose_' + Date.now(),
+      substanceId: selectedSubstanceId,
+      amount,
+      timestamp,
+      route,
+      stomach: route === 'oral' ? stomach : null,
+      note,
+      strainId: selectedStrainId || null,
+      bioavailabilityMultiplier,
+      tmaxMultiplier
     };
+
+    onAddDose(dose);
+    setTimeOffset(0);
+    setNote('');
+    setAmount(selectedSubstance.step || 1); // Reset amount to step after logging
+  };
 
   const getSubstanceIcon = (name: string) => {
     const n = name.toLowerCase();
@@ -92,85 +95,29 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
     return Activity;
   };
 
-  const warnings = useMemo(() => {
-    const list = [];
-    if (!selectedSubstance) return list;
-
-    // Too soon warning
-    const lastDose = doses.find(d => d.substanceId === selectedSubstanceId);
-    if (lastDose) {
-      const minInterval = 2; // hours, could be substance specific
-      const elapsed = (Date.now() - new Date(lastDose.timestamp).getTime()) / 3600000;
-      if (elapsed < minInterval) {
-        list.push({
-          type: 'time',
-          title: 'Příliš brzy',
-          message: `Minimální odstup je ${minInterval}h. Uplynulo pouze ${elapsed.toFixed(2)}h.`,
-          severity: 'medium'
-        });
-      }
-    }
-
-    // Interaction warning
-    const metabolismMult = getMetabolismMultiplier(settings);
-    const activeDoses = doses.filter(d => {
-      const elapsed = (Date.now() - new Date(d.timestamp).getTime()) / 3600000;
-      const sub = substances.find(s => s.id === d.substanceId);
-      if (!sub) return false;
-      
-      let eliminationTime = sub.halfLife * 5 / metabolismMult;
-      if (sub.metabolismCurve === 'custom' && sub.customCurve && sub.customCurve.length > 0) {
-        const lastPoint = [...sub.customCurve].sort((a, b) => a.time - b.time).pop();
-        if (lastPoint) {
-          eliminationTime = lastPoint.time / metabolismMult;
-        }
-      }
-      
-      return elapsed < eliminationTime;
-    });
-    
-    const activeSubstanceIds = Array.from(new Set(activeDoses.map(d => d.substanceId)));
-    
-    activeSubstanceIds.forEach(id => {
-      if (id === selectedSubstanceId) return;
-      const other = substances.find(s => s.id === id);
-      if (!other) return;
-      
-      if (selectedSubstance.interactions?.includes(id) || other.interactions?.includes(selectedSubstanceId)) {
-        list.push({
-          type: 'interaction',
-          title: 'Nebezpečná kombinace',
-          message: `Pozor na kombinaci s ${other.name}. ${selectedSubstance.interactionMessage || other.interactionMessage || ''}`,
-          severity: selectedSubstance.isSevere || other.isSevere ? 'high' : 'medium'
-        });
-      }
-    });
-
-    return list;
-  }, [selectedSubstanceId, doses, selectedSubstance, substances]);
-
   const timeOptions = [
-    { label: 'Nyní', value: 0 },
-    { label: '-15m', value: 15 },
-    { label: '-30m', value: 30 },
-    { label: '-1h', value: 60 },
-    { label: '-2h', value: 120 },
+    { label: 'Now', value: 0 },
+    { label: '15m', value: 15 },
+    { label: '30m', value: 30 },
+    { label: '1h', value: 60 },
+    { label: '2h', value: 120 },
   ];
 
-  const currentStrain = selectedSubstance?.strains?.find(s => s.name === selectedStrainId);
-  const price = currentStrain ? currentStrain.price * amount : (selectedSubstance?.price || 0) * amount;
-
   return (
-    <div className="space-y-3 pb-6 relative">
+    <div className="space-y-6 pb-20 relative">
       {/* Decorative Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[15%] left-[-5%] w-[35%] h-[35%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[25%] right-[-5%] w-[30%] h-[30%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-[10%] left-[-10%] w-[50%] h-[50%] bg-android-accent/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-purple-500/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Substance Selection - More Compact */}
+      {/* Substance Selection - Modern Grid */}
       <section className="relative z-10">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+        <div className="flex items-center justify-between mb-4 px-2">
+          <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Select Substance</span>
+          <span className="text-[10px] font-black text-android-accent uppercase tracking-wider">{substances.length} Available</span>
+        </div>
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2">
           {substances.map(s => {
             const Icon = getSubstanceIcon(s.name);
             const isActive = selectedSubstanceId === s.id;
@@ -179,94 +126,66 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                 key={s.id}
                 onClick={() => setSelectedSubstanceId(s.id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-2xl border transition-all whitespace-nowrap min-w-[100px] justify-center relative overflow-hidden group shadow-lg",
+                  "flex flex-col items-center gap-3 p-4 rounded-[2rem] border transition-all min-w-[100px] justify-center relative overflow-hidden group android-button",
                   isActive 
-                    ? "border-transparent text-black font-black" 
-                    : "bg-theme-card/40 backdrop-blur-xl border-theme-border text-ios-gray hover:bg-theme-subtle hover:border-theme-border"
+                    ? "border-android-accent/30 bg-android-accent/10 shadow-[0_10px_30px_rgba(0,242,255,0.15)]" 
+                    : "bg-android-surface border-android-border text-android-text-muted hover:border-android-accent/20"
                 )}
-                style={isActive ? { backgroundColor: s.color || '#00d1ff', boxShadow: `0 0 20px ${s.color}44` } : {}}
               >
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeSubstanceGlow"
-                    className="absolute inset-0 bg-theme-subtle-hover blur-xl rounded-full"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                  />
-                )}
-                <Icon size={14} strokeWidth={isActive ? 3 : 2} className="relative z-10" />
-                <span className="text-[10px] uppercase tracking-[0.2em] relative z-10">{s.name}</span>
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300",
+                  isActive ? "bg-android-accent text-android-bg" : "bg-android-bg text-android-text-muted"
+                )}>
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                </div>
+                <span className={cn("text-[10px] font-black uppercase tracking-widest", isActive ? "text-android-accent" : "text-android-text-muted")}>
+                  {s.name}
+                </span>
               </button>
             );
           })}
         </div>
       </section>
 
-      {/* Strain Selection - More Compact */}
-      {selectedSubstance?.strains && selectedSubstance.strains.length > 0 && (
-        <section className="relative z-10">
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-            {selectedSubstance.strains.map(strain => {
-              const isActive = selectedStrainId === strain.name;
-              return (
-                <button
-                  key={strain.name}
-                  onClick={() => setSelectedStrainId(strain.name)}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all whitespace-nowrap uppercase tracking-widest",
-                    isActive 
-                      ? "bg-theme-border border-cyan-primary text-cyan-primary" 
-                      : "bg-theme-card/40 backdrop-blur-md border-theme-border text-ios-gray"
-                  )}
-                  style={isActive ? { borderColor: selectedSubstance.color, color: selectedSubstance.color } : {}}
-                >
-                  {strain.name}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* Amount Control - More Compact */}
-      <section className="bg-theme-card/40 backdrop-blur-xl rounded-[2.5rem] p-6 border border-theme-border flex flex-col items-center relative overflow-hidden z-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] group">
-        <div 
-          className="absolute inset-0 opacity-10 pointer-events-none transition-opacity group-hover:opacity-20" 
-          style={{ background: `radial-gradient(circle at center, ${selectedSubstance?.color || '#00d1ff'}, transparent 70%)` }}
-        />
-        
-        <div className="flex items-center justify-between w-full max-w-[240px] relative z-10">
+      {/* Amount Control - Hero Unit */}
+      <section className="android-card p-8 flex flex-col items-center relative overflow-hidden z-10 glass-accent border-white/5">
+        <div className="flex items-center justify-between w-full max-w-[280px] relative z-10">
           <button 
             onClick={() => handleAdjust(-1)}
-            className="w-12 h-12 rounded-full flex items-center justify-center bg-theme-subtle border border-theme-border text-ios-gray active:scale-90 transition-all hover:bg-theme-subtle-hover hover:border-theme-border"
+            className="w-14 h-14 rounded-3xl flex items-center justify-center bg-android-surface border border-android-border text-android-text active:scale-90 transition-all hover:border-android-accent/30"
           >
-            <Minus size={20} />
+            <Minus size={24} strokeWidth={2.5} />
           </button>
           
           <div className="flex flex-col items-center">
-            <div className="flex items-baseline gap-1">
-              <span className="text-5xl font-black tracking-tighter tabular-nums" style={{ color: selectedSubstance?.color || '#00d1ff', filter: `drop-shadow(0 0 15px ${selectedSubstance?.color}66)` }}>{amount}</span>
-              <span className="font-black text-[10px] uppercase tracking-widest opacity-70" style={{ color: selectedSubstance?.color || '#00d1ff' }}>{selectedSubstance?.unit || 'g'}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-6xl font-black tracking-tighter tabular-nums text-android-text" style={{ textShadow: `0 0 30px ${selectedSubstance?.color}44` }}>
+                {amount}
+              </span>
+              <span className="font-black text-xs uppercase tracking-[0.2em] text-android-text-muted leading-none">
+                {selectedSubstance?.unit || 'g'}
+              </span>
             </div>
           </div>
           
           <button 
             onClick={() => handleAdjust(1)}
-            className="w-12 h-12 rounded-full flex items-center justify-center text-black active:scale-90 transition-all hover:scale-110 shadow-lg"
-            style={{ backgroundColor: selectedSubstance?.color || '#00d1ff', boxShadow: `0 0 20px ${selectedSubstance?.color}66` }}
+            className="w-14 h-14 rounded-3xl flex items-center justify-center bg-android-accent text-android-bg active:scale-90 transition-all shadow-[0_10px_20px_rgba(0,242,255,0.3)]"
           >
-            <Plus size={20} strokeWidth={3} />
+            <Plus size={24} strokeWidth={3} />
           </button>
         </div>
 
-        {/* Quick Amount Presets - More Compact */}
-        <div className="flex gap-1 mt-4 relative z-10 overflow-x-auto no-scrollbar max-w-full px-1">
+        {/* Quick Amount Presets */}
+        <div className="flex gap-2 mt-8 relative z-10 overflow-x-auto no-scrollbar max-w-full px-2">
           {[1, 5, 10, 25, 50, 100].map(val => (
             <button
               key={val}
               onClick={() => setAmount(val)}
-              className="px-2 py-1 rounded-lg bg-theme-subtle border border-theme-border text-[8px] font-black text-ios-gray hover:text-theme-text transition-all whitespace-nowrap uppercase tracking-widest"
-              style={{ borderColor: amount === val ? selectedSubstance?.color : undefined }}
+              className={cn(
+                "px-4 py-2 rounded-xl border text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest android-button",
+                amount === val ? "bg-android-accent/10 border-android-accent text-android-accent" : "bg-android-bg border-android-border text-android-text-muted hover:text-android-text"
+              )}
             >
               {val} {selectedSubstance?.unit}
             </button>
@@ -274,93 +193,86 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         </div>
       </section>
 
-      {/* Time Selection - More Compact */}
-      <section className="relative z-10">
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
-          {timeOptions.map(opt => {
-            const isActive = timeOffset === opt.value;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => setTimeOffset(opt.value)}
-                className={cn(
-                  "flex-1 px-2 py-2 rounded-xl border text-[10px] font-black transition-all whitespace-nowrap min-w-[60px] uppercase tracking-widest",
-                  isActive 
-                    ? "text-black font-black border-transparent" 
-                    : "bg-theme-card/40 backdrop-blur-md border-theme-border text-ios-gray"
-                )}
-                style={isActive ? { backgroundColor: selectedSubstance?.color || '#00d1ff' } : {}}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
+      {/* Advanced Settings Grid */}
+      <section className="grid grid-cols-2 gap-4 relative z-10">
+        <div className="android-card p-4 bg-android-surface/40">
+          <div className="text-[9px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Route</div>
+          <select 
+            value={route} 
+            onChange={(e) => setRoute(e.target.value)}
+            className="w-full bg-transparent text-sm font-black text-android-text outline-none uppercase tracking-wider cursor-pointer"
+          >
+            <option value="oral">Oral</option>
+            <option value="sublingual">Sublingual</option>
+            <option value="insufflated">Sniff</option>
+            <option value="inhaled">Inhale</option>
+          </select>
+        </div>
+        <div className="android-card p-4 bg-android-surface/40">
+          <div className="text-[9px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Timing</div>
+          <select 
+            value={timeOffset} 
+            onChange={(e) => setTimeOffset(Number(e.target.value))}
+            className="w-full bg-transparent text-sm font-black text-android-text outline-none uppercase tracking-wider cursor-pointer"
+          >
+            {timeOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
       </section>
 
-      {/* Notes & Submit - More Compact */}
-      <div className="space-y-2 relative z-10">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Fingerprint size={12} className="text-ios-gray group-focus-within:text-cyan-primary transition-colors" />
+      {/* Note Input & Submit */}
+      <div className="space-y-4 relative z-10">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Fingerprint size={16} className="text-android-text-muted" />
           </div>
           <input 
             type="text" 
             value={note}
             onChange={e => setNote(e.target.value)}
-            placeholder="Poznámka..."
-            className="w-full bg-theme-card/40 backdrop-blur-md border border-theme-border rounded-xl py-2.5 pl-9 pr-4 text-[10px] outline-none focus:border-cyan-primary/50 focus:ring-1 focus:ring-cyan-primary/20 transition-all text-theme-text"
+            placeholder="Add biometric note..."
+            className="android-input w-full pl-12 h-14 font-bold text-sm"
           />
         </div>
 
         <button 
           onClick={handleSubmit}
-          className="w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-[0_10px_30px_rgba(0,0,0,0.3)] active:scale-[0.98] transition-all uppercase tracking-[0.3em] relative z-10 overflow-hidden group"
-          style={{ backgroundColor: selectedSubstance?.color || '#fff', color: '#000' }}
+          className="w-full h-16 rounded-3xl bg-android-accent text-android-bg font-black text-lg flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(0,242,255,0.25)] android-button uppercase tracking-[0.2em]"
         >
-          <div className="absolute inset-0 bg-theme-subtle-hover translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-          <Fingerprint size={20} className="relative z-10" />
-          <span className="relative z-10">Zapsat</span>
+          <Activity size={20} strokeWidth={3} />
+          <span>Record Data</span>
         </button>
       </div>
 
-      {/* Advanced Settings (Compact) */}
-      <section className="pt-4 border-t border-theme-border relative z-10">
-        <div className="flex items-center justify-between px-2">
-          <div className="flex gap-4">
-            <div className="flex flex-col">
-              <span className="text-[8px] text-ios-gray uppercase font-bold">Aplikace</span>
-              <select 
-                value={route} 
-                onChange={(e) => setRoute(e.target.value)}
-                className="bg-transparent text-xs text-theme-text outline-none"
-              >
-                <option value="oral">Oral</option>
-                <option value="sublingual">Sublingual</option>
-                <option value="insufflated">Sniff</option>
-                <option value="inhaled">Inhale</option>
-              </select>
-            </div>
-            {route === 'oral' && (
-              <div className="flex flex-col">
-                <span className="text-[8px] text-ios-gray uppercase font-bold">Žaludek</span>
-                <select 
-                  value={stomach} 
-                  onChange={(e) => setStomach(e.target.value)}
-                  className="bg-transparent text-xs text-theme-text outline-none"
-                >
-                  <option value="empty">Empty</option>
-                  <option value="light">Light</option>
-                  <option value="full">Full</option>
-                </select>
+      {/* Warning Center */}
+      {warnings.length > 0 && (
+        <section className="space-y-3 relative z-10 pt-4">
+          <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Warnings</div>
+          {warnings.map((w, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className={cn(
+                "p-4 rounded-3xl border flex items-start gap-3",
+                w.severity === 'high' ? "bg-red-500/10 border-red-500/20" : "bg-amber-500/10 border-amber-500/20"
+              )}
+            >
+              <div className={cn("p-2 rounded-xl", w.severity === 'high' ? "bg-red-500/20" : "bg-amber-500/20")}>
+                <AlertTriangle size={16} className={w.severity === 'high' ? "text-red-500" : "text-amber-500"} />
               </div>
-            )}
-          </div>
-          <button className="p-2 text-ios-gray hover:text-theme-text">
-            <Clock size={16} />
-          </button>
-        </div>
-      </section>
+              <div>
+                <div className={cn("text-[10px] font-black uppercase tracking-wider mb-1", w.severity === 'high' ? "text-red-500" : "text-amber-500")}>
+                  {w.title}
+                </div>
+                <div className="text-xs font-bold text-android-text/70 leading-relaxed">{w.message}</div>
+              </div>
+            </motion.div>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

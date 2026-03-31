@@ -1,8 +1,9 @@
-import { FlaskConical, Plus, Trash2, Database, Package, Activity, ChevronRight, Search, X, Star } from 'lucide-react';
+import { Plus, Trash2, Database, Package, Activity, Search, X, Star, Filter, ChevronRight, FlaskConical } from 'lucide-react';
 import { Substance, SubstanceCategory } from '../types';
 import { cn } from '../lib/utils';
 import { DEFAULT_SUBSTANCES } from '../constants';
 import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface SubstancesProps {
   substances: Substance[];
@@ -33,154 +34,160 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
   const presets = DEFAULT_SUBSTANCES.filter(ds => !substances.some(s => s.id === ds.id));
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-8 relative pb-20">
       {/* Decorative Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[20%] right-[-5%] w-[30%] h-[30%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[10%] left-[-5%] w-[35%] h-[35%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
+        <div className="absolute top-[20%] right-[-5%] w-[40%] h-[40%] bg-android-accent/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[15%] left-[-5%] w-[45%] h-[45%] bg-purple-500/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
 
-      {/* Search Bar */}
-      <div className="relative group z-10">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-          <Search size={16} className="text-ios-gray group-focus-within:text-cyan-primary transition-colors" />
+      {/* Search & Stats */}
+      <div className="space-y-6 relative z-10 px-2">
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search size={18} className="text-android-text-muted group-focus-within:text-android-accent transition-colors" />
+          </div>
+          <input 
+            type="text" 
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search Molecular Database..."
+            className="android-input w-full pl-12 h-16 text-sm font-bold shadow-[0_10px_30px_rgba(0,0,0,0.3)] border-white/5"
+          />
+          {search && (
+            <button 
+              onClick={() => setSearch('')}
+              className="absolute inset-y-0 right-4 flex items-center text-android-text-muted hover:text-android-text transition-colors active:scale-90"
+            >
+              <X size={20} />
+            </button>
+          )}
         </div>
-        <input 
-          type="text" 
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Hledat látku..."
-          className="w-full bg-theme-subtle backdrop-blur-2xl border border-theme-border rounded-2xl py-4 pl-12 pr-12 text-sm outline-none focus:border-cyan-primary/50 focus:bg-theme-subtle-hover transition-all text-theme-text shadow-inner"
-        />
-        {search && (
-          <button 
-            onClick={() => setSearch('')}
-            className="absolute inset-y-0 right-4 flex items-center text-ios-gray hover:text-theme-text transition-colors active:scale-90"
-          >
-            <X size={18} />
-          </button>
-        )}
+
+        <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-2 px-2">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={cn(
+                "px-5 py-2.5 rounded-2xl border text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap android-button",
+                selectedCategory === cat 
+                  ? "bg-android-accent border-transparent text-android-bg shadow-[0_0_20px_rgba(0,242,255,0.3)]" 
+                  : "bg-android-surface border-android-border text-android-text-muted hover:text-android-text"
+              )}
+            >
+              {cat === 'all' ? 'All Units' : cat}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1 relative z-10">
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={cn(
-              "px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap active:scale-95",
-              selectedCategory === cat 
-                ? "bg-cyan-primary border-transparent text-black shadow-[0_0_15px_rgba(0,209,255,0.4)] scale-105" 
-                : "bg-theme-subtle backdrop-blur-xl border-theme-border text-ios-gray hover:text-theme-text hover:bg-theme-subtle-hover"
-            )}
-          >
-            {cat === 'all' ? 'Vše' : cat}
-          </button>
-        ))}
-      </div>
-
-      {/* My Substances */}
-      <section className="bg-theme-subtle backdrop-blur-3xl rounded-[2rem] p-6 border border-theme-border relative z-10 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
+      {/* Primary Database Section */}
+      <section className="android-card p-6 relative z-10 glass-accent border-white/5 shadow-2xl">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-cyan-primary/10 shadow-[0_0_15px_rgba(0,209,255,0.1)]">
-              <Database className="w-5 h-5 text-cyan-primary" />
+            <div className="p-3.5 rounded-2xl bg-android-bg border border-android-border shadow-inner">
+              <Database className="w-6 h-6 text-android-accent" />
             </div>
             <div>
-              <h2 className="text-[10px] font-black text-ios-gray uppercase tracking-[0.3em]">Databáze</h2>
-              <div className="text-xl font-black text-theme-text leading-tight tracking-tighter">Moje látky</div>
+              <h2 className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.3em] mb-1">Local Archive</h2>
+              <div className="text-2xl font-black text-android-text tracking-tighter">Molecular Units</div>
             </div>
           </div>
           <button 
             onClick={() => onEditSubstance('new')}
-            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)] active:scale-90 transition-all hover:scale-105"
+            className="w-14 h-14 rounded-3xl bg-android-accent text-android-bg flex items-center justify-center shadow-[0_10px_25px_rgba(0,242,255,0.3)] android-button"
           >
-            <Plus className="w-6 h-6 text-black" strokeWidth={3} />
+            <Plus className="w-8 h-8" strokeWidth={3} />
           </button>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredSubstances.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-theme-border rounded-2xl bg-theme-subtle">
-              <span className="text-[11px] text-ios-gray font-black uppercase tracking-[0.3em]">Žádné látky</span>
+            <div className="py-16 text-center border-2 border-dashed border-android-border rounded-[2rem] bg-android-bg/30">
+              <div className="mb-4 flex justify-center opacity-20">
+                <FlaskConical size={48} className="text-android-text-muted" />
+              </div>
+              <span className="text-[11px] text-android-text-muted font-black uppercase tracking-[0.3em]">No Compounds Found</span>
             </div>
           ) : (
             filteredSubstances.map(substance => (
-              <div 
+              <motion.div 
+                layout
                 key={substance.id} 
                 onClick={() => onEditSubstance(substance.id)}
-                className="bg-theme-subtle border border-theme-border rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-theme-subtle-hover transition-all group relative overflow-hidden shadow-sm"
+                className="android-card bg-android-surface/50 border-android-border/50 rounded-3xl p-5 flex items-center gap-5 cursor-pointer hover:border-android-accent/30 transition-all group relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-1.5 h-full shadow-[2px_0_10px_rgba(0,0,0,0.2)]" style={{ backgroundColor: substance.color || '#00d1ff' }} />
+                <div className="absolute top-0 left-0 w-1.5 h-full opacity-50" style={{ backgroundColor: substance.color || '#00f2ff' }} />
                 
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-theme-subtle border border-theme-border shadow-inner">
-                  <Activity size={20} style={{ color: substance.color || '#00d1ff' }} />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-android-bg border border-android-border shadow-inner group-hover:scale-110 transition-transform">
+                  <Activity size={24} style={{ color: substance.color || '#00f2ff' }} />
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-black text-theme-text truncate text-sm tracking-tight">{substance.name}</h3>
-                    <span className={cn(
-                      "text-[7px] uppercase font-black tracking-[0.2em] px-1.5 py-0.5 rounded-md bg-theme-subtle text-ios-gray border border-theme-border"
-                    )}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <h3 className="font-black text-android-text truncate text-base tracking-tight">{substance.name}</h3>
+                    <span className="text-[8px] uppercase font-black tracking-[0.2em] px-2 py-0.5 rounded-lg bg-android-bg text-android-text-muted border border-android-border">
                       {substance.category}
                     </span>
                   </div>
-                  <div className="text-[10px] text-ios-gray font-black uppercase tracking-[0.1em]">
-                    T₁/₂: <span className="text-theme-text">{substance.halfLife}h</span> • Tmax: <span className="text-theme-text">{substance.tmax}h</span>
+                  <div className="text-[10px] text-android-text-muted font-black uppercase tracking-[0.1em] opacity-80">
+                    Half-life: <span className="text-android-text">{substance.halfLife}h</span> • Peak: <span className="text-android-text">{substance.tmax}h</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleFavorite(substance.id);
                     }}
                     className={cn(
-                      "p-2 rounded-xl transition-all active:scale-90",
-                      substance.isFavorite ? "text-amber-400 bg-amber-400/10 shadow-[0_0_15px_rgba(251,191,36,0.2)]" : "text-ios-gray hover:text-amber-400 hover:bg-amber-400/5"
+                      "p-2.5 rounded-xl transition-all android-button",
+                      substance.isFavorite ? "text-amber-400 bg-amber-400/10" : "text-android-text-muted hover:text-amber-400"
                     )}
                   >
-                    <Star size={16} fill={substance.isFavorite ? "currentColor" : "none"} />
+                    <Star size={18} fill={substance.isFavorite ? "currentColor" : "none"} />
                   </button>
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       onDeleteSubstance(substance.id);
                     }}
-                    className="p-2 rounded-xl hover:bg-red-500/10 text-ios-gray hover:text-red-500 transition-all active:scale-90"
+                    className="p-2.5 rounded-xl hover:bg-red-500/10 text-android-text-muted hover:text-red-500 transition-all android-button"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={18} />
                   </button>
-                  <ChevronRight size={18} className="text-ios-gray group-hover:text-cyan-primary transition-all group-hover:translate-x-1" />
                 </div>
-              </div>
+                <ChevronRight size={20} className="text-android-text-muted group-hover:text-android-accent transition-all group-hover:translate-x-1" />
+              </motion.div>
             ))
           )}
         </div>
       </section>
 
-      {/* Presets */}
+      {/* Global Presets */}
       {presets.length > 0 && (
-        <section className="bg-theme-card/40 backdrop-blur-md rounded-2xl p-4 border border-theme-border relative z-10">
-          <h2 className="text-[9px] font-bold text-ios-gray uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Package size={10} className="text-purple-400" /> Přednastavené látky
+        <section className="android-card p-6 bg-android-surface/40 relative z-10 border-white/5">
+          <h2 className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-6 flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-purple-500/10">
+              <Package size={14} className="text-purple-400" />
+            </div>
+            Global Templates
           </h2>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-4">
             {presets.map(preset => (
               <button 
                 key={preset.id}
                 onClick={() => onAddPreset(preset)}
-                className="p-3 rounded-xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle text-left flex items-center gap-2.5 transition-all active:scale-95"
+                className="p-4 rounded-3xl bg-android-surface border border-android-border hover:border-android-accent/20 text-left flex items-center gap-3.5 transition-all android-button group shadow-sm"
               >
-                <div className="w-7 h-7 rounded-lg bg-theme-subtle flex items-center justify-center border border-theme-border">
-                  <Activity size={12} style={{ color: preset.color || '#00d1ff' }} />
+                <div className="w-9 h-9 rounded-xl bg-android-bg flex items-center justify-center border border-android-border shadow-inner group-hover:scale-110 transition-transform">
+                  <Activity size={16} style={{ color: preset.color || '#00f2ff' }} />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[9px] font-bold text-theme-text truncate">{preset.name}</div>
-                  <div className="text-[7px] text-ios-gray font-bold uppercase">{preset.category}</div>
+                  <div className="text-xs font-black text-android-text truncate tracking-tight">{preset.name}</div>
+                  <div className="text-[9px] text-android-text-muted font-bold uppercase tracking-wider">{preset.category}</div>
                 </div>
               </button>
             ))}

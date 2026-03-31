@@ -1,77 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ios-bg: var(--ios-bg);
-  --color-ios-text: var(--ios-text);
-  --color-ios-card: var(--ios-card);
-  --color-ios-secondary: var(--ios-secondary);
-  --color-ios-border: var(--ios-border);
-  --color-ios-glass: var(--ios-glass);
-  --color-ios-subtle: var(--ios-subtle);
-  --color-ios-subtle-hover: var(--ios-subtle-hover);
+  --color-android-bg: var(--android-bg);
+  --color-android-surface: var(--android-surface);
+  --color-android-card: var(--android-card);
+  --color-android-accent: var(--android-accent);
+  --color-android-text: var(--android-text);
+  --color-android-text-muted: var(--android-text-muted);
+  --color-android-border: var(--android-border);
+  --color-android-glass: var(--android-glass);
 
-  --color-theme-bg: var(--ios-bg);
-  --color-theme-text: var(--ios-text);
-  --color-theme-card: var(--ios-card);
-  --color-theme-secondary: var(--ios-secondary);
-  --color-theme-border: var(--ios-border);
-  --color-theme-glass: var(--ios-glass);
-  --color-theme-subtle: var(--ios-subtle);
-  --color-theme-subtle-hover: var(--ios-subtle-hover);
-
-  --color-ios-blue: #0a84ff;
-  --color-ios-green: #30d158;
-  --color-ios-red: #ff453a;
-  --color-ios-orange: #ff9f0a;
-  --color-ios-gray: #8e8e93;
-  --color-cyan-primary: #0a84ff;
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --color-theme-bg: var(--android-bg);
+  --color-theme-text: var(--android-text);
+  --color-theme-card: var(--android-card);
+  --color-theme-accent: var(--android-accent);
+  --color-theme-border: var(--android-border);
+  
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
 }
 
 @layer base {
   :root {
-    --ios-bg: #f2f2f7;
-    --ios-text: #000000;
-    --ios-card: #ffffff;
-    --ios-secondary: #e5e5ea;
-    --ios-border: rgba(0, 0, 0, 0.05);
-    --ios-glass: rgba(255, 255, 255, 0.8);
-    --ios-subtle: rgba(0, 0, 0, 0.05);
-    --ios-subtle-hover: rgba(0, 0, 0, 0.1);
-  }
-  .dark {
-    --ios-bg: #000000;
-    --ios-text: #ffffff;
-    --ios-card: #1c1c1e;
-    --ios-secondary: #2c2c2e;
-    --ios-border: rgba(255, 255, 255, 0.1);
-    --ios-glass: rgba(28, 28, 30, 0.8);
-    --ios-subtle: rgba(255, 255, 255, 0.05);
-    --ios-subtle-hover: rgba(255, 255, 255, 0.1);
+    --android-bg: #050505;
+    --android-surface: #0a0a0a;
+    --android-card: #121212;
+    --android-accent: #00f2ff;
+    --android-text: #ffffff;
+    --android-text-muted: #9ca3af;
+    --android-border: rgba(255, 255, 255, 0.08);
+    --android-glass: rgba(18, 18, 18, 0.75);
   }
 
   body {
-    @apply antialiased bg-ios-bg text-ios-text selection:bg-ios-blue/30;
+    @apply antialiased bg-android-bg text-android-text selection:bg-android-accent/30;
     -webkit-tap-highlight-color: transparent;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
 @layer utilities {
-  .ios-glass {
-    @apply bg-ios-glass backdrop-blur-2xl border border-ios-border;
+  .android-glass {
+    @apply bg-android-glass backdrop-blur-3xl border border-android-border;
   }
-  .ios-glass-light {
-    @apply bg-ios-glass backdrop-blur-xl border border-ios-border;
+  .android-card {
+    @apply bg-android-card rounded-3xl border border-android-border shadow-2xl;
   }
-  .ios-card {
-    @apply bg-ios-card rounded-[2rem] border border-ios-border shadow-xl;
+  .android-button {
+    @apply active:scale-[0.96] transition-all duration-300 cursor-pointer;
   }
-  .ios-button {
-    @apply active:scale-[0.97] transition-all duration-200 cursor-pointer;
+  .android-input {
+    @apply bg-android-surface border border-android-border rounded-2xl px-4 py-3 text-android-text placeholder:text-android-text-muted focus:border-android-accent/50 focus:ring-1 focus:ring-android-accent/30 outline-none transition-all;
   }
-  .ios-input {
-    @apply bg-ios-secondary border-none rounded-xl px-4 py-3 text-ios-text placeholder:text-ios-gray focus:ring-2 focus:ring-ios-blue/50 outline-none transition-all;
+  .glass-accent {
+    @apply relative overflow-hidden;
+  }
+  .glass-accent::before {
+    content: '';
+    @apply absolute -top-1/2 -left-1/2 w-full h-full bg-android-accent/10 blur-[100px] pointer-events-none;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -79,15 +64,6 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
-  }
-  .text-glow-blue {
-    text-shadow: 0 0 20px rgba(10, 132, 255, 0.4);
-  }
-  .text-glow-green {
-    text-shadow: 0 0 20px rgba(48, 209, 88, 0.4);
-  }
-  .text-glow-red {
-    text-shadow: 0 0 20px rgba(255, 69, 58, 0.4);
   }
 }
 

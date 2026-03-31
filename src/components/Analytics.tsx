@@ -355,23 +355,23 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   }, [doses, substances, now]);
 
   const renderOverview = () => (
-    <div className="space-y-6 relative">
+    <div className="space-y-8 relative">
       {/* Header */}
       <div className="flex items-center justify-between px-2 relative z-10">
         <div>
-          <h1 className="text-3xl font-bold text-theme-text tracking-tight">Analýza</h1>
-          <p className="text-sm font-medium text-ios-gray">Přehled vašich dat</p>
+          <h1 className="text-3xl font-black text-android-text tracking-tighter">Analytics<span className="text-android-accent">.</span></h1>
+          <p className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mt-1">Biometric Intelligence</p>
         </div>
-        <div className="flex bg-ios-secondary p-1 rounded-xl">
+        <div className="flex bg-android-surface p-1 rounded-2xl border border-android-border shadow-inner">
           {[7, 30, 90].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p as Period)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all",
+                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 android-button",
                 period === p 
-                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-                  : "text-ios-gray hover:text-theme-text"
+                  ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" 
+                  : "text-android-text-muted hover:text-android-text"
               )}
             >
               {p}D
@@ -382,80 +382,88 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 gap-4 relative z-10">
-        <div className="ios-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-ios-blue/10 flex items-center justify-center text-ios-blue">
-              <DollarSign size={16} />
+        <div className="android-card p-6 glass-accent border-white/5">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-android-accent/10 border border-android-accent/20 flex items-center justify-center text-android-accent shadow-inner">
+              <DollarSign size={18} strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">Útrata ({period}D)</span>
+            <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Spent ({period}D)</span>
           </div>
-          <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-ios-gray">Kč</span>
+          <div className="text-3xl font-black text-android-text tracking-tighter">
+            {totalCost.toLocaleString('cs-CZ')} <span className="text-base font-bold text-android-text-muted uppercase ml-1">Kč</span>
           </div>
         </div>
-        <div className="ios-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-ios-green/10 flex items-center justify-center text-ios-green">
-              <Wallet size={16} />
+        <div className="android-card p-6 bg-android-surface/40 border-white/5">
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
+              <Wallet size={18} strokeWidth={2.5} />
             </div>
-            <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">Celkem</span>
+            <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Total All-Time</span>
           </div>
-          <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-ios-gray">Kč</span>
+          <div className="text-3xl font-black text-android-text tracking-tighter">
+            {allTimeCost.toLocaleString('cs-CZ')} <span className="text-base font-bold text-android-text-muted uppercase ml-1">Kč</span>
           </div>
         </div>
       </div>
 
       {/* Trend Chart */}
-      <section className="ios-card p-6 relative z-10">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={16} className="text-ios-blue" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Trend Výdajů</h2>
+      <section className="android-card p-6 bg-android-surface/40 relative z-10 border-white/5 overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-android-accent/5 blur-[100px] -mr-20 -mt-20 pointer-events-none" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-android-accent/10 text-android-accent">
+              <TrendingUp size={18} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Financial Dynamics</h2>
           </div>
-          <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">{(totalCost / period).toFixed(0)} Kč / den</span>
+          <div className="text-[10px] font-black text-android-accent bg-android-accent/10 px-3 py-1.5 rounded-full border border-android-accent/20 tracking-wider">
+            AVG: {(totalCost / period).toFixed(0)} Kč / DAY
+          </div>
         </div>
-        <div className="h-48 w-full">
+        <div className="h-56 w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0a84ff" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#0a84ff" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#00f2ff" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#00f2ff" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                dy={10}
+                tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
+                dy={15}
               />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
               />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                  borderRadius: '16px', 
+                  backgroundColor: '#121212', 
+                  borderRadius: '20px', 
                   border: '1px solid rgba(255, 255, 255, 0.1)', 
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  fontSize: '11px',
+                  letterSpacing: '0.05em'
                 }}
-                itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                itemStyle={{ color: '#fff', padding: '4px 0' }}
+                labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
               />
               <Area 
                 type="monotone" 
                 dataKey="cost" 
-                stroke="#0a84ff" 
+                stroke="#00f2ff" 
                 fillOpacity={1} 
                 fill="url(#colorCost)" 
-                strokeWidth={3} 
-                animationDuration={1500}
+                strokeWidth={4} 
+                animationDuration={2000}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -463,35 +471,44 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       </section>
 
       {/* Activity & Predictions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-        <section className="ios-card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Calendar size={16} className="text-ios-green" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Aktivita</h2>
+      <div className="grid grid-cols-1 gap-6 relative z-10">
+        <section className="android-card p-6 bg-android-surface/40 border-white/5">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+              <Calendar size={18} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Neural Activity Map</h2>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="flex flex-wrap gap-2.5 justify-center py-4 bg-android-bg/30 rounded-3xl border border-android-border shadow-inner">
             {activityHeatmap.map((day, i) => (
-              <div 
+              <motion.div 
                 key={i} 
-                className="w-4 h-4 rounded-sm transition-all duration-300 hover:scale-125"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.01 }}
+                className="w-5 h-5 rounded-md transition-all duration-500 hover:scale-125 cursor-help shadow-sm"
                 style={{ 
-                  backgroundColor: day.count > 0 ? `rgba(48, 209, 88, ${0.2 + (Math.min(day.count, 5) * 0.15)})` : 'rgba(255, 255, 255, 0.05)',
+                  backgroundColor: day.count > 0 ? `rgba(0, 242, 255, ${0.15 + (Math.min(day.count, 5) * 0.15)})` : 'rgba(255, 255, 255, 0.03)',
+                  border: day.count > 0 ? '1px solid rgba(0, 242, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)'
                 }}
               />
             ))}
           </div>
         </section>
 
-        <section className="ios-card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Zap size={16} className="text-ios-orange" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce</h2>
+        <section className="android-card p-6 glass-accent border-white/5 overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/5 blur-[80px] -ml-16 -mb-16 pointer-events-none" />
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400">
+              <Zap size={18} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Forecast Projection</h2>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             {predictionData.map((p, i) => (
-              <div key={i} className="text-center p-3 rounded-2xl bg-theme-subtle">
-                <div className="text-[8px] text-ios-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
-                <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} Kč</div>
+              <div key={i} className="text-center p-4 rounded-3xl bg-android-bg border border-android-border shadow-lg">
+                <div className="text-[9px] text-android-text-muted font-black uppercase mb-2 tracking-[0.1em]">{p.name}</div>
+                <div className="text-base font-black text-android-text tracking-tighter leading-none">{p.value.toFixed(0)} <span className="text-[10px] text-android-text-muted uppercase">Kč</span></div>
               </div>
             ))}
           </div>
@@ -501,15 +518,15 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       {/* Substance List */}
       <div className="space-y-4 relative z-10 pb-24">
         <div className="flex items-center justify-between px-2">
-          <h3 className="text-xs font-bold text-ios-gray uppercase tracking-widest">Látky</h3>
+          <h3 className="text-xs font-black text-android-text-muted uppercase tracking-[0.2em]">Substances</h3>
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ios-gray" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-android-text-muted" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Hledat..."
-              className="bg-ios-secondary border-none rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-1 focus:ring-ios-blue/50 transition-all w-40 text-theme-text font-medium"
+              placeholder="Search..."
+              className="bg-android-surface border-none rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-1 focus:ring-android-accent/50 transition-all w-40 text-android-text font-black tracking-tight"
             />
           </div>
         </div>
@@ -519,24 +536,24 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             <button 
               key={s.id}
               onClick={() => setSelectedSubstanceId(s.id)}
-              className="w-full ios-card p-4 flex items-center justify-between ios-button text-left"
+              className="w-full android-card p-4 flex items-center justify-between android-button-subtle text-left border-white/5"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative">
-                  <div className="absolute inset-0 blur-lg opacity-20 rounded-full" style={{ backgroundColor: s.color }} />
-                  <Activity size={20} style={{ color: s.color }} className="relative z-10" />
+                <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative" style={{ backgroundColor: s.color || '#ffffff' }}>
+                  <div className="absolute inset-0 blur-lg opacity-30 rounded-full" style={{ backgroundColor: s.color }} />
+                  <Activity size={20} className="relative z-10" style={{ color: s.color }} />
                 </div>
                 <div>
-                  <div className="text-base font-bold text-theme-text tracking-tight">{s.name}</div>
-                  <div className="text-xs text-ios-gray font-medium">{s.count} záznamů</div>
+                  <div className="text-base font-black text-android-text tracking-tight">{s.name}</div>
+                  <div className="text-xs text-android-text-muted font-black">{s.count} entries</div>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <div className="text-xs font-bold text-theme-text">{s.tolerance.toFixed(0)}%</div>
-                  <div className="text-[8px] font-bold text-ios-gray uppercase tracking-widest">Tolerance</div>
+                  <div className="text-xs font-black text-android-text">{s.tolerance.toFixed(0)}%</div>
+                  <div className="text-[8px] font-black text-android-text-muted uppercase tracking-[0.2em]">Tolerance</div>
                 </div>
-                <ChevronRight size={20} className="text-ios-gray" />
+                <ChevronRight size={20} className="text-android-text-muted" />
               </div>
             </button>
           ))}
@@ -558,49 +575,49 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
     return (
       <div className="space-y-6 relative pb-24">
         {/* Back Button & Header */}
-        <div className="flex items-center justify-between relative z-10">
+        <div className="flex items-center justify-between relative z-10 px-2">
           <button 
             onClick={() => setSelectedSubstanceId(null)}
-            className="flex items-center gap-2 text-ios-blue font-bold ios-button"
+            className="flex items-center gap-2 text-android-accent font-black android-button-subtle"
           >
             <ChevronLeft size={24} />
-            <span>Zpět</span>
+            <span>Back</span>
           </button>
-          <div className="w-10 h-10 rounded-2xl bg-theme-subtle flex items-center justify-center">
+          <div className="w-10 h-10 rounded-2xl bg-theme-subtle flex items-center justify-center" style={{ backgroundColor: substance.color }}>
             <Activity size={20} style={{ color: substance.color }} />
           </div>
         </div>
 
         {/* Substance Title Card */}
         <div className="px-2">
-          <h2 className="text-3xl font-bold text-theme-text tracking-tight mb-1">{substance.name}</h2>
+          <h2 className="text-3xl font-black text-android-text tracking-tighter mb-1">{substance.name}</h2>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-lg bg-ios-secondary text-[10px] font-bold text-ios-gray uppercase tracking-widest">
+            <span className="px-2 py-0.5 rounded-lg bg-android-surface text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">
               {substance.category}
             </span>
-            <span className="text-xs font-medium text-ios-gray">
-              {sDoses.length} záznamů v období
+            <span className="text-xs font-medium text-android-text-muted">
+              {sDoses.length} entries in period
             </span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-ios-secondary p-1 rounded-2xl relative z-10 overflow-x-auto no-scrollbar">
+        <div className="flex bg-android-surface p-1 rounded-2xl relative z-10 overflow-x-auto no-scrollbar border border-android-border shadow-inner">
           {[
-            { id: 'trends', label: 'Trendy', icon: TrendingUp },
-            { id: 'time', label: 'Časy', icon: Clock },
-            { id: 'distribution', label: 'Dávky', icon: GitMerge },
+            { id: 'trends', label: 'Trends', icon: TrendingUp },
+            { id: 'time', label: 'Time', icon: Clock },
+            { id: 'distribution', label: 'Dosage', icon: GitMerge },
             { id: 'finance', label: 'Finance', icon: Wallet },
-            { id: 'history', label: 'Historie', icon: History },
+            { id: 'history', label: 'History', icon: History },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setDetailTab(tab.id as any)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap",
                 detailTab === tab.id 
-                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-                  : "text-ios-gray hover:text-theme-text"
+                  ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" 
+                  : "text-android-text-muted hover:text-android-text"
               )}
             >
               <tab.icon size={14} />
@@ -616,66 +633,72 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10"
+              className="space-y-4 relative z-10 px-2"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="ios-card p-5">
-                  <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Tolerance</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{tolerance.toFixed(0)}%</div>
+                <div className="android-card p-6 glass-accent border-white/5">
+                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Tolerance</div>
+                  <div className="text-2xl font-black text-android-text tracking-tighter">{tolerance.toFixed(0)}%</div>
                 </div>
-                <div className="ios-card p-5">
-                  <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Celkem</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">
-                    {totalAmount.toFixed(1)} <span className="text-sm font-medium text-ios-gray">{substance.unit}</span>
+                <div className="android-card p-6 bg-android-surface/40 border-white/5">
+                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Total Amount</div>
+                  <div className="text-2xl font-black text-android-text tracking-tighter">
+                    {totalAmount.toFixed(1)} <span className="text-sm font-bold text-android-text-muted uppercase ml-1">{substance.unit}</span>
                   </div>
                 </div>
               </div>
 
-              <section className="ios-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp size={16} className="text-ios-blue" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Množství za den</h3>
+              <section className="android-card p-6 bg-android-surface/40 border-white/5">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 rounded-xl bg-android-accent/10 text-android-accent">
+                    <TrendingUp size={18} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Daily Amount Trend</h3>
                 </div>
-                <div className="h-56 w-full">
+                <div className="h-56 w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={dailyTrend}>
                       <defs>
                         <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={substance.color || '#00f2ff'} stopOpacity={0.4}/>
+                          <stop offset="95%" stopColor={substance.color || '#00f2ff'} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        dy={10}
+                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
+                        dy={15}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
+                          backgroundColor: '#121212', 
+                          borderRadius: '20px', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+                          fontWeight: '900',
+                          textTransform: 'uppercase',
+                          fontSize: '11px',
+                          letterSpacing: '0.05em'
                         }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                        itemStyle={{ color: '#fff', padding: '4px 0' }}
+                        labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
                       />
                       <Area 
                         type="monotone" 
                         dataKey="amount" 
-                        stroke={substance.color} 
+                        stroke={substance.color || '#00f2ff'} 
                         fillOpacity={1} 
                         fill="url(#colorAmount)" 
-                        strokeWidth={3} 
-                        animationDuration={1500}
+                        strokeWidth={4} 
+                        animationDuration={2000}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -690,39 +713,45 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10"
+              className="space-y-4 relative z-10 px-2"
             >
-              <section className="ios-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Clock size={16} className="text-ios-blue" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kdy užívám nejvíc</h3>
+              <section className="android-card p-6 bg-android-surface/40 border-white/5">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 rounded-xl bg-android-accent/10 text-android-accent">
+                    <Clock size={18} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Peak Usage Times</h3>
                 </div>
-                <div className="h-56 w-full">
+                <div className="h-56 w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={substanceTimeStats}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                       <XAxis 
                         dataKey="hour" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        dy={10}
+                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
+                        dy={15}
                       />
                       <YAxis hide />
                       <Tooltip 
                         cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
                         contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
+                          backgroundColor: '#121212', 
+                          borderRadius: '20px', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+                          fontWeight: '900',
+                          textTransform: 'uppercase',
+                          fontSize: '11px',
+                          letterSpacing: '0.05em'
                         }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                        itemStyle={{ color: '#fff', padding: '4px 0' }}
+                        labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
                       />
                       <Bar 
                         dataKey="count" 
-                        fill={substance.color} 
+                        fill={substance.color || '#00f2ff'} 
                         radius={[6, 6, 0, 0]} 
                         animationDuration={1500}
                       />
@@ -739,39 +768,45 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10"
+              className="space-y-4 relative z-10 px-2"
             >
-              <section className="ios-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <GitMerge size={16} className="text-ios-purple" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Distribuce dávek</h3>
+              <section className="android-card p-6 bg-android-surface/40 border-white/5">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 rounded-xl bg-android-purple/10 text-android-purple">
+                    <GitMerge size={18} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Dosage Distribution</h3>
                 </div>
-                <div className="h-56 w-full">
+                <div className="h-56 w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dosageDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
                       <XAxis 
                         dataKey="range" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        dy={10}
+                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
+                        dy={15}
                       />
                       <YAxis hide />
                       <Tooltip 
                         cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
                         contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
+                          backgroundColor: '#121212', 
+                          borderRadius: '20px', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+                          fontWeight: '900',
+                          textTransform: 'uppercase',
+                          fontSize: '11px',
+                          letterSpacing: '0.05em'
                         }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                        itemStyle={{ color: '#fff', padding: '4px 0' }}
+                        labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
                       />
                       <Bar 
                         dataKey="count" 
-                        fill={substance.color} 
+                        fill={substance.color || '#00f2ff'} 
                         radius={[6, 6, 0, 0]} 
                         animationDuration={1500}
                       />
@@ -788,33 +823,36 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10"
+              className="space-y-4 relative z-10 px-2"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="ios-card p-5">
-                  <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Celková útrata</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{cost.toFixed(0)} Kč</div>
+                <div className="android-card p-6 glass-accent border-white/5">
+                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Total Spent</div>
+                  <div className="text-2xl font-black text-android-text tracking-tighter">{cost.toFixed(0)} Kč</div>
                 </div>
-                <div className="ios-card p-5">
-                  <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{(cost / (sDoses.length || 1)).toFixed(0)} Kč</div>
+                <div className="android-card p-6 bg-android-surface/40 border-white/5">
+                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Avg per Dose</div>
+                  <div className="text-2xl font-black text-android-text tracking-tighter">{(cost / (sDoses.length || 1)).toFixed(0)} Kč</div>
                 </div>
               </div>
 
-              <section className="ios-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Zap size={16} className="text-ios-orange" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce výdajů</h3>
+              <section className="android-card p-6 glass-accent border-white/5 overflow-hidden">
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/5 blur-[80px] -ml-16 -mb-16 pointer-events-none" />
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400">
+                    <Zap size={18} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Spending Forecast</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: 'Denně', value: substancePredictions.daily },
-                    { label: 'Měsíčně', value: substancePredictions.monthly },
-                    { label: 'Ročně', value: substancePredictions.yearly },
+                    { label: 'Daily', value: substancePredictions.daily },
+                    { label: 'Monthly', value: substancePredictions.monthly },
+                    { label: 'Yearly', value: substancePredictions.yearly },
                   ].map((p, i) => (
-                    <div key={i} className="text-center p-4 rounded-2xl bg-theme-subtle">
-                      <div className="text-[8px] text-ios-gray font-bold uppercase mb-1 tracking-wider">{p.label}</div>
-                      <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} Kč</div>
+                    <div key={i} className="text-center p-4 rounded-3xl bg-android-bg border border-android-border shadow-lg">
+                      <div className="text-[9px] text-android-text-muted font-black uppercase mb-2 tracking-[0.1em]">{p.label}</div>
+                      <div className="text-base font-black text-android-text tracking-tighter leading-none">{p.value.toFixed(0)} <span className="text-[10px] text-android-text-muted uppercase">Kč</span></div>
                     </div>
                   ))}
                 </div>
@@ -828,36 +866,38 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10"
+              className="space-y-4 relative z-10 px-2"
             >
-              <section className="ios-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <History size={16} className="text-ios-gray" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Poslední záznamy</h3>
+              <section className="android-card p-6 bg-android-surface/40 border-white/5">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-2 rounded-xl bg-android-text-muted/10 text-android-text-muted">
+                    <History size={18} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Recent Entries</h3>
                 </div>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto no-scrollbar">
                   {sDoses.slice(0, 10).map((dose) => (
-                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border group hover:bg-theme-subtle-hover transition-all">
+                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-android-bg border border-android-border group hover:bg-android-surface-hover transition-all shadow-sm">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform">
-                          <Clock size={16} className="text-ios-gray" />
+                        <div className="w-10 h-10 rounded-xl bg-android-surface flex items-center justify-center border border-android-border group-hover:scale-110 transition-transform shadow-inner">
+                          <Clock size={16} className="text-android-text-muted" />
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-theme-text tracking-tight">
+                          <div className="text-sm font-black text-android-text tracking-tight">
                             {dose.amount} {substance.unit}
-                            {dose.strainId && <span className="text-[10px] text-ios-blue ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
+                            {dose.strainId && <span className="text-[10px] text-android-accent ml-2 font-black uppercase tracking-[0.2em]">({dose.strainId})</span>}
                           </div>
-                          <div className="text-[10px] text-ios-gray font-bold uppercase tracking-wider mt-0.5">
+                          <div className="text-[10px] text-android-text-muted font-black uppercase tracking-[0.2em] mt-0.5">
                             {new Date(dose.timestamp).toLocaleDateString('cs-CZ')} • {new Date(dose.timestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">
+                        <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-1">
                           {dose.route}
                         </div>
                         {dose.cost && (
-                          <div className="text-[11px] font-bold text-ios-green tracking-tight">
+                          <div className="text-[11px] font-black text-emerald-400 tracking-tight">
                             {dose.cost} Kč
                           </div>
                         )}

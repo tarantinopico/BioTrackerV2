@@ -297,81 +297,55 @@ export default function Dashboard({
   }, [activeSubstanceDetails]);
 
   return (
-    <div className="space-y-6 pb-4 relative">
-      {/* Main Status & History - iOS Style Cards */}
-      <div className="grid grid-cols-2 gap-2">
-        <section className="ios-card p-3 flex flex-col justify-between min-h-[80px]">
-          <div className="flex items-center gap-1.5 mb-1 opacity-70">
-            <Activity size={12} className="text-ios-blue" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Status</span>
+    <div className="space-y-8 pb-8 relative">
+      {/* Main Status & Quick Stats - Deep Dark Glass */}
+      <div className="grid grid-cols-2 gap-4">
+        <section className="android-card p-4 flex flex-col justify-between min-h-[100px] glass-accent">
+          <div className="flex items-center gap-2 mb-2 opacity-60">
+            <Activity size={14} className="text-android-accent" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-android-text-muted">Status</span>
           </div>
           <div>
-            <div className={cn("text-[9px] font-bold uppercase tracking-wider mb-0.5", systemLoad.color)}>
+            <div className={cn("text-[10px] font-black uppercase tracking-widest mb-1.5", systemLoad.color === 'text-emerald-400' ? 'text-emerald-400' : systemLoad.color === 'text-cyan-primary' ? 'text-android-accent' : systemLoad.color === 'text-amber-400' ? 'text-amber-400' : 'text-red-500')}>
               {systemLoad.label}
             </div>
-            <div className="text-lg font-bold text-theme-text tracking-tight leading-none">
+            <div className="text-2xl font-black text-android-text tracking-tighter leading-none">
               {cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}
             </div>
           </div>
         </section>
 
-        <section className="ios-card p-3 flex flex-col justify-between min-h-[80px]">
-          <div className="flex items-center gap-1.5 mb-1 opacity-70">
-            <Wallet size={12} className="text-ios-green" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Dnes</span>
+        <section className="android-card p-4 flex flex-col justify-between min-h-[100px]">
+          <div className="flex items-center gap-2 mb-2 opacity-60">
+            <Wallet size={14} className="text-emerald-400" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-android-text-muted">Expense</span>
           </div>
           <div>
-            <div className="text-[9px] font-bold uppercase tracking-wider mb-0.5 text-ios-gray">
-              Utraceno
+            <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 text-android-text-muted">
+              Today
             </div>
-            <div className="text-lg font-bold text-theme-text tracking-tight leading-none">
-              {dailyCost.toLocaleString('cs-CZ')} Kč
+            <div className="text-2xl font-black text-android-text tracking-tighter leading-none">
+              {dailyCost.toLocaleString('cs-CZ')} <span className="text-sm font-bold text-android-text-muted">Kč</span>
             </div>
           </div>
         </section>
 
-        <section className="ios-card p-3 flex flex-col min-h-[80px]">
-          <div className="flex items-center gap-1.5 mb-2 opacity-70">
-            <TrendingUp size={12} className="text-ios-blue" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Dnešní spotřeba</span>
+        <section className="android-card p-4 flex flex-col col-span-2 min-h-[100px]">
+          <div className="flex items-center gap-2 mb-3 opacity-60">
+            <TrendingUp size={14} className="text-android-accent" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-android-text-muted">Today's Consumption</span>
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex gap-4 overflow-x-auto no-scrollbar py-1">
             {dailyStats.map(s => (
-              <div key={s.name} className="flex flex-col min-w-fit">
-                <span className="text-[8px] font-bold text-ios-gray uppercase mb-0.5">{s.name}</span>
-                <span className="text-sm font-bold text-theme-text tabular-nums leading-none">
-                  {s.amount}<span className="text-[9px] text-ios-gray ml-0.5">{s.unit}</span>
+              <div key={s.name} className="flex flex-col min-w-fit pr-4 border-r border-android-border last:border-0">
+                <span className="text-[9px] font-black text-android-text-muted uppercase mb-1 tracking-wider">{s.name}</span>
+                <span className="text-lg font-black text-android-text tabular-nums leading-none">
+                  {s.amount}<span className="text-[11px] font-bold text-android-text-muted ml-1 uppercase">{s.unit}</span>
                 </span>
               </div>
             ))}
             {dailyStats.length === 0 && (
-              <span className="text-[10px] font-medium text-ios-gray italic">Nic</span>
-            )}
-          </div>
-        </section>
-
-        <section className="ios-card p-3 flex flex-col min-h-[80px]">
-          <div className="flex items-center gap-1.5 mb-2 opacity-70">
-            <Clock size={12} className="text-ios-purple" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-ios-gray">Historie</span>
-          </div>
-          <div className="space-y-1.5 max-h-[40px] overflow-hidden">
-            {allSubstancesLastUsed.slice(0, 2).map(s => (
-              <div key={s.id} className="flex justify-between items-center leading-none">
-                <span className="text-[10px] font-bold uppercase truncate max-w-[60px]" style={{ color: s.color }}>{s.name}</span>
-                <span className="text-[10px] font-bold text-ios-gray tabular-nums">
-                  {(() => {
-                    const hrs = Math.floor(s.lastUsedHours!);
-                    const mins = Math.floor((s.lastUsedHours! - hrs) * 60);
-                    if (hrs === 0 && mins === 0) return 'TEĎ';
-                    if (hrs === 0) return `-${mins}m`;
-                    return `-${hrs}h ${mins}m`;
-                  })()}
-                </span>
-              </div>
-            ))}
-            {allSubstancesLastUsed.length === 0 && (
-              <div className="text-[10px] font-medium text-ios-gray italic">Žádná data</div>
+              <span className="text-xs font-bold text-android-text-muted/50 italic py-2">No activity recorded today</span>
             )}
           </div>
         </section>
@@ -379,85 +353,105 @@ export default function Dashboard({
 
       {/* Interaction Alerts */}
       {interactions.length > 0 && (
-        <section className="bg-ios-red/10 rounded-2xl p-3 border border-ios-red/20">
-          <div className="flex items-start gap-2.5">
-            <AlertCircle size={16} className="text-ios-red shrink-0 mt-0.5" />
+        <motion.section 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-red-500/10 rounded-3xl p-4 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.1)]"
+        >
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-red-500/20 rounded-xl">
+              <AlertCircle size={18} className="text-red-500" />
+            </div>
             <div>
-              <div className="text-[10px] font-bold text-ios-red uppercase tracking-wider mb-0.5">Varování: Interakce</div>
-              <div className="text-xs text-red-200/80 leading-snug">
-                {interactions[0].type}: {interactions[0].message}
+              <div className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em] mb-1">Critical Warning</div>
+              <div className="text-xs font-bold text-red-100/80 leading-relaxed">
+                <span className="text-white">{interactions[0].type}</span>: {interactions[0].message}
               </div>
             </div>
           </div>
-        </section>
+        </motion.section>
       )}
 
-      {/* Kinetic & Effects Chart */}
-      <section className="ios-card p-3">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex bg-ios-secondary p-1 rounded-xl">
+      {/* Kinetic & Effects Chart - Glass Style */}
+      <section className="android-card p-5 bg-android-surface/40 overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-android-accent/5 blur-[80px] -mr-16 -mt-16 pointer-events-none" />
+        
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex bg-android-bg p-1 rounded-2xl border border-android-border">
             <button 
               onClick={() => setChartType('kinetic')}
-              className={cn("px-3 py-1 rounded-lg text-[10px] font-bold transition-all", chartType === 'kinetic' ? "bg-ios-blue text-white shadow-lg" : "text-ios-gray")}
+              className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300", 
+                chartType === 'kinetic' ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" : "text-android-text-muted")}
             >
-              Kinetika
+              Kinetics
             </button>
             <button 
               onClick={() => setChartType('effects')}
-              className={cn("px-3 py-1 rounded-lg text-[10px] font-bold transition-all", chartType === 'effects' ? "bg-ios-orange text-white shadow-lg" : "text-ios-gray")}
+              className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300", 
+                chartType === 'effects' ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" : "text-android-text-muted")}
             >
-              Účinky
+              Effects
             </button>
           </div>
-          <div className="flex gap-1.5 items-center px-2">
-            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", chartType === 'kinetic' ? "bg-ios-blue" : "bg-ios-orange")} />
-            <span className="text-[9px] font-bold text-ios-gray uppercase tracking-widest">Live</span>
+          <div className="flex gap-2 items-center px-2">
+            <div className={cn("w-2 h-2 rounded-full animate-pulse", chartType === 'kinetic' ? "bg-android-accent shadow-[0_0_10px_rgba(0,242,255,0.5)]" : "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]")} />
+            <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Real-time</span>
           </div>
         </div>
         
-        <div className="h-[260px] w-full">
+        <div className="h-[280px] w-full mt-2">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ left: -20, right: 0, top: 10, bottom: 0 }}>
               <defs>
                 {chartType === 'kinetic' ? (
                   substances.map(s => (
                     <linearGradient key={s.id} id={`color-${s.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={s.color || '#0a84ff'} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={s.color || '#0a84ff'} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={s.color || '#00f2ff'} stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor={s.color || '#00f2ff'} stopOpacity={0}/>
                     </linearGradient>
                   ))
                 ) : (
                   Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
                     <linearGradient key={type} id={`color-effect-${type}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={EFFECT_COLORS[type] || '#fbbf24'} stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor={EFFECT_COLORS[type] || '#fbbf24'} stopOpacity={0}/>
                     </linearGradient>
                   ))
                 )}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
               <XAxis dataKey="time" type="number" domain={['dataMin', 'dataMax']} hide />
               <YAxis hide domain={[0, maxChartValue]} />
               <Tooltip 
-                contentStyle={{ backgroundColor: 'var(--ios-card)', border: 'none', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', fontSize: '12px', color: 'var(--ios-text)' }}
-                itemStyle={{ padding: '2px 0' }}
+                contentStyle={{ 
+                  backgroundColor: '#121212', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  borderRadius: '16px', 
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)', 
+                  fontSize: '11px', 
+                  color: '#fff',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                itemStyle={{ padding: '4px 0' }}
                 labelFormatter={(time) => new Date(time).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
               />
               {chartType === 'kinetic' ? (
                 substances.map(s => (
-                  <Area key={s.id} type="monotone" dataKey={s.id} stroke={s.color || '#0a84ff'} fillOpacity={1} fill={`url(#color-${s.id})`} strokeWidth={2} connectNulls animationDuration={500} />
+                  <Area key={s.id} type="monotone" dataKey={s.id} stroke={s.color || '#00f2ff'} fillOpacity={1} fill={`url(#color-${s.id})`} strokeWidth={3} connectNulls animationDuration={800} />
                 ))
               ) : (
                 Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
-                  <Area key={type} type="monotone" dataKey={type} stroke={EFFECT_COLORS[type] || '#ff9f0a'} fillOpacity={1} fill={`url(#color-effect-${type})`} strokeWidth={2} connectNulls animationDuration={500} />
+                  <Area key={type} type="monotone" dataKey={type} stroke={EFFECT_COLORS[type] || '#fbbf24'} fillOpacity={1} fill={`url(#color-effect-${type})`} strokeWidth={3} connectNulls animationDuration={800} />
                 ))
               )}
               <ReferenceLine 
                 x={now} 
-                stroke="#ff453a" 
-                strokeDasharray="4 4" 
+                stroke="#00f2ff" 
+                strokeDasharray="6 6" 
                 strokeWidth={2} 
-                label={{ position: 'top', value: 'TEĎ', fill: '#ff453a', fontSize: 10, fontWeight: 'bold' }} 
+                label={{ position: 'top', value: 'NOW', fill: '#00f2ff', fontSize: 10, fontWeight: '900', letterSpacing: '0.1em' }} 
                 isFront={true}
               />
             </AreaChart>
@@ -478,30 +472,35 @@ export default function Dashboard({
       </section>
 
       {/* Active Substance Monitor */}
-      <section className="space-y-2">
-        <div className="flex items-center justify-between px-1">
-          <span className="text-[10px] font-bold text-ios-gray uppercase tracking-widest">Aktivní látky</span>
-          <span className="text-[10px] font-medium text-ios-blue">{activeSubstanceDetails.length} aktivní</span>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Active Molecules</span>
+          <span className="text-[10px] font-black text-android-accent uppercase tracking-wider">{activeSubstanceDetails.length} Detected</span>
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
           {activeSubstanceDetails.map(({ substance, level }) => (
             <button 
               key={substance!.id} 
               onClick={() => setSelectedDetailsId(substance!.id)}
-              className="flex-shrink-0 ios-card p-2.5 min-w-[110px] text-left ios-button"
+              className="flex-shrink-0 android-card p-4 min-w-[140px] text-left android-button group hover:border-android-accent/30"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-theme-text uppercase truncate max-w-[60px]">{substance!.name}</span>
-                <span className="text-[11px] font-bold" style={{ color: substance!.color }}>{level.toFixed(0)}%</span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black text-android-text uppercase tracking-widest truncate max-w-[80px]">{substance!.name}</span>
+                <span className="text-sm font-black" style={{ color: substance!.color }}>{level.toFixed(0)}%</span>
               </div>
-              <div className="h-1 bg-theme-subtle rounded-full overflow-hidden">
-                <motion.div animate={{ width: `${level}%` }} className="h-full" style={{ backgroundColor: substance!.color }} />
+              <div className="h-1.5 bg-android-surface rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${level}%` }} 
+                  className="h-full shadow-[0_0_10px_rgba(255,255,255,0.2)]" 
+                  style={{ backgroundColor: substance!.color }} 
+                />
               </div>
             </button>
           ))}
           {activeSubstanceDetails.length === 0 && (
-            <div className="w-full ios-card p-4 text-center text-ios-gray italic text-xs">
-              Žádné aktivní látky v systému
+            <div className="w-full android-card p-6 text-center text-android-text-muted/50 italic text-sm">
+              No active molecules detected
             </div>
           )}
         </div>
@@ -516,13 +515,13 @@ export default function Dashboard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedDetailsId(null)}
-              className="absolute inset-0 bg-theme-bg/60 backdrop-blur-md"
+              className="absolute inset-0 bg-black/70 backdrop-blur-xl"
             />
             <motion.div 
               initial={{ y: "100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0 }}
-              className="w-full max-w-md ios-card overflow-hidden relative z-10 shadow-2xl"
+              className="w-full max-w-md android-card overflow-hidden relative z-10 shadow-2xl glass-primary"
             >
               {(() => {
                 const item = activeSubstanceDetails.find(d => d.substance?.id === selectedDetailsId);
@@ -532,54 +531,54 @@ export default function Dashboard({
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center border border-theme-border">
-                          <Activity size={24} style={{ color: substance!.color || '#00d1ff' }} />
+                        <div className="w-14 h-14 rounded-3xl bg-android-surface flex items-center justify-center border border-android-border">
+                          <Activity size={28} style={{ color: substance!.color || '#00f2ff' }} />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-theme-text">{substance!.name}</h3>
-                          <div className="text-[10px] text-ios-gray font-bold uppercase tracking-widest">Biometrická Analýza</div>
+                          <h3 className="text-2xl font-black text-android-text">{substance!.name}</h3>
+                          <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Biometric Analysis</div>
                         </div>
                       </div>
                       <button 
                         onClick={() => setSelectedDetailsId(null)}
-                        className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-theme-text transition-all hover:rotate-90 ios-button"
+                        className="p-2.5 rounded-full bg-android-bg text-android-text-muted hover:text-android-text transition-all hover:rotate-90 android-button"
                       >
-                        <X size={20} />
+                        <X size={24} />
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                      <div className="bg-theme-subtle rounded-2xl p-4 border border-theme-border">
-                        <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">Hladina</div>
-                        <div className="text-xl font-bold text-ios-blue">{level.toFixed(2)}%</div>
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-android-surface rounded-3xl p-4 border border-android-border">
+                        <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-1">Level</div>
+                        <div className="text-3xl font-black text-android-accent tracking-tighter">{level.toFixed(1)}%</div>
                       </div>
-                      <div className="bg-theme-subtle rounded-2xl p-4 border border-theme-border">
-                        <div className="text-[10px] font-bold text-ios-gray uppercase tracking-widest mb-1">Tolerance</div>
-                        <div className="text-xl font-bold text-ios-orange">{tolerance.toFixed(2)}%</div>
+                      <div className="bg-android-surface rounded-3xl p-4 border border-android-border">
+                        <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-1">Tolerance</div>
+                        <div className="text-3xl font-black text-amber-400 tracking-tighter">{tolerance.toFixed(1)}%</div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {[
-                        { icon: Clock, label: 'Poločas rozpadu', value: `${substance!.halfLife}h` },
-                        { icon: Zap, label: 'Nástup účinku', value: `${substance!.onset}m` },
-                        { icon: Activity, label: 'Doba trvání', value: `${substance!.duration}h` }
+                        { icon: Clock, label: 'Half-life', value: `${substance!.halfLife}h` },
+                        { icon: Zap, label: 'Onset', value: `${substance!.onset}m` },
+                        { icon: Activity, label: 'Duration', value: `${substance!.duration}h` }
                       ].map((row, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-theme-subtle rounded-xl border border-theme-border">
-                          <div className="flex items-center gap-2">
-                            <row.icon size={14} className="text-ios-gray" />
-                            <span className="text-xs font-bold text-ios-gray">{row.label}</span>
+                        <div key={i} className="flex items-center justify-between p-3.5 bg-android-surface rounded-2xl border border-android-border">
+                          <div className="flex items-center gap-2.5">
+                            <row.icon size={16} className="text-android-text-muted" />
+                            <span className="text-sm font-bold text-android-text-muted">{row.label}</span>
                           </div>
-                          <span className="text-xs font-bold text-theme-text">{row.value}</span>
+                          <span className="text-sm font-black text-android-text">{row.value}</span>
                         </div>
                       ))}
                     </div>
 
                     <button 
                       onClick={() => setSelectedDetailsId(null)}
-                      className="w-full mt-6 py-4 rounded-2xl bg-ios-blue text-theme-text text-sm font-bold uppercase tracking-wider ios-button"
+                      className="w-full mt-8 py-4 rounded-3xl bg-android-accent text-android-bg text-lg font-black uppercase tracking-wider android-button shadow-lg shadow-android-accent/30"
                     >
-                      Zavřít Analýzu
+                      Close Analysis
                     </button>
                   </div>
                 );
@@ -589,12 +588,12 @@ export default function Dashboard({
         )}
       </AnimatePresence>
       {/* Floating Quick Log Button */}
-      <div className="fixed bottom-20 right-4 z-[100] md:hidden">
+      <div className="fixed bottom-24 right-5 z-[100] md:hidden">
         <button 
           onClick={() => setIsQuickLogOpen(true)}
-          className="w-14 h-14 rounded-2xl bg-cyan-primary text-black shadow-[0_0_25px_rgba(0,209,255,0.4)] flex items-center justify-center active:scale-90 transition-all border border-theme-border"
+          className="w-16 h-16 rounded-3xl bg-android-accent text-android-bg shadow-[0_0_30px_rgba(0,242,255,0.4)] flex items-center justify-center active:scale-95 transition-all border border-android-border"
         >
-          <Plus size={28} strokeWidth={3} />
+          <Plus size={32} strokeWidth={3} />
         </button>
       </div>
 
@@ -607,22 +606,22 @@ export default function Dashboard({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsQuickLogOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              className="absolute inset-0 bg-black/70 backdrop-blur-xl"
             />
             <motion.div 
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className="relative ios-card rounded-t-[2.5rem] rounded-b-none w-full max-w-xl p-6 border-t border-theme-border shadow-2xl"
+              className="relative android-card rounded-t-[2.5rem] rounded-b-none w-full max-w-xl p-6 border-t border-android-border shadow-2xl"
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-theme-text uppercase tracking-tight">Rychlý Záznam</h2>
-                <button onClick={() => setIsQuickLogOpen(false)} className="p-2 rounded-full bg-ios-secondary text-ios-gray hover:text-theme-text transition-all ios-button">
-                  <X size={20} />
+                <h2 className="text-xl font-black text-android-text uppercase tracking-tight">Quick Log</h2>
+                <button onClick={() => setIsQuickLogOpen(false)} className="p-2.5 rounded-full bg-android-bg text-android-text-muted hover:text-android-text transition-all android-button">
+                  <X size={24} />
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 {substances.map(s => (
                   <button
                     key={s.id}
@@ -640,17 +639,17 @@ export default function Dashboard({
                       onAddDose(newDose);
                       setIsQuickLogOpen(false);
                     }}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle-hover transition-all text-left ios-button"
+                    className="flex items-center gap-3 p-4 rounded-3xl bg-android-surface border border-android-border hover:bg-android-surface-hover transition-all text-left android-button"
                   >
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-theme-subtle border border-theme-border">
-                      <Zap size={14} style={{ color: s.color }} />
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-android-bg border border-android-border">
+                      <Zap size={18} style={{ color: s.color }} />
                     </div>
-                    <div className="text-xs font-bold text-theme-text uppercase tracking-tight truncate">{s.name}</div>
+                    <div className="text-sm font-black text-android-text uppercase tracking-tight truncate">{s.name}</div>
                   </button>
                 ))}
               </div>
               
-              <p className="text-[10px] text-ios-gray font-bold uppercase text-center tracking-widest">Vyberte látku pro okamžitý záznam výchozí dávky</p>
+              <p className="text-[10px] font-black text-android-text-muted uppercase text-center tracking-[0.2em]">Select a substance to log its default dose instantly</p>
             </motion.div>
           </div>
         )}
