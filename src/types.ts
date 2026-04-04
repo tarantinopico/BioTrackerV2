@@ -28,6 +28,7 @@ export interface CurvePoint {
 export interface Strain {
   name: string;
   price: number;
+  color?: string;
 }
 
 export interface Effect {
@@ -50,6 +51,7 @@ export interface Substance {
   unit: string;
   price: number;
   step: number;
+  dailyLimit?: number;
   category: SubstanceCategory;
   onset: number;
   offset: number;
@@ -116,7 +118,9 @@ export interface UserSettings {
   timeFormat24h: boolean;
   showSeconds: boolean;
   compactMode: boolean;
+  hapticFeedback: boolean;
   language: string;
+  currency: string;
   chartWindow: number;
   weeklyBudget: number;
   chartAnimation: boolean;
@@ -126,7 +130,7 @@ export interface UserSettings {
   doseWarnings: boolean;
   reminders: boolean;
   comedownWarnings: boolean;
-  theme: 'dark' | 'light';
+  theme: 'dark' | 'light' | 'midnight';
 }
 
 export interface CustomEffect {

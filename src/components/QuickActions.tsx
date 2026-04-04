@@ -3,6 +3,7 @@ import { Substance, Shortcut } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useState } from 'react';
+import { getIconComponent } from './Substances';
 
 interface QuickActionsProps {
   shortcuts: Shortcut[];
@@ -22,7 +23,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
     substanceId: '',
     strainId: null,
     route: 'oral',
-    color: '#00f2ff'
+    color: '#00d1ff'
   });
 
   const handleSave = () => {
@@ -38,7 +39,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         strainId: newShortcut.strainId,
         amount: Number(newShortcut.amount),
         route: newShortcut.route || 'oral',
-        color: substance?.color || '#00f2ff',
+        color: substance?.color || '#00d1ff',
       });
     } else {
       onAddShortcut({
@@ -48,13 +49,13 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         strainId: newShortcut.strainId,
         amount: Number(newShortcut.amount),
         route: newShortcut.route || 'oral',
-        color: substance?.color || '#00f2ff',
+        color: substance?.color || '#00d1ff',
       });
     }
     
     setIsAdding(false);
     setEditingShortcutId(null);
-    setNewShortcut({ name: '', amount: 0, substanceId: '', strainId: null, route: 'oral', color: '#00f2ff' });
+    setNewShortcut({ name: '', amount: 0, substanceId: '', strainId: null, route: 'oral', color: '#00d1ff' });
   };
 
   const handleEdit = (shortcut: Shortcut) => {
@@ -66,68 +67,87 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
   const selectedSubstance = substances.find(s => s.id === newShortcut.substanceId);
 
   return (
-    <section className="space-y-6 relative z-10">
+    <section className="space-y-4">
       <div className="flex items-center justify-between px-2">
-        <h3 className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Neural Shortcuts</h3>
+        <h3 className="text-xs font-bold text-md3-gray uppercase tracking-widest">Rychlé užití</h3>
         <button 
           onClick={() => {
             setEditingShortcutId(null);
-            setNewShortcut({ name: '', amount: 0, substanceId: '', strainId: null, route: 'oral', color: '#00f2ff' });
+            setNewShortcut({ name: '', amount: 0, substanceId: '', strainId: null, route: 'oral', color: '#0a84ff' });
             setIsAdding(true);
           }}
-          className="w-10 h-10 rounded-2xl bg-android-accent/10 border border-android-accent/20 text-android-accent flex items-center justify-center android-button shadow-inner"
+          className="p-2 rounded-full bg-md3-secondary md3-button text-md3-primary"
         >
-          <Plus size={20} strokeWidth={3} />
+          <Plus size={16} strokeWidth={3} />
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-2">
         <AnimatePresence mode="popLayout">
           {shortcuts.map((shortcut) => (
             <motion.div
               key={shortcut.id}
               layout
-              initial={{ opacity: 0, scale: 0.9, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className="relative group"
             >
               <button
                 onClick={() => onUseShortcut(shortcut)}
-                className="w-full flex items-center gap-4 p-5 android-card android-button relative overflow-hidden group hover:border-android-accent/30 shadow-xl bg-android-surface/40"
+                className="w-full flex flex-col items-center gap-1.5 p-2 md3-card md3-button text-center relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-1.5 h-full opacity-30 shadow-[2px_0_15px_rgba(0,0,0,0.2)]" style={{ backgroundColor: shortcut.color }} />
-                
-                <div className="w-12 h-12 rounded-2xl bg-android-bg border border-android-border flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
-                  <Zap size={22} strokeWidth={2.5} style={{ color: shortcut.color }} />
+                <div className="w-8 h-8 rounded-xl bg-theme-subtle flex items-center justify-center mb-0.5">
+                  {(() => {
+                    const substance = substances.find(s => s.id === shortcut.substanceId);
+                    const IconComponent = getIconComponent(substance?.icon);
+                    return (
+                      <IconComponent 
+                        size={14} 
+                        style={{ color: shortcut.color }} 
+                      />
+                    );
+                  })()}
                 </div>
                 
-                <div className="text-left min-w-0">
-                  <div className="text-sm font-black text-android-text truncate uppercase tracking-tight">{shortcut.name}</div>
-                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.1em] mt-1 opacity-80">
-                    {shortcut.amount}<span className="text-[8px] ml-0.5">{substances.find(s => s.id === shortcut.substanceId)?.unit || ''}</span> • {shortcut.route}
+                <div className="w-full">
+                  <div className="text-xs font-bold text-theme-text uppercase tracking-tight truncate mb-0.5">
+                    {shortcut.name}
+                  </div>
+                  <div className="flex items-baseline justify-center gap-0.5">
+                    <span className="text-sm font-bold text-theme-text tabular-nums">
+                      {shortcut.amount}
+                    </span>
+                    <span className="text-xs font-medium text-md3-gray uppercase">
+                      {substances.find(s => s.id === shortcut.substanceId)?.unit || ''}
+                    </span>
                   </div>
                 </div>
+
+                <div 
+                  className="absolute bottom-0 left-0 h-1 opacity-30"
+                  style={{ backgroundColor: shortcut.color, width: '100%' }}
+                />
               </button>
               
-              <div className="absolute -top-2 -right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10 scale-90">
+              <div className="absolute -top-2 -right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(shortcut);
                   }}
-                  className="w-9 h-9 rounded-2xl bg-android-accent text-android-bg flex items-center justify-center shadow-[0_5px_15px_rgba(0,242,255,0.3)] android-button"
+                  className="w-6 h-6 rounded-full bg-md3-primary text-white flex items-center justify-center shadow-lg md3-button"
                 >
-                  <Edit2 size={14} strokeWidth={3} />
+                  <Edit2 size={10} strokeWidth={3} />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemoveShortcut(shortcut.id);
                   }}
-                  className="w-9 h-9 rounded-2xl bg-red-500 text-android-bg flex items-center justify-center shadow-[0_5px_15px_rgba(239,68,68,0.3)] android-button"
+                  className="w-6 h-6 rounded-full bg-md3-error text-white flex items-center justify-center shadow-lg md3-button"
                 >
-                  <Trash2 size={14} strokeWidth={3} />
+                  <Trash2 size={10} strokeWidth={3} />
                 </button>
               </div>
             </motion.div>
@@ -137,123 +157,152 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         {shortcuts.length === 0 && (
           <button
             onClick={() => setIsAdding(true)}
-            className="col-span-2 py-16 android-card border-2 border-dashed border-android-border bg-android-surface/20 flex flex-col items-center justify-center gap-4 text-android-text-muted hover:border-android-accent/30 hover:text-android-accent transition-all android-button shadow-inner"
+            className="col-span-3 py-8 md3-card border-dashed border-theme-border flex flex-col items-center justify-center gap-3 text-md3-gray hover:text-md3-primary hover:border-md3-primary/50 transition-all md3-button"
           >
-            <div className="w-16 h-16 rounded-[2rem] bg-android-bg border border-android-border flex items-center justify-center shadow-lg">
-              <Plus size={32} strokeWidth={2.5} />
+            <div className="w-10 h-10 rounded-full bg-theme-subtle flex items-center justify-center">
+              <Plus size={20} strokeWidth={2} />
             </div>
-            <span className="text-[11px] font-black uppercase tracking-[0.3em]">Initialize Shortcut</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Přidat zkratku</span>
           </button>
         )}
       </div>
 
-      {/* Add Shortcut Modal - Modern Bottom Sheet Style */}
+      {/* Add Shortcut Modal */}
       <AnimatePresence>
         {isAdding && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-28 sm:items-center sm:pb-0">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsAdding(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+              className="absolute inset-0 bg-theme-bg/60 backdrop-blur-md"
             />
             <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="relative bg-android-bg border-t border-white/10 rounded-t-[3rem] w-full max-w-lg p-8 pb-12 shadow-[0_-20px_80px_rgba(0,0,0,0.8)] z-10 glass-accent overflow-hidden"
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto no-scrollbar bg-md3-card/90 backdrop-blur-3xl border border-theme-border rounded-[2.5rem] p-6 sm:p-8 relative z-10 shadow-2xl"
             >
-              <div className="w-12 h-1.5 bg-android-border rounded-full mx-auto mb-8 opacity-50" />
-              
-              <div className="flex items-center justify-between mb-10">
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-black text-android-text tracking-tighter">{editingShortcutId ? 'Edit Protocol' : 'New Protocol'}</h2>
-                  <p className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">One-tap rapid sequence</p>
-                </div>
-                <button onClick={() => setIsAdding(false)} className="p-3.5 rounded-full bg-android-bg text-android-text-muted hover:text-android-text android-button shadow-inner">
-                  <X size={24} strokeWidth={2.5} />
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-bold text-theme-text">{editingShortcutId ? 'Upravit zkratku' : 'Nová zkratka'}</h2>
+                <button onClick={() => setIsAdding(false)} className="p-2 rounded-full bg-theme-subtle text-md3-gray hover:text-theme-text transition-all">
+                  <X size={20} />
                 </button>
               </div>
 
-              <div className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Action Identifier</label>
+              <div className="space-y-6">
+                <div>
+                  <label className="text-xs font-bold text-md3-gray uppercase tracking-widest ml-1 mb-2 block">Název</label>
                   <input
                     type="text"
                     value={newShortcut.name}
                     onChange={(e) => setNewShortcut(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g. MORNING ENERGY"
-                    className="android-input w-full h-16 text-lg font-black tracking-tight"
+                    placeholder="Např. Ranní káva"
+                    className="w-full md3-input"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Molecule</label>
-                    <div className="relative group">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-md3-gray uppercase tracking-widest ml-1 mb-2 block">Látka</label>
+                    <div className="relative">
                       <select
                         value={newShortcut.substanceId}
                         onChange={(e) => setNewShortcut(prev => ({ ...prev, substanceId: e.target.value }))}
-                        className="android-input w-full h-16 font-black appearance-none text-xs uppercase tracking-widest pl-5"
+                        className="w-full md3-input appearance-none pr-10"
                       >
-                        <option value="">Select</option>
+                        <option value="" className="bg-theme-card">Vyberte</option>
                         {substances.map(s => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
+                          <option key={s.id} value={s.id} className="bg-theme-card">{s.name}</option>
                         ))}
                       </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-android-text-muted">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-md3-gray">
                         <ChevronDown size={16} />
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Concentration</label>
+                  <div>
+                    <label className="text-xs font-bold text-md3-gray uppercase tracking-widest ml-1 mb-2 block">Množství</label>
                     <div className="relative">
                       <input
                         type="number"
                         step="any"
                         value={newShortcut.amount ?? ''}
                         onChange={(e) => setNewShortcut(prev => ({ ...prev, amount: Number(e.target.value) }))}
-                        className="android-input w-full h-16 text-lg font-black pr-14"
+                        placeholder="0"
+                        className="w-full md3-input pr-12"
                       />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-android-accent uppercase tracking-widest">
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-md3-gray uppercase">
                         {selectedSubstance?.unit || ''}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Transmission Route</label>
-                  <div className="relative group">
-                    <select
-                      value={newShortcut.route}
-                      onChange={(e) => setNewShortcut(prev => ({ ...prev, route: e.target.value }))}
-                      className="android-input w-full h-16 font-black appearance-none text-xs uppercase tracking-widest pl-5"
-                    >
-                      <option value="oral">Oral Path</option>
-                      <option value="sublingual">Sublingual</option>
-                      <option value="insufflated">Nasal Array</option>
-                      <option value="inhaled">Inhalation</option>
-                      <option value="topical">Topical</option>
-                    </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-android-text-muted">
-                      <ChevronDown size={16} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-md3-gray uppercase tracking-widest ml-1 mb-2 block">Způsob užití</label>
+                    <div className="relative">
+                      <select
+                        value={newShortcut.route}
+                        onChange={(e) => setNewShortcut(prev => ({ ...prev, route: e.target.value }))}
+                        className="w-full md3-input appearance-none pr-10"
+                      >
+                        <option value="oral" className="bg-theme-card">Orálně</option>
+                        <option value="sublingual" className="bg-theme-card">Pod jazyk</option>
+                        <option value="insufflated" className="bg-theme-card">Nos</option>
+                        <option value="inhaled" className="bg-theme-card">Inhalace</option>
+                        <option value="intravenous" className="bg-theme-card">IV</option>
+                        <option value="intramuscular" className="bg-theme-card">IM</option>
+                        <option value="subcutaneous" className="bg-theme-card">SC</option>
+                        <option value="rectal" className="bg-theme-card">Rektálně</option>
+                        <option value="topical" className="bg-theme-card">Topicky</option>
+                      </select>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-md3-gray">
+                        <ChevronDown size={16} />
+                      </div>
                     </div>
                   </div>
+
+                  {selectedSubstance?.strains && selectedSubstance.strains.length > 0 && (
+                    <div>
+                      <label className="text-xs font-bold text-md3-gray uppercase tracking-widest ml-1 mb-2 block">Druh</label>
+                      <div className="relative">
+                        <select
+                          value={newShortcut.strainId || ''}
+                          onChange={(e) => setNewShortcut(prev => ({ ...prev, strainId: e.target.value || null }))}
+                          className="w-full md3-input appearance-none pr-10"
+                        >
+                          <option value="" className="bg-theme-card">Základní</option>
+                          {selectedSubstance.strains.map(s => (
+                            <option key={s.name} value={s.name} className="bg-theme-card">{s.name}</option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-md3-gray">
+                          <ChevronDown size={16} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  onClick={handleSave}
-                  disabled={!newShortcut.name || !newShortcut.substanceId || (newShortcut.amount ?? 0) <= 0}
-                  className="w-full h-18 rounded-[2.5rem] bg-android-accent text-android-bg font-black text-lg uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(0,242,255,0.35)] android-button disabled:opacity-50 mt-6 flex items-center justify-center gap-4"
-                >
-                  <Zap size={24} strokeWidth={3} />
-                  <span>{editingShortcutId ? 'Commit Changes' : 'Initialize Action'}</span>
-                </button>
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={() => setIsAdding(false)}
+                    className="flex-1 py-4 rounded-2xl bg-md3-secondary text-theme-text font-bold md3-button"
+                  >
+                    Zrušit
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={!newShortcut.name || !newShortcut.substanceId || (newShortcut.amount ?? 0) <= 0}
+                    className="flex-1 py-4 rounded-2xl bg-md3-primary text-theme-text font-bold md3-button disabled:opacity-50"
+                  >
+                    {editingShortcutId ? 'Uložit' : 'Vytvořit'}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

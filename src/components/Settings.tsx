@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  X, 
   User, 
   Monitor, 
+  Bell, 
   Sparkles, 
   Database, 
   Download, 
@@ -11,57 +11,60 @@ import {
   Plus,
   Activity,
   Clock,
-  Settings as SettingsIcon,
+  ShieldCheck,
+  Smartphone,
   Info,
-  ExternalLink,
+  Github,
+  Heart,
+  Moon,
+  Sun,
   ChevronRight,
-  ShieldCheck
+  Palette
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
 import { cn } from '../lib/utils';
 
 interface SettingsProps {
-  isOpen: boolean;
   settings: UserSettings;
   customEffects: CustomEffect[];
-  onClose: () => void;
   onSave: (settings: UserSettings) => void;
   onSaveEffects: (effects: CustomEffect[]) => void;
   onClearData: () => void;
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onExport: () => void;
+  onExportCSV?: () => void;
 }
 
+type Tab = 'profile' | 'appearance' | 'notifications' | 'effects' | 'data' | 'about';
+
 export default function Settings({ 
-  isOpen, 
   settings, 
   customEffects, 
-  onClose, 
   onSave, 
   onSaveEffects,
   onClearData,
   onImport,
-  onExport
+  onExport,
+  onExportCSV
 }: SettingsProps) {
-  const [localSettings, setLocalSettings] = useState<UserSettings>(settings);
+  const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [newEffectName, setNewEffectName] = useState('');
   const [newEffectType, setNewEffectType] = useState<Valence>('positive');
 
-  if (!isOpen) return null;
-
-  const handleSave = () => {
-    onSave(localSettings);
-    onClose();
+  // Auto-save wrapper
+  const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
+    onSave({ ...settings, [key]: value });
   };
 
   const addCustomEffect = () => {
     if (!newEffectName.trim()) return;
-    const colors = ['#00f2ff', '#00e676', '#d500f9', '#2979ff', '#ffea00', '#ff4081', '#00e5ff', '#ff1744'];
+    const icons = ['sparkles', 'zap', 'heart', 'brain', 'activity', 'smile', 'frown', 'alert-circle'];
+    const colors = ['#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#ec4899', '#06b6d4', '#f43f5e'];
     
     const newEffect: CustomEffect = {
       name: newEffectName.trim(),
-      icon: 'sparkles',
+      icon: icons[Math.floor(Math.random() * icons.length)],
       color: colors[Math.floor(Math.random() * colors.length)],
       valence: newEffectType
     };
@@ -74,207 +77,486 @@ export default function Settings({
     onSaveEffects(customEffects.filter((_, i) => i !== index));
   };
 
+  const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
+    { id: 'profile', label: 'Profil', icon: User },
+    { id: 'appearance', label: 'Vzhled', icon: Palette },
+    { id: 'notifications', label: 'Upozornění', icon: Bell },
+    { id: 'effects', label: 'Efekty', icon: Sparkles },
+    { id: 'data', label: 'Data', icon: Database },
+    { id: 'about', label: 'O aplikaci', icon: Info },
+  ];
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center">
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-xl"
-      />
-      <motion.div 
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="relative bg-android-bg border-t border-white/10 rounded-t-[3.5rem] w-full max-w-lg h-[94vh] overflow-hidden flex flex-col shadow-[0_-20px_80px_rgba(0,0,0,0.8)]"
-      >
-        <div className="w-12 h-1.5 bg-android-border rounded-full mx-auto mt-6 mb-2 opacity-50" />
-        
-        {/* Header */}
-        <div className="flex items-center justify-between p-8">
-          <div className="space-y-1">
-            <h2 className="text-3xl font-black text-android-text tracking-tighter">Settings<span className="text-android-accent">.</span></h2>
-            <p className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Neural System Config</p>
-          </div>
-          <button onClick={onClose} className="p-3.5 rounded-2xl bg-android-surface border border-android-border text-android-text-muted hover:text-android-text android-button shadow-inner">
-            <X size={24} strokeWidth={2.5} />
+    <div className="space-y-6 pb-8">
+      {/* Settings Navigation */}
+      <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-2xl whitespace-nowrap transition-all font-bold text-sm",
+              activeTab === tab.id 
+                ? "bg-md3-primary text-theme-bg shadow-md" 
+                : "bg-theme-subtle text-md3-gray hover:bg-theme-subtle-hover"
+            )}
+          >
+            <tab.icon size={16} />
+            {tab.label}
           </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-6 space-y-12 no-scrollbar">
-          {/* User Profile */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 px-2">
-              <div className="p-2 rounded-xl bg-android-accent/10 border border-android-accent/20">
-                <User size={16} className="text-android-accent" />
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-6"
+        >
+          {/* PROFILE TAB */}
+          {activeTab === 'profile' && (
+            <div className="space-y-6">
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <User size={16} className="text-md3-primary" /> Biometrický profil
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Váha (kg)</label>
+                    <input 
+                      type="number" 
+                      value={settings.userWeight} 
+                      onChange={e => updateSetting('userWeight', parseInt(e.target.value) || 70)}
+                      className="w-full md3-input" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Věk</label>
+                    <input 
+                      type="number" 
+                      value={settings.userAge} 
+                      onChange={e => updateSetting('userAge', parseInt(e.target.value) || 25)}
+                      className="w-full md3-input" 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Metabolismus</label>
+                  <select 
+                    value={settings.userMetabolism} 
+                    onChange={e => updateSetting('userMetabolism', e.target.value as any)}
+                    className="w-full md3-input appearance-none"
+                  >
+                    <option value="slow" className="bg-theme-bg">Pomalý (-20%)</option>
+                    <option value="normal" className="bg-theme-bg">Normální</option>
+                    <option value="fast" className="bg-theme-bg">Rychlý (+20%)</option>
+                  </select>
+                </div>
               </div>
-              <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Biological Profile</h3>
+
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Activity size={16} className="text-md3-primary" /> Cíle a limity
+                </h3>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Týdenní rozpočet</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="number" 
+                      value={settings.weeklyBudget || 1000} 
+                      onChange={e => updateSetting('weeklyBudget', parseInt(e.target.value) || 1000)}
+                      className="flex-1 md3-input" 
+                    />
+                    <select 
+                      value={settings.currency || 'Kč'} 
+                      onChange={e => updateSetting('currency', e.target.value)}
+                      className="w-24 md3-input appearance-none"
+                    >
+                      <option value="Kč" className="bg-theme-bg">Kč</option>
+                      <option value="€" className="bg-theme-bg">€</option>
+                      <option value="$" className="bg-theme-bg">$</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div className="android-card p-8 space-y-8 glass-accent border-white/5">
-              <div className="grid grid-cols-2 gap-8">
+          )}
+
+          {/* APPEARANCE TAB */}
+          {activeTab === 'appearance' && (
+            <div className="space-y-6">
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Monitor size={16} className="text-md3-primary" /> Rozhraní
+                </h3>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Mass (kg)</label>
-                  <input 
-                    type="number" 
-                    value={localSettings.userWeight} 
-                    onChange={e => setLocalSettings(prev => ({ ...prev, userWeight: parseInt(e.target.value) }))}
-                    className="android-input w-full h-16 text-xl font-black tracking-tight" 
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Age Cycle</label>
-                  <input 
-                    type="number" 
-                    value={localSettings.userAge} 
-                    onChange={e => setLocalSettings(prev => ({ ...prev, userAge: parseInt(e.target.value) }))}
-                    className="android-input w-full h-16 text-xl font-black tracking-tight" 
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Metabolic Velocity</label>
-                <div className="grid grid-cols-3 gap-3 p-1.5 bg-android-bg rounded-[2rem] border border-android-border shadow-inner">
-                  {['slow', 'normal', 'fast'].map(m => (
-                    <button
-                      key={m}
-                      onClick={() => setLocalSettings(prev => ({ ...prev, userMetabolism: m as any }))}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Jazyk</label>
+                    <select 
+                      value={settings.language} 
+                      onChange={e => updateSetting('language', e.target.value)}
+                      className="w-full md3-input appearance-none"
+                    >
+                      <option value="cs" className="bg-theme-bg">Čeština</option>
+                      <option value="en" className="bg-theme-bg">English</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Téma vzhledu</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        onClick={() => updateSetting('theme', 'light')}
+                        className={cn(
+                          "p-3 rounded-xl border flex flex-col items-center gap-2 transition-all",
+                          settings.theme === 'light' ? "bg-md3-primary/10 border-md3-primary text-md3-primary" : "bg-theme-subtle border-theme-border text-md3-gray hover:bg-theme-subtle-hover"
+                        )}
+                      >
+                        <Sun size={20} />
+                        <span className="text-xs font-bold">Světlé</span>
+                      </button>
+                      <button 
+                        onClick={() => updateSetting('theme', 'dark')}
+                        className={cn(
+                          "p-3 rounded-xl border flex flex-col items-center gap-2 transition-all",
+                          settings.theme === 'dark' ? "bg-md3-primary/10 border-md3-primary text-md3-primary" : "bg-theme-subtle border-theme-border text-md3-gray hover:bg-theme-subtle-hover"
+                        )}
+                      >
+                        <Moon size={20} />
+                        <span className="text-xs font-bold">Tmavé</span>
+                      </button>
+                      <button 
+                        onClick={() => updateSetting('theme', 'midnight')}
+                        className={cn(
+                          "p-3 rounded-xl border flex flex-col items-center gap-2 transition-all",
+                          settings.theme === 'midnight' ? "bg-md3-primary/10 border-md3-primary text-md3-primary" : "bg-theme-subtle border-theme-border text-md3-gray hover:bg-theme-subtle-hover"
+                        )}
+                      >
+                        <Moon size={20} className="fill-current" />
+                        <span className="text-xs font-bold">Půlnoční</span>
+                      </button>
+                    </div>
+                  </div>
+                  {[
+                    { id: 'timeFormat24h', label: '24h formát času', icon: Clock },
+                    { id: 'showSeconds', label: 'Zobrazit sekundy', icon: Activity },
+                    { id: 'compactMode', label: 'Kompaktní režim', icon: Smartphone },
+                  ].map(item => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => updateSetting(item.id as keyof UserSettings, !(settings as any)[item.id])}
                       className={cn(
-                        "py-3.5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 android-button",
-                        localSettings.userMetabolism === m 
-                          ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" 
-                          : "text-android-text-muted hover:text-android-text"
+                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                        (settings as any)[item.id] 
+                          ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                          : "bg-theme-subtle border-theme-border text-md3-gray"
                       )}
                     >
-                      {m}
+                      <div className="flex items-center gap-3">
+                        <item.icon size={18} />
+                        <span className="font-bold text-sm">{item.label}</span>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-6 rounded-full p-1 transition-all",
+                        (settings as any)[item.id] ? "bg-md3-primary" : "bg-theme-border"
+                      )}>
+                        <div className={cn(
+                          "w-4 h-4 rounded-full bg-white transition-all",
+                          (settings as any)[item.id] ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Activity size={16} className="text-md3-primary" /> Grafy a analýza
+                </h3>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Časové okno grafu</label>
+                    <select 
+                      value={settings.chartWindow} 
+                      onChange={e => updateSetting('chartWindow', parseInt(e.target.value) || 24)}
+                      className="w-full md3-input appearance-none"
+                    >
+                      <option value={12} className="bg-theme-bg">12 hodin</option>
+                      <option value={24} className="bg-theme-bg">24 hodin</option>
+                      <option value={48} className="bg-theme-bg">48 hodin</option>
+                      <option value={72} className="bg-theme-bg">72 hodin</option>
+                    </select>
+                  </div>
+                  {[
+                    { id: 'chartAnimation', label: 'Animace grafů', icon: Sparkles },
+                    { id: 'chartGrid', label: 'Zobrazit mřížku', icon: Monitor },
+                    { id: 'chartPoints', label: 'Zobrazit body', icon: Activity },
+                  ].map(item => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => updateSetting(item.id as keyof UserSettings, !(settings as any)[item.id])}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                        (settings as any)[item.id] 
+                          ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                          : "bg-theme-subtle border-theme-border text-md3-gray"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon size={18} />
+                        <span className="font-bold text-sm">{item.label}</span>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-6 rounded-full p-1 transition-all",
+                        (settings as any)[item.id] ? "bg-md3-primary" : "bg-theme-border"
+                      )}>
+                        <div className={cn(
+                          "w-4 h-4 rounded-full bg-white transition-all",
+                          (settings as any)[item.id] ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
-          </section>
+          )}
 
-          {/* Interface Settings */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 px-2">
-              <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <Monitor size={16} className="text-purple-400" />
-              </div>
-              <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Neural Interface</h3>
-            </div>
-            
-            <div className="android-card overflow-hidden border-white/5 shadow-2xl">
-              {[
-                { id: 'timeFormat24h', label: '24-hour Chronology', icon: Clock },
-                { id: 'showSeconds', label: 'High Precision Clock', icon: Activity },
-                { id: 'compactMode', label: 'Molecular View (Compact)', icon: Sparkles },
-              ].map((item, i, arr) => (
-                <button 
-                  key={item.id} 
-                  onClick={() => setLocalSettings(prev => ({ ...prev, [item.id]: !(prev as any)[item.id] }))}
-                  className={cn(
-                    "w-full flex items-center justify-between p-6 hover:bg-android-surface transition-all duration-300 text-left group",
-                    i !== arr.length - 1 && "border-b border-android-border"
-                  )}
-                >
-                  <div className="flex items-center gap-5">
-                    <div className="w-12 h-12 rounded-2xl bg-android-surface border border-android-border flex items-center justify-center text-android-text-muted group-active:text-android-accent transition-colors shadow-inner">
-                      <item.icon size={20} strokeWidth={2.5} />
-                    </div>
-                    <span className="text-base font-black text-android-text tracking-tight">{item.label}</span>
-                  </div>
-                  <div className={cn(
-                    "w-14 h-8 rounded-full relative transition-all duration-500 shadow-inner",
-                    (localSettings as any)[item.id] ? "bg-android-accent" : "bg-android-surface border border-android-border"
-                  )}>
-                    <div className={cn(
-                      "absolute top-1 w-6 h-6 rounded-full transition-all duration-500 shadow-lg",
-                      (localSettings as any)[item.id] ? "left-7 bg-android-bg" : "left-1 bg-android-text-muted"
-                    )} />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Data Management */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 px-2">
-              <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <Database size={16} className="text-emerald-400" />
-              </div>
-              <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Core Database</h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <button 
-                onClick={onExport}
-                className="android-card p-8 flex flex-col items-center justify-center gap-4 android-button bg-android-surface/40 hover:border-android-accent/30 border-white/5 group shadow-xl"
-              >
-                <div className="w-14 h-14 rounded-3xl bg-android-accent/10 flex items-center justify-center text-android-accent shadow-inner group-hover:scale-110 transition-transform">
-                  <Download size={28} strokeWidth={2.5} />
-                </div>
-                <span className="text-[10px] font-black text-android-text uppercase tracking-[0.2em]">Backup System</span>
-              </button>
-              <label className="android-card p-8 flex flex-col items-center justify-center gap-4 android-button bg-android-surface/40 hover:border-android-accent/30 border-white/5 group shadow-xl cursor-pointer">
-                <div className="w-14 h-14 rounded-3xl bg-android-accent/10 flex items-center justify-center text-android-accent shadow-inner group-hover:scale-110 transition-transform">
-                  <Upload size={28} strokeWidth={2.5} />
-                </div>
-                <span className="text-[10px] font-black text-android-text uppercase tracking-[0.2em]">Restore Array</span>
-                <input type="file" accept=".json" onChange={onImport} className="hidden" />
-              </label>
-            </div>
-            
-            <button 
-              onClick={onClearData}
-              className="w-full h-16 rounded-[2rem] border border-red-500/20 text-red-500 hover:bg-red-500/5 flex items-center justify-center gap-4 transition-all font-black text-[11px] uppercase tracking-[0.3em] android-button shadow-lg shadow-red-500/5 mt-4"
-            >
-              <Trash2 size={18} strokeWidth={2.5} /> Force Purge All Memory
-            </button>
-          </section>
-
-          {/* App Info */}
-          <section className="pt-8 border-t border-android-border space-y-8">
-            <div className="android-card p-10 space-y-8 glass-accent overflow-hidden relative border-white/5 shadow-2xl">
-              <div className="flex items-center gap-6 relative z-10">
-                <div className="w-20 h-20 rounded-[2rem] bg-android-accent text-android-bg flex items-center justify-center shadow-[0_0_40px_rgba(0,242,255,0.3)]">
-                  <ShieldCheck size={40} strokeWidth={3} />
-                </div>
-                <div>
-                  <h4 className="text-2xl font-black text-android-text tracking-tighter">BioTracker Pro</h4>
-                  <p className="text-[10px] text-android-accent font-black uppercase tracking-[0.3em] mt-1 opacity-80">v2.5.0 Molecular OS</p>
-                </div>
-              </div>
-              
-              <p className="text-sm text-android-text-muted leading-relaxed font-bold">
-                Elite pharmacokinetic monitoring and biometric analysis environment. Your genetic and chemical data never leaves this encrypted device. High-precision science for the digital human.
-              </p>
-
-              <div className="flex items-center gap-3 pt-4">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full border-4 border-android-card bg-android-surface shadow-lg" />
+          {/* NOTIFICATIONS TAB */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-6">
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Bell size={16} className="text-md3-primary" /> Upozornění a varování
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { id: 'interactionWarnings', label: 'Varování před interakcemi', icon: ShieldCheck },
+                    { id: 'doseWarnings', label: 'Varování vysoké dávky', icon: Activity },
+                    { id: 'comedownWarnings', label: 'Upozornění na comedown', icon: Clock },
+                    { id: 'reminders', label: 'Připomenutí dávky', icon: Bell },
+                    { id: 'hapticFeedback', label: 'Haptická odezva', icon: Sparkles },
+                  ].map(item => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => updateSetting(item.id as keyof UserSettings, !(settings as any)[item.id])}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                        (settings as any)[item.id] 
+                          ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                          : "bg-theme-subtle border-theme-border text-md3-gray"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon size={18} />
+                        <span className="font-bold text-sm">{item.label}</span>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-6 rounded-full p-1 transition-all",
+                        (settings as any)[item.id] ? "bg-md3-primary" : "bg-theme-border"
+                      )}>
+                        <div className={cn(
+                          "w-4 h-4 rounded-full bg-white transition-all",
+                          (settings as any)[item.id] ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </div>
+                    </button>
                   ))}
                 </div>
-                <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] ml-3">Validated by 50k+ Bio-Trackers</span>
               </div>
             </div>
-          </section>
-        </div>
-        
-        {/* Footer Actions */}
-        <div className="p-8 border-t border-android-border bg-android-bg/95 backdrop-blur-2xl">
-          <button 
-            onClick={handleSave}
-            className="w-full h-18 rounded-[2.5rem] bg-android-accent text-android-bg font-black text-lg uppercase tracking-[0.3em] shadow-[0_20px_40px_rgba(0,242,255,0.35)] android-button flex items-center justify-center gap-4"
-          >
-            <span>Execute Calibration</span>
-          </button>
-        </div>
-      </motion.div>
+          )}
+
+          {/* EFFECTS TAB */}
+          {activeTab === 'effects' && (
+            <div className="space-y-6">
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Sparkles size={16} className="text-md3-primary" /> Vlastní efekty
+                </h3>
+                <p className="text-xs text-md3-gray font-medium">
+                  Přidejte si vlastní efekty, které chcete sledovat u jednotlivých látek.
+                </p>
+                
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={newEffectName}
+                    onChange={e => setNewEffectName(e.target.value)}
+                    placeholder="Název efektu..."
+                    className="flex-1 md3-input"
+                  />
+                  <select 
+                    value={newEffectType}
+                    onChange={e => setNewEffectType(e.target.value as Valence)}
+                    className="w-32 md3-input appearance-none"
+                  >
+                    <option value="positive" className="bg-theme-bg">Pozitivní</option>
+                    <option value="neutral" className="bg-theme-bg">Neutrální</option>
+                    <option value="negative" className="bg-theme-bg">Negativní</option>
+                  </select>
+                  <button 
+                    onClick={addCustomEffect}
+                    disabled={!newEffectName.trim()}
+                    className="p-4 rounded-2xl bg-md3-primary text-theme-bg disabled:opacity-50 md3-button"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  {customEffects.map((effect, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: effect.color }} />
+                        <span className="text-sm font-bold text-theme-text">{effect.name}</span>
+                      </div>
+                      <button 
+                        onClick={() => deleteCustomEffect(idx)}
+                        className="p-1.5 rounded-lg text-md3-gray hover:text-red-500 hover:bg-red-500/10 transition-all"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  {customEffects.length === 0 && (
+                    <div className="col-span-2 text-center p-4 text-xs text-md3-gray italic">
+                      Zatím nemáte žádné vlastní efekty
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* DATA TAB */}
+          {activeTab === 'data' && (
+            <div className="space-y-6">
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Database size={16} className="text-md3-primary" /> Správa dat
+                </h3>
+                <div className="space-y-3">
+                  <button 
+                    onClick={onExport}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border text-theme-text hover:bg-theme-subtle-hover transition-all group md3-button"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-md3-primary/10 text-md3-primary group-hover:scale-110 transition-transform">
+                        <Download size={18} />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-sm">Zálohovat data (JSON)</div>
+                        <div className="text-xs text-md3-gray">Uloží všechna data do souboru</div>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-md3-gray" />
+                  </button>
+
+                  {onExportCSV && (
+                    <button 
+                      onClick={onExportCSV}
+                      className="w-full flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border text-theme-text hover:bg-theme-subtle-hover transition-all group md3-button"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:scale-110 transition-transform">
+                          <Database size={18} />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-sm">Exportovat do CSV</div>
+                          <div className="text-xs text-md3-gray">Pro analýzu v Excelu</div>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-md3-gray" />
+                    </button>
+                  )}
+
+                  <label className="w-full flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border text-theme-text hover:bg-theme-subtle-hover transition-all cursor-pointer group md3-button">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 group-hover:scale-110 transition-transform">
+                        <Upload size={18} />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-sm">Obnovit ze zálohy</div>
+                        <div className="text-xs text-md3-gray">Načte data z JSON souboru</div>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-md3-gray" />
+                    <input type="file" accept=".json" onChange={onImport} className="hidden" />
+                  </label>
+
+                  <button 
+                    onClick={onClearData}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-red-500/5 border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all group md3-button mt-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-red-500/10 group-hover:scale-110 transition-transform">
+                        <Trash2 size={18} />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-sm">Smazat všechna data</div>
+                        <div className="text-xs opacity-80">Tato akce je nevratná</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ABOUT TAB */}
+          {activeTab === 'about' && (
+            <div className="space-y-6">
+              <div className="md3-card p-6 flex flex-col items-center text-center space-y-4">
+                <div className="w-20 h-20 rounded-3xl bg-md3-primary flex items-center justify-center shadow-lg">
+                  <Activity size={40} className="text-theme-bg" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-theme-text tracking-tight">BioTracker Pro</h2>
+                  <p className="text-sm font-bold text-md3-gray tracking-widest uppercase mt-1">Verze 2.1.0</p>
+                </div>
+                <p className="text-sm text-md3-gray font-medium max-w-xs leading-relaxed">
+                  Pokročilý systém pro sledování farmakokinetiky, biometrických dat a analýzu užívání látek.
+                </p>
+                
+                <div className="w-full text-left space-y-3 mt-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-md3-text">Hlavní funkce</h3>
+                  <ul className="text-sm text-md3-gray space-y-2">
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Výpočet plazmatické koncentrace</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Sledování tolerance a interakcí</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Analýza výdajů a zvyklostí</li>
+                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Plně lokální a privátní úložiště</li>
+                  </ul>
+                </div>
+
+                <div className="w-full p-4 rounded-2xl bg-theme-subtle border border-theme-border text-left mt-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-md3-text mb-2 flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-emerald-500" />
+                    Ochrana soukromí
+                  </h3>
+                  <p className="text-xs text-md3-gray leading-relaxed">
+                    Všechna data jsou ukládána výhradně ve vašem zařízení (Local Storage). Aplikace neodesílá žádné informace na externí servery. Pro zálohování použijte funkci exportu v záložce Data.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <a href="#" className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle-hover transition-all text-theme-text">
+                  <Github size={24} className="text-md3-gray" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Zdrojový kód</span>
+                </a>
+                <a href="#" className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle-hover transition-all text-theme-text">
+                  <Heart size={24} className="text-rose-500" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Podpořit</span>
+                </a>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

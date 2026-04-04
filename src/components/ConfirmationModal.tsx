@@ -20,63 +20,63 @@ export default function ConfirmationModal({
   message,
   onConfirm,
   onCancel,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText = 'Potvrdit',
+  cancelText = 'Zrušit',
   variant = 'danger'
 }: ConfirmationModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onCancel}
-            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+            className="absolute inset-0 bg-theme-bg/80 backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-sm android-card p-10 glass-accent overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] border-white/10"
+            className="relative w-full max-w-sm bg-card-bg border border-theme-border rounded-2xl p-4 shadow-2xl"
           >
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex items-start justify-between mb-3">
               <div className={cn(
-                "w-16 h-16 rounded-3xl flex items-center justify-center shadow-2xl transition-all duration-500",
-                variant === 'danger' ? 'bg-red-500/20 text-red-500 shadow-red-500/10' :
-                variant === 'warning' ? 'bg-amber-500/20 text-amber-500 shadow-amber-500/10' :
-                'bg-android-accent/20 text-android-accent shadow-android-accent/10'
+                "w-10 h-10 rounded-xl flex items-center justify-center",
+                variant === 'danger' ? 'bg-red-500/10 text-red-500' :
+                variant === 'warning' ? 'bg-amber-500/10 text-amber-500' :
+                'bg-cyan-500/10 text-cyan-500'
               )}>
-                <AlertTriangle size={32} strokeWidth={2.5} />
+                <AlertTriangle size={20} />
               </div>
               <button 
                 onClick={onCancel}
-                className="p-3 rounded-2xl bg-android-surface border border-android-border text-android-text-muted hover:text-android-text transition-colors android-button"
+                className="p-1.5 rounded-lg hover:bg-theme-subtle text-md3-gray transition-colors"
               >
-                <X size={24} strokeWidth={2.5} />
+                <X size={18} />
               </button>
             </div>
 
-            <h3 className="text-2xl font-black text-android-text mb-3 uppercase tracking-tighter">{title}</h3>
-            <p className="text-android-text-muted text-sm leading-relaxed mb-10 font-bold opacity-80">
+            <h3 className="text-lg font-black text-theme-text uppercase tracking-tight mb-1.5">{title}</h3>
+            <p className="text-md3-gray text-xs leading-relaxed mb-6 font-medium">
               {message}
             </p>
 
-            <div className="flex gap-5">
+            <div className="flex gap-2.5">
               <button
                 onClick={onCancel}
-                className="flex-1 h-14 rounded-2xl bg-android-surface border border-android-border text-android-text-muted font-black uppercase tracking-[0.2em] text-[10px] android-button shadow-inner"
+                className="flex-1 py-2.5 px-3 rounded-lg bg-theme-subtle border border-theme-border text-theme-text font-bold uppercase tracking-wider text-xs hover:bg-theme-subtle-hover transition-all"
               >
                 {cancelText}
               </button>
               <button
                 onClick={onConfirm}
                 className={cn(
-                  "flex-1 h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] text-android-bg transition-all shadow-xl android-button",
-                  variant === 'danger' ? 'bg-red-500 shadow-red-500/30' :
-                  variant === 'warning' ? 'bg-amber-500 shadow-amber-500/30' :
-                  'bg-android-accent shadow-android-accent/30'
+                  "flex-1 py-2.5 px-3 rounded-lg font-bold uppercase tracking-wider text-xs text-black transition-all shadow-lg",
+                  variant === 'danger' ? 'bg-red-500 hover:bg-red-400 shadow-red-500/20' :
+                  variant === 'warning' ? 'bg-amber-500 hover:bg-amber-400 shadow-amber-500/20' :
+                  'bg-cyan-primary hover:bg-cyan-400 shadow-cyan-500/20'
                 )}
               >
                 {confirmText}

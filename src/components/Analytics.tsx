@@ -8,7 +8,6 @@ import {
   GitMerge, 
   Calendar,
   TrendingUp,
-  Activity,
   PieChart as PieChartIcon,
   ChevronRight,
   ChevronLeft,
@@ -44,8 +43,10 @@ import {
   Legend
 } from 'recharts';
 import { Substance, Dose, UserSettings, Strain } from '../types';
-import { cn } from '../lib/utils';
+import { cn, formatTime } from '../lib/utils';
 import { calculateTolerance } from '../services/pharmacology';
+
+import { getIconComponent } from './Substances';
 
 interface AnalyticsProps {
   substances: Substance[];
@@ -355,23 +356,23 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   }, [doses, substances, now]);
 
   const renderOverview = () => (
-    <div className="space-y-8 relative">
+    <div className="space-y-6 relative">
       {/* Header */}
       <div className="flex items-center justify-between px-2 relative z-10">
         <div>
-          <h1 className="text-3xl font-black text-android-text tracking-tighter">Analytics<span className="text-android-accent">.</span></h1>
-          <p className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mt-1">Biometric Intelligence</p>
+          <h1 className="text-3xl font-bold text-theme-text tracking-tight">Analýza</h1>
+          <p className="text-sm font-medium text-md3-gray">Přehled vašich dat</p>
         </div>
-        <div className="flex bg-android-surface p-1 rounded-2xl border border-android-border shadow-inner">
+        <div className="flex bg-md3-secondary p-1 rounded-xl">
           {[7, 30, 90].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p as Period)}
               className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 android-button",
+                "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
                 period === p 
-                  ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" 
-                  : "text-android-text-muted hover:text-android-text"
+                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+                  : "text-md3-gray hover:text-theme-text"
               )}
             >
               {p}D
@@ -382,88 +383,80 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 gap-4 relative z-10">
-        <div className="android-card p-6 glass-accent border-white/5">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-android-accent/10 border border-android-accent/20 flex items-center justify-center text-android-accent shadow-inner">
-              <DollarSign size={18} strokeWidth={2.5} />
+        <div className="md3-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-md3-primary/10 flex items-center justify-center text-md3-primary">
+              <DollarSign size={16} />
             </div>
-            <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Spent ({period}D)</span>
+            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Útrata ({period}D)</span>
           </div>
-          <div className="text-3xl font-black text-android-text tracking-tighter">
-            {totalCost.toLocaleString('cs-CZ')} <span className="text-base font-bold text-android-text-muted uppercase ml-1">Kč</span>
+          <div className="text-2xl font-bold text-theme-text tracking-tight">
+            {totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
           </div>
         </div>
-        <div className="android-card p-6 bg-android-surface/40 border-white/5">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-inner">
-              <Wallet size={18} strokeWidth={2.5} />
+        <div className="md3-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-md3-green/10 flex items-center justify-center text-md3-green">
+              <Wallet size={16} />
             </div>
-            <span className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Total All-Time</span>
+            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Celkem</span>
           </div>
-          <div className="text-3xl font-black text-android-text tracking-tighter">
-            {allTimeCost.toLocaleString('cs-CZ')} <span className="text-base font-bold text-android-text-muted uppercase ml-1">Kč</span>
+          <div className="text-2xl font-bold text-theme-text tracking-tight">
+            {allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
           </div>
         </div>
       </div>
 
       {/* Trend Chart */}
-      <section className="android-card p-6 bg-android-surface/40 relative z-10 border-white/5 overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-android-accent/5 blur-[100px] -mr-20 -mt-20 pointer-events-none" />
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-android-accent/10 text-android-accent">
-              <TrendingUp size={18} strokeWidth={2.5} />
-            </div>
-            <h2 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Financial Dynamics</h2>
+      <section className="md3-card p-6 relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} className="text-md3-primary" />
+            <h2 className="text-sm font-bold text-theme-text uppercase tracking-wider">Trend Výdajů</h2>
           </div>
-          <div className="text-[10px] font-black text-android-accent bg-android-accent/10 px-3 py-1.5 rounded-full border border-android-accent/20 tracking-wider">
-            AVG: {(totalCost / period).toFixed(0)} Kč / DAY
-          </div>
+          <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">{(totalCost / period).toFixed(0)} {settings.currency || 'Kč'} / den</span>
         </div>
-        <div className="h-56 w-full mt-4">
+        <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00f2ff" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#00f2ff" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#0a84ff" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#0a84ff" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
-                dy={15}
+                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                dy={10}
               />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
+                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
               />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#121212', 
-                  borderRadius: '20px', 
+                  backgroundColor: 'rgba(28, 28, 30, 0.9)', 
+                  borderRadius: '16px', 
                   border: '1px solid rgba(255, 255, 255, 0.1)', 
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                  fontWeight: '900',
-                  textTransform: 'uppercase',
-                  fontSize: '11px',
-                  letterSpacing: '0.05em'
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
                 }}
-                itemStyle={{ color: '#fff', padding: '4px 0' }}
-                labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
+                itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
+                labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
               />
               <Area 
                 type="monotone" 
                 dataKey="cost" 
-                stroke="#00f2ff" 
+                stroke="#0a84ff" 
                 fillOpacity={1} 
                 fill="url(#colorCost)" 
-                strokeWidth={4} 
-                animationDuration={2000}
+                strokeWidth={3} 
+                animationDuration={1500}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -471,44 +464,35 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       </section>
 
       {/* Activity & Predictions */}
-      <div className="grid grid-cols-1 gap-6 relative z-10">
-        <section className="android-card p-6 bg-android-surface/40 border-white/5">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
-              <Calendar size={18} strokeWidth={2.5} />
-            </div>
-            <h2 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Neural Activity Map</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+        <section className="md3-card p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar size={16} className="text-md3-green" />
+            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Aktivita</h2>
           </div>
-          <div className="flex flex-wrap gap-2.5 justify-center py-4 bg-android-bg/30 rounded-3xl border border-android-border shadow-inner">
+          <div className="flex flex-wrap gap-2 justify-center">
             {activityHeatmap.map((day, i) => (
-              <motion.div 
+              <div 
                 key={i} 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.01 }}
-                className="w-5 h-5 rounded-md transition-all duration-500 hover:scale-125 cursor-help shadow-sm"
+                className="w-4 h-4 rounded-sm transition-all duration-300 hover:scale-125"
                 style={{ 
-                  backgroundColor: day.count > 0 ? `rgba(0, 242, 255, ${0.15 + (Math.min(day.count, 5) * 0.15)})` : 'rgba(255, 255, 255, 0.03)',
-                  border: day.count > 0 ? '1px solid rgba(0, 242, 255, 0.2)' : '1px solid rgba(255, 255, 255, 0.05)'
+                  backgroundColor: day.count > 0 ? `rgba(48, 209, 88, ${0.2 + (Math.min(day.count, 5) * 0.15)})` : 'rgba(255, 255, 255, 0.05)',
                 }}
               />
             ))}
           </div>
         </section>
 
-        <section className="android-card p-6 glass-accent border-white/5 overflow-hidden">
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/5 blur-[80px] -ml-16 -mb-16 pointer-events-none" />
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400">
-              <Zap size={18} strokeWidth={2.5} />
-            </div>
-            <h2 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Forecast Projection</h2>
+        <section className="md3-card p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Zap size={16} className="text-md3-orange" />
+            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce</h2>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             {predictionData.map((p, i) => (
-              <div key={i} className="text-center p-4 rounded-3xl bg-android-bg border border-android-border shadow-lg">
-                <div className="text-[9px] text-android-text-muted font-black uppercase mb-2 tracking-[0.1em]">{p.name}</div>
-                <div className="text-base font-black text-android-text tracking-tighter leading-none">{p.value.toFixed(0)} <span className="text-[10px] text-android-text-muted uppercase">Kč</span></div>
+              <div key={i} className="text-center p-3 rounded-2xl bg-theme-subtle">
+                <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
+                <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
               </div>
             ))}
           </div>
@@ -518,45 +502,48 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       {/* Substance List */}
       <div className="space-y-4 relative z-10 pb-24">
         <div className="flex items-center justify-between px-2">
-          <h3 className="text-xs font-black text-android-text-muted uppercase tracking-[0.2em]">Substances</h3>
+          <h3 className="text-xs font-bold text-md3-gray uppercase tracking-widest">Látky</h3>
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-android-text-muted" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-md3-gray" />
             <input 
               type="text" 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search..."
-              className="bg-android-surface border-none rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-1 focus:ring-android-accent/50 transition-all w-40 text-android-text font-black tracking-tight"
+              placeholder="Hledat..."
+              className="bg-md3-secondary border-none rounded-xl py-2 pl-9 pr-4 text-xs outline-none focus:ring-1 focus:ring-md3-primary/50 transition-all w-40 text-theme-text font-medium"
             />
           </div>
         </div>
         
         <div className="grid grid-cols-1 gap-3">
-          {filteredSubstanceStats.map((s) => (
+          {filteredSubstanceStats.map((s) => {
+            const IconComponent = getIconComponent(s.icon);
+            return (
             <button 
               key={s.id}
               onClick={() => setSelectedSubstanceId(s.id)}
-              className="w-full android-card p-4 flex items-center justify-between android-button-subtle text-left border-white/5"
+              className="w-full md3-card p-4 flex items-center justify-between md3-button text-left"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative" style={{ backgroundColor: s.color || '#ffffff' }}>
-                  <div className="absolute inset-0 blur-lg opacity-30 rounded-full" style={{ backgroundColor: s.color }} />
-                  <Activity size={20} className="relative z-10" style={{ color: s.color }} />
+                <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative">
+                  <div className="absolute inset-0 blur-lg opacity-20 rounded-full" style={{ backgroundColor: s.color }} />
+                  <IconComponent size={20} style={{ color: s.color }} className="relative z-10" />
                 </div>
                 <div>
-                  <div className="text-base font-black text-android-text tracking-tight">{s.name}</div>
-                  <div className="text-xs text-android-text-muted font-black">{s.count} entries</div>
+                  <div className="text-base font-bold text-theme-text tracking-tight">{s.name}</div>
+                  <div className="text-xs text-md3-gray font-medium">{s.count} záznamů</div>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <div className="text-xs font-black text-android-text">{s.tolerance.toFixed(0)}%</div>
-                  <div className="text-[8px] font-black text-android-text-muted uppercase tracking-[0.2em]">Tolerance</div>
+                  <div className="text-xs font-bold text-theme-text">{s.tolerance.toFixed(0)}%</div>
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest">Tolerance</div>
                 </div>
-                <ChevronRight size={20} className="text-android-text-muted" />
+                <ChevronRight size={20} className="text-md3-gray" />
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -571,53 +558,55 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
     const cost = calculateCost(sDoses);
     const tolerance = calculateTolerance(substanceId, substances, doses);
     const substancePredictions = calculatePredictions(sDoses, substances, period);
+    const IconComponent = getIconComponent(substance.icon);
     
     return (
       <div className="space-y-6 relative pb-24">
         {/* Back Button & Header */}
-        <div className="flex items-center justify-between relative z-10 px-2">
+        <div className="flex items-center justify-between relative z-10">
           <button 
             onClick={() => setSelectedSubstanceId(null)}
-            className="flex items-center gap-2 text-android-accent font-black android-button-subtle"
+            className="flex items-center gap-2 text-md3-primary font-bold md3-button"
           >
             <ChevronLeft size={24} />
-            <span>Back</span>
+            <span>Zpět</span>
           </button>
-          <div className="w-10 h-10 rounded-2xl bg-theme-subtle flex items-center justify-center" style={{ backgroundColor: substance.color }}>
-            <Activity size={20} style={{ color: substance.color }} />
+          <div className="w-10 h-10 rounded-2xl bg-theme-subtle flex items-center justify-center">
+            <IconComponent size={20} style={{ color: substance.color }} />
           </div>
         </div>
 
         {/* Substance Title Card */}
         <div className="px-2">
-          <h2 className="text-3xl font-black text-android-text tracking-tighter mb-1">{substance.name}</h2>
+          <h2 className="text-3xl font-bold text-theme-text tracking-tight mb-1">{substance.name}</h2>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded-lg bg-android-surface text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">
+            <span className="px-2 py-0.5 rounded-lg bg-md3-secondary text-xs font-bold text-md3-gray uppercase tracking-widest">
               {substance.category}
             </span>
-            <span className="text-xs font-medium text-android-text-muted">
-              {sDoses.length} entries in period
+            <span className="text-xs font-medium text-md3-gray">
+              {sDoses.length} záznamů v období
             </span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-android-surface p-1 rounded-2xl relative z-10 overflow-x-auto no-scrollbar border border-android-border shadow-inner">
+        <div className="flex bg-md3-secondary p-1 rounded-2xl relative z-10 overflow-x-auto no-scrollbar">
           {[
-            { id: 'trends', label: 'Trends', icon: TrendingUp },
-            { id: 'time', label: 'Time', icon: Clock },
-            { id: 'distribution', label: 'Dosage', icon: GitMerge },
+            { id: 'trends', label: 'Trendy', icon: TrendingUp },
+            { id: 'time', label: 'Časy', icon: Clock },
+            { id: 'distribution', label: 'Dávky', icon: GitMerge },
+            { id: 'stats', label: 'Statistiky', icon: BarChart2 },
             { id: 'finance', label: 'Finance', icon: Wallet },
-            { id: 'history', label: 'History', icon: History },
+            { id: 'history', label: 'Historie', icon: History },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setDetailTab(tab.id as any)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300 whitespace-nowrap",
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
                 detailTab === tab.id 
-                  ? "bg-android-accent text-android-bg shadow-[0_5px_15px_rgba(0,242,255,0.3)]" 
-                  : "text-android-text-muted hover:text-android-text"
+                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+                  : "text-md3-gray hover:text-theme-text"
               )}
             >
               <tab.icon size={14} />
@@ -633,72 +622,66 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10 px-2"
+              className="space-y-4 relative z-10"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="android-card p-6 glass-accent border-white/5">
-                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Tolerance</div>
-                  <div className="text-2xl font-black text-android-text tracking-tighter">{tolerance.toFixed(0)}%</div>
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Tolerance</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{tolerance.toFixed(0)}%</div>
                 </div>
-                <div className="android-card p-6 bg-android-surface/40 border-white/5">
-                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Total Amount</div>
-                  <div className="text-2xl font-black text-android-text tracking-tighter">
-                    {totalAmount.toFixed(1)} <span className="text-sm font-bold text-android-text-muted uppercase ml-1">{substance.unit}</span>
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celkem</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">
+                    {totalAmount.toFixed(1)} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
                 </div>
               </div>
 
-              <section className="android-card p-6 bg-android-surface/40 border-white/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="p-2 rounded-xl bg-android-accent/10 text-android-accent">
-                    <TrendingUp size={18} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Daily Amount Trend</h3>
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp size={16} className="text-md3-primary" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Množství za den</h3>
                 </div>
-                <div className="h-56 w-full mt-4">
+                <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={dailyTrend}>
                       <defs>
                         <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={substance.color || '#00f2ff'} stopOpacity={0.4}/>
-                          <stop offset="95%" stopColor={substance.color || '#00f2ff'} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
-                        dy={15}
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        dy={10}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#121212', 
-                          borderRadius: '20px', 
+                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
+                          borderRadius: '16px', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                          fontWeight: '900',
-                          textTransform: 'uppercase',
-                          fontSize: '11px',
-                          letterSpacing: '0.05em'
+                          backdropFilter: 'blur(20px)'
                         }}
-                        itemStyle={{ color: '#fff', padding: '4px 0' }}
-                        labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
+                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
                       />
                       <Area 
                         type="monotone" 
                         dataKey="amount" 
-                        stroke={substance.color || '#00f2ff'} 
+                        stroke={substance.color} 
                         fillOpacity={1} 
                         fill="url(#colorAmount)" 
-                        strokeWidth={4} 
-                        animationDuration={2000}
+                        strokeWidth={3} 
+                        animationDuration={1500}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -713,45 +696,39 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10 px-2"
+              className="space-y-4 relative z-10"
             >
-              <section className="android-card p-6 bg-android-surface/40 border-white/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="p-2 rounded-xl bg-android-accent/10 text-android-accent">
-                    <Clock size={18} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Peak Usage Times</h3>
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Clock size={16} className="text-md3-primary" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kdy užívám nejvíc</h3>
                 </div>
-                <div className="h-56 w-full mt-4">
+                <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={substanceTimeStats}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                       <XAxis 
                         dataKey="hour" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
-                        dy={15}
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        dy={10}
                       />
                       <YAxis hide />
                       <Tooltip 
                         cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
                         contentStyle={{ 
-                          backgroundColor: '#121212', 
-                          borderRadius: '20px', 
+                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
+                          borderRadius: '16px', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                          fontWeight: '900',
-                          textTransform: 'uppercase',
-                          fontSize: '11px',
-                          letterSpacing: '0.05em'
+                          backdropFilter: 'blur(20px)'
                         }}
-                        itemStyle={{ color: '#fff', padding: '4px 0' }}
-                        labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
+                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
                       />
                       <Bar 
                         dataKey="count" 
-                        fill={substance.color || '#00f2ff'} 
+                        fill={substance.color} 
                         radius={[6, 6, 0, 0]} 
                         animationDuration={1500}
                       />
@@ -768,50 +745,100 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10 px-2"
+              className="space-y-4 relative z-10"
             >
-              <section className="android-card p-6 bg-android-surface/40 border-white/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="p-2 rounded-xl bg-android-purple/10 text-android-purple">
-                    <GitMerge size={18} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Dosage Distribution</h3>
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <GitMerge size={16} className="text-md3-primary-container" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Distribuce dávek</h3>
                 </div>
-                <div className="h-56 w-full mt-4">
+                <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dosageDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                       <XAxis 
                         dataKey="range" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fill: '#9ca3af', fontSize: 10, fontWeight: '900' }}
-                        dy={15}
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        dy={10}
                       />
                       <YAxis hide />
                       <Tooltip 
                         cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
                         contentStyle={{ 
-                          backgroundColor: '#121212', 
-                          borderRadius: '20px', 
+                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
+                          borderRadius: '16px', 
                           border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                          fontWeight: '900',
-                          textTransform: 'uppercase',
-                          fontSize: '11px',
-                          letterSpacing: '0.05em'
+                          backdropFilter: 'blur(20px)'
                         }}
-                        itemStyle={{ color: '#fff', padding: '4px 0' }}
-                        labelStyle={{ color: '#9ca3af', marginBottom: '6px' }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
+                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
                       />
                       <Bar 
                         dataKey="count" 
-                        fill={substance.color || '#00f2ff'} 
+                        fill={substance.color} 
                         radius={[6, 6, 0, 0]} 
                         animationDuration={1500}
                       />
                     </BarChart>
                   </ResponsiveContainer>
+                </div>
+              </section>
+            </motion.div>
+          )}
+
+          {detailTab === 'stats' && (
+            <motion.div
+              key="stats"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4 relative z-10"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměrná dávka</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">
+                    {sDoses.length > 0 ? (totalAmount / sDoses.length).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
+                  </div>
+                </div>
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Maximální dávka</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">
+                    {sDoses.length > 0 ? Math.max(...sDoses.map(d => d.amount)).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
+                  </div>
+                </div>
+              </div>
+
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <BarChart2 size={16} className="text-md3-primary" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Doplňující statistiky</h3>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+                    <span className="text-sm font-bold text-md3-gray">Celkový počet dávek</span>
+                    <span className="text-lg font-bold text-theme-text">{sDoses.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+                    <span className="text-sm font-bold text-md3-gray">Nejčastější den</span>
+                    <span className="text-lg font-bold text-theme-text">
+                      {(() => {
+                        if (sDoses.length === 0) return '-';
+                        const days = [0, 0, 0, 0, 0, 0, 0];
+                        sDoses.forEach(d => days[new Date(d.timestamp).getDay()]++);
+                        const maxDay = days.indexOf(Math.max(...days));
+                        return ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'][maxDay];
+                      })()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+                    <span className="text-sm font-bold text-md3-gray">Průměrně za den</span>
+                    <span className="text-lg font-bold text-theme-text">
+                      {(sDoses.length / period).toFixed(1)}x
+                    </span>
+                  </div>
                 </div>
               </section>
             </motion.div>
@@ -823,36 +850,33 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10 px-2"
+              className="space-y-4 relative z-10"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="android-card p-6 glass-accent border-white/5">
-                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Total Spent</div>
-                  <div className="text-2xl font-black text-android-text tracking-tighter">{cost.toFixed(0)} Kč</div>
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celková útrata</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{cost.toFixed(0)} {settings.currency || 'Kč'}</div>
                 </div>
-                <div className="android-card p-6 bg-android-surface/40 border-white/5">
-                  <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-2">Avg per Dose</div>
-                  <div className="text-2xl font-black text-android-text tracking-tighter">{(cost / (sDoses.length || 1)).toFixed(0)} Kč</div>
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{(cost / (sDoses.length || 1)).toFixed(0)} {settings.currency || 'Kč'}</div>
                 </div>
               </div>
 
-              <section className="android-card p-6 glass-accent border-white/5 overflow-hidden">
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-400/5 blur-[80px] -ml-16 -mb-16 pointer-events-none" />
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="p-2 rounded-xl bg-amber-400/10 text-amber-400">
-                    <Zap size={18} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Spending Forecast</h3>
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Zap size={16} className="text-md3-orange" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce výdajů</h3>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: 'Daily', value: substancePredictions.daily },
-                    { label: 'Monthly', value: substancePredictions.monthly },
-                    { label: 'Yearly', value: substancePredictions.yearly },
+                    { label: 'Denně', value: substancePredictions.daily },
+                    { label: 'Měsíčně', value: substancePredictions.monthly },
+                    { label: 'Ročně', value: substancePredictions.yearly },
                   ].map((p, i) => (
-                    <div key={i} className="text-center p-4 rounded-3xl bg-android-bg border border-android-border shadow-lg">
-                      <div className="text-[9px] text-android-text-muted font-black uppercase mb-2 tracking-[0.1em]">{p.label}</div>
-                      <div className="text-base font-black text-android-text tracking-tighter leading-none">{p.value.toFixed(0)} <span className="text-[10px] text-android-text-muted uppercase">Kč</span></div>
+                    <div key={i} className="text-center p-4 rounded-2xl bg-theme-subtle">
+                      <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.label}</div>
+                      <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
                     </div>
                   ))}
                 </div>
@@ -866,39 +890,37 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10 px-2"
+              className="space-y-4 relative z-10"
             >
-              <section className="android-card p-6 bg-android-surface/40 border-white/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="p-2 rounded-xl bg-android-text-muted/10 text-android-text-muted">
-                    <History size={18} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-xs font-black text-android-text uppercase tracking-[0.2em]">Recent Entries</h3>
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <History size={16} className="text-md3-gray" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Poslední záznamy</h3>
                 </div>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto no-scrollbar">
                   {sDoses.slice(0, 10).map((dose) => (
-                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-android-bg border border-android-border group hover:bg-android-surface-hover transition-all shadow-sm">
+                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border group hover:bg-theme-subtle-hover transition-all">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-android-surface flex items-center justify-center border border-android-border group-hover:scale-110 transition-transform shadow-inner">
-                          <Clock size={16} className="text-android-text-muted" />
+                        <div className="w-10 h-10 rounded-xl bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform">
+                          <Clock size={16} className="text-md3-gray" />
                         </div>
                         <div>
-                          <div className="text-sm font-black text-android-text tracking-tight">
+                          <div className="text-sm font-bold text-theme-text tracking-tight">
                             {dose.amount} {substance.unit}
-                            {dose.strainId && <span className="text-[10px] text-android-accent ml-2 font-black uppercase tracking-[0.2em]">({dose.strainId})</span>}
+                            {dose.strainId && <span className="text-xs text-md3-primary ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
                           </div>
-                          <div className="text-[10px] text-android-text-muted font-black uppercase tracking-[0.2em] mt-0.5">
-                            {new Date(dose.timestamp).toLocaleDateString('cs-CZ')} • {new Date(dose.timestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}
+                          <div className="text-xs text-md3-gray font-bold uppercase tracking-wider mt-0.5">
+                            {new Date(dose.timestamp).toLocaleDateString('cs-CZ')} • {formatTime(dose.timestamp, settings)}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] mb-1">
+                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">
                           {dose.route}
                         </div>
                         {dose.cost && (
-                          <div className="text-[11px] font-black text-emerald-400 tracking-tight">
-                            {dose.cost} Kč
+                          <div className="text-sm font-bold text-md3-green tracking-tight">
+                            {dose.cost} {settings.currency || 'Kč'}
                           </div>
                         )}
                       </div>

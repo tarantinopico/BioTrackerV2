@@ -1,62 +1,89 @@
 @import "tailwindcss";
 
 @theme {
-  --color-android-bg: var(--android-bg);
-  --color-android-surface: var(--android-surface);
-  --color-android-card: var(--android-card);
-  --color-android-accent: var(--android-accent);
-  --color-android-text: var(--android-text);
-  --color-android-text-muted: var(--android-text-muted);
-  --color-android-border: var(--android-border);
-  --color-android-glass: var(--android-glass);
+  --color-md3-bg: var(--md3-bg);
+  --color-md3-text: var(--md3-text);
+  --color-md3-card: var(--md3-card);
+  --color-md3-secondary: var(--md3-secondary);
+  --color-md3-border: var(--md3-border);
+  --color-md3-glass: var(--md3-glass);
+  --color-md3-subtle: var(--md3-subtle);
+  --color-md3-subtle-hover: var(--md3-subtle-hover);
 
-  --color-theme-bg: var(--android-bg);
-  --color-theme-text: var(--android-text);
-  --color-theme-card: var(--android-card);
-  --color-theme-accent: var(--android-accent);
-  --color-theme-border: var(--android-border);
-  
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
+  --color-theme-bg: var(--md3-bg);
+  --color-theme-text: var(--md3-text);
+  --color-theme-card: var(--md3-card);
+  --color-theme-secondary: var(--md3-secondary);
+  --color-theme-border: var(--md3-border);
+  --color-theme-glass: var(--md3-glass);
+  --color-theme-subtle: var(--md3-subtle);
+  --color-theme-subtle-hover: var(--md3-subtle-hover);
+
+  --color-md3-primary: #D0BCFF;
+  --color-md3-primary-container: #4F378B;
+  --color-md3-secondary-color: #CCC2DC;
+  --color-md3-tertiary: #EFB8C8;
+  --color-md3-error: #F2B8B5;
+  --color-md3-green: #81C995;
+  --color-md3-orange: #FDBA74;
+  --color-md3-gray: #C4C7C5;
+  --color-cyan-primary: #A8C7FA;
+  --font-sans: "Roboto", "Inter", system-ui, sans-serif;
 }
 
 @layer base {
   :root {
-    --android-bg: #050505;
-    --android-surface: #0a0a0a;
-    --android-card: #121212;
-    --android-accent: #00f2ff;
-    --android-text: #ffffff;
-    --android-text-muted: #9ca3af;
-    --android-border: rgba(255, 255, 255, 0.08);
-    --android-glass: rgba(18, 18, 18, 0.75);
+    --md3-bg: #FEF7FF;
+    --md3-text: #1D1B20;
+    --md3-card: #F4EFF4;
+    --md3-secondary: #E8DEF8;
+    --md3-border: rgba(28, 27, 31, 0.12);
+    --md3-glass: rgba(244, 239, 244, 0.75);
+    --md3-subtle: rgba(28, 27, 31, 0.05);
+    --md3-subtle-hover: rgba(28, 27, 31, 0.08);
+  }
+  .dark {
+    --md3-bg: #141218;
+    --md3-text: #E6E0E9;
+    --md3-card: #211F26;
+    --md3-secondary: #36343B;
+    --md3-border: rgba(202, 196, 208, 0.12);
+    --md3-glass: rgba(33, 31, 38, 0.75);
+    --md3-subtle: rgba(202, 196, 208, 0.05);
+    --md3-subtle-hover: rgba(202, 196, 208, 0.08);
+  }
+  .midnight {
+    --md3-bg: #000000;
+    --md3-text: #E6E0E9;
+    --md3-card: #0A0A0A;
+    --md3-secondary: #1A1A1A;
+    --md3-border: rgba(255, 255, 255, 0.08);
+    --md3-glass: rgba(0, 0, 0, 0.75);
+    --md3-subtle: rgba(255, 255, 255, 0.03);
+    --md3-subtle-hover: rgba(255, 255, 255, 0.06);
   }
 
   body {
-    @apply antialiased bg-android-bg text-android-text selection:bg-android-accent/30;
+    @apply antialiased bg-md3-bg text-md3-text selection:bg-md3-primary/30;
     -webkit-tap-highlight-color: transparent;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
 @layer utilities {
-  .android-glass {
-    @apply bg-android-glass backdrop-blur-3xl border border-android-border;
+  .md3-glass {
+    @apply bg-md3-glass backdrop-blur-md border border-md3-border;
   }
-  .android-card {
-    @apply bg-android-card rounded-3xl border border-android-border shadow-2xl;
+  .md3-glass-light {
+    @apply bg-md3-glass backdrop-blur-sm border border-md3-border;
   }
-  .android-button {
-    @apply active:scale-[0.96] transition-all duration-300 cursor-pointer;
+  .md3-card {
+    @apply bg-md3-card rounded-2xl border border-md3-border shadow-md;
   }
-  .android-input {
-    @apply bg-android-surface border border-android-border rounded-2xl px-4 py-3 text-android-text placeholder:text-android-text-muted focus:border-android-accent/50 focus:ring-1 focus:ring-android-accent/30 outline-none transition-all;
+  .md3-button {
+    @apply active:scale-[0.98] transition-all duration-150 cursor-pointer rounded-full;
   }
-  .glass-accent {
-    @apply relative overflow-hidden;
-  }
-  .glass-accent::before {
-    content: '';
-    @apply absolute -top-1/2 -left-1/2 w-full h-full bg-android-accent/10 blur-[100px] pointer-events-none;
+  .md3-input {
+    @apply bg-md3-secondary border-none rounded-xl px-4 py-3 text-md3-text placeholder:text-md3-gray focus:ring-2 focus:ring-md3-primary/50 outline-none transition-all;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -65,11 +92,20 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .text-glow-primary {
+    text-shadow: 0 0 20px rgba(208, 188, 255, 0.4);
+  }
+  .text-glow-green {
+    text-shadow: 0 0 20px rgba(129, 201, 149, 0.4);
+  }
+  .text-glow-error {
+    text-shadow: 0 0 20px rgba(242, 184, 181, 0.4);
+  }
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -77,10 +113,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--ios-subtle-hover);
-  border-radius: 10px;
+  background: var(--md3-subtle-hover);
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--ios-border);
+  background: var(--md3-border);
 }

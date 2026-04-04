@@ -84,7 +84,8 @@ export function calculateDoseLevel(
   hoursSinceDose: number, 
   settings: UserSettings,
   substances: Substance[],
-  doses: Dose[]
+  doses: Dose[],
+  precalculatedTolerance?: number
 ): number {
   if (hoursSinceDose < 0) return 0;
 
@@ -92,7 +93,7 @@ export function calculateDoseLevel(
   const bioavailability = (substance.bioavailability / 100) * (dose.bioavailabilityMultiplier || 1);
   const effectiveDose = amount * bioavailability;
 
-  const tolerance = calculateTolerance(substance.id, substances, doses);
+  const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substance.id, substances, doses);
   const toleranceFactor = 1 - (tolerance / 100);
 
   const metabolismMult = getMetabolismMultiplier(settings);
@@ -178,7 +179,8 @@ export function calculateSubstanceLevelAtTime(
   timestamp: number, 
   substances: Substance[], 
   doses: Dose[], 
-  settings: UserSettings
+  settings: UserSettings,
+  precalculatedTolerance?: number
 ): number {
   const substance = substances.find(s => s.id === substanceId);
   if (!substance) return 0;
@@ -186,12 +188,14 @@ export function calculateSubstanceLevelAtTime(
   const relevantDoses = doses.filter(d => d.substanceId === substanceId);
   let totalLevel = 0;
 
+  const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substanceId, substances, doses);
+
   relevantDoses.forEach(dose => {
     const doseTime = new Date(dose.timestamp).getTime();
     const hoursSinceDose = (timestamp - doseTime) / 3600000;
     if (hoursSinceDose < 0) return;
 
-    const level = calculateDoseLevel(substance, dose, hoursSinceDose, settings, substances, doses);
+    const level = calculateDoseLevel(substance, dose, hoursSinceDose, settings, substances, doses, tolerance);
     totalLevel += level;
   });
 
@@ -232,7 +236,8 @@ export function calculateEffectIntensityAtTime(
   timestamp: number,
   substances: Substance[],
   doses: Dose[],
-  settings: UserSettings
+  settings: UserSettings,
+  precalculatedTolerances?: Record<string, number>
 ): number {
   let totalIntensity = 0;
   const metabolismMult = getMetabolismMultiplier(settings);
@@ -242,6 +247,7 @@ export function calculateEffectIntensityAtTime(
     if (!effect) return;
     
     const relevantDoses = doses.filter(d => d.substanceId === substance.id);
+    const tolerance = precalculatedTolerances?.[substance.id];
     
     relevantDoses.forEach(dose => {
       const doseTime = new Date(dose.timestamp).getTime();
@@ -253,7 +259,7 @@ export function calculateEffectIntensityAtTime(
         level = interpolateCurve(effect.customCurve, hoursSinceDose * metabolismMult);
       } else {
         // Fallback to substance level if no custom curve for effect
-        level = calculateDoseLevel(substance, dose, hoursSinceDose, settings, substances, doses) / 100;
+        level = calculateDoseLevel(substance, dose, hoursSinceDose, settings, substances, doses, tolerance) / 100;
       }
       
       const contribution = (level * 100 * Math.abs(effect.intensity)) / 10;

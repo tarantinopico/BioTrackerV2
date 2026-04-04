@@ -1,22 +1,36 @@
-import { Clock, Trash2, Activity, Calendar, Edit2, X, Check } from 'lucide-react';
-import { useState } from 'react';
-import { Dose, Substance } from '../types';
-import { cn } from '../lib/utils';
+import { Clock, Trash2, Calendar, Edit2, X, Check, Search, Filter } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Dose, Substance, UserSettings } from '../types';
+import { cn, formatTime } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { getIconComponent } from './Substances';
 
 interface HistoryProps {
   doses: Dose[];
   substances: Substance[];
+  settings: UserSettings;
   onDeleteDose: (id: string) => void;
   onEditDose: (dose: Dose) => void;
   onClearAll: () => void;
 }
 
-export default function History({ doses, substances, onDeleteDose, onEditDose, onClearAll }: HistoryProps) {
+export default function History({ doses, substances, settings, onDeleteDose, onEditDose, onClearAll }: HistoryProps) {
   const [editingDose, setEditingDose] = useState<Dose | null>(null);
-  const sortedDoses = [...doses].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSubstanceId, setSelectedSubstanceId] = useState<string | 'all'>('all');
 
-  const groupedDoses = sortedDoses.reduce((groups: Record<string, Dose[]>, dose) => {
+  const filteredDoses = useMemo(() => {
+    return doses.filter(dose => {
+      const substance = substances.find(s => s.id === dose.substanceId);
+      const matchesSearch = substance?.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            dose.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            dose.strainId?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSubstance = selectedSubstanceId === 'all' || dose.substanceId === selectedSubstanceId;
+      return matchesSearch && matchesSubstance;
+    }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [doses, substances, searchQuery, selectedSubstanceId]);
+
+  const groupedDoses = filteredDoses.reduce((groups: Record<string, Dose[]>, dose) => {
     const date = new Date(dose.timestamp).toLocaleDateString('cs-CZ', { 
       weekday: 'long', 
       day: 'numeric', 
@@ -35,101 +49,180 @@ export default function History({ doses, substances, onDeleteDose, onEditDose, o
   };
 
   return (
-    <div className="space-y-8 pb-20 relative">
+    <div className="space-y-4 relative pb-10">
       {/* Decorative Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[30%] left-[-10%] w-[40%] h-[40%] bg-android-accent/5 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[10%] right-[-10%] w-[35%] h-[35%] bg-purple-500/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-[30%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[15%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
       <div className="flex items-center justify-between px-2 relative z-10">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-black text-android-text tracking-tighter">Timeline<span className="text-android-accent">.</span></h2>
-          <p className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Molecular Log Archive</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-cyan-primary/10 shadow-[0_0_15px_rgba(0,209,255,0.1)]">
+            <Clock size={20} className="text-cyan-primary" />
+          </div>
+          <div>
+            <h2 className="text-xs font-bold text-md3-gray uppercase tracking-wider">Časová osa</h2>
+            <div className="text-2xl font-bold text-theme-text leading-tight tracking-tight">Historie dávek</div>
+          </div>
         </div>
         <button 
           onClick={onClearAll}
-          className="px-5 py-2.5 rounded-[1.25rem] text-[10px] font-black text-red-500 uppercase tracking-widest hover:bg-red-500/10 transition-all border border-red-500/20 android-button"
+          className="px-4 py-2 rounded-xl text-xs font-bold text-red-500 uppercase tracking-wider hover:bg-red-500/10 transition-all active:scale-95 border border-red-500/20"
         >
-          Purge Data
+          Vymazat vše
         </button>
       </div>
 
-      {doses.length === 0 ? (
-        <div className="py-24 text-center android-card border-dashed relative z-10 glass-accent">
-          <div className="mb-6 flex justify-center opacity-20">
-            <Clock size={64} className="text-android-text-muted" />
+      {/* Search and Filter */}
+      {doses.length > 0 && (
+        <div className="relative z-10 space-y-3">
+          <div className="relative">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-md3-gray" />
+            <input 
+              type="text" 
+              placeholder="Hledat látku, poznámku..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-theme-subtle border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all text-theme-text"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray hover:text-theme-text"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-          <span className="text-xs text-android-text-muted font-black uppercase tracking-[0.3em]">No Activity Records</span>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <button
+              onClick={() => setSelectedSubstanceId('all')}
+              className={cn(
+                "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+                selectedSubstanceId === 'all' 
+                  ? "bg-theme-border border-cyan-primary text-cyan-primary" 
+                  : "bg-theme-subtle border-theme-border text-md3-gray hover:text-theme-text"
+              )}
+            >
+              Vše
+            </button>
+            {Array.from(new Set(doses.map(d => d.substanceId))).map(subId => {
+              const substance = substances.find(s => s.id === subId);
+              if (!substance) return null;
+              const isActive = selectedSubstanceId === subId;
+              return (
+                <button
+                  key={subId}
+                  onClick={() => setSelectedSubstanceId(subId)}
+                  className={cn(
+                    "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+                    isActive 
+                      ? "bg-theme-border border-cyan-primary text-cyan-primary" 
+                      : "bg-theme-subtle border-theme-border text-md3-gray hover:text-theme-text"
+                  )}
+                  style={isActive ? { borderColor: substance.color, color: substance.color } : {}}
+                >
+                  {substance.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {filteredDoses.length === 0 ? (
+        <div className="p-12 text-center bg-theme-subtle backdrop-blur-md rounded-[2rem] border border-theme-border border-dashed relative z-10 shadow-lg">
+          <div className="w-16 h-16 bg-theme-subtle rounded-2xl flex items-center justify-center mx-auto mb-4 border border-theme-border shadow-inner">
+            <Clock size={32} className="text-md3-gray" />
+          </div>
+          <span className="text-sm text-md3-gray font-bold uppercase tracking-wider">Žádné záznamy</span>
+          <p className="text-xs text-md3-gray font-medium mt-2">Zatím jste nic nezaznamenali</p>
         </div>
       ) : (
-        <div className="space-y-12 relative z-10">
+        <div className="space-y-8 relative z-10">
           {Object.entries(groupedDoses).map(([date, dayDoses]) => (
-            <div key={date} className="space-y-6">
-              <div className="flex items-center gap-4 px-2">
-                <div className="p-2 rounded-xl bg-android-accent/10 border border-android-accent/20">
-                  <Calendar size={14} className="text-android-accent" />
+            <div key={date} className="space-y-3">
+              <div className="flex items-center gap-3 px-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10" />
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-md3-gray" />
+                  <h3 className="text-xs font-bold text-md3-gray uppercase tracking-wider">{date}</h3>
                 </div>
-                <h3 className="text-[11px] font-black text-android-text uppercase tracking-[0.2em]">{date}</h3>
-                <div className="h-px flex-1 bg-gradient-to-r from-android-border to-transparent ml-2" />
+                <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10" />
               </div>
               
-              <div className="space-y-4">
-                {dayDoses.map(dose => {
+              <div className="space-y-2">
+                {(dayDoses as Dose[]).map(dose => {
                   const substance = substances.find(s => s.id === dose.substanceId);
                   if (!substance) return null;
                   
                   return (
-                    <motion.div 
-                      layout
+                    <div 
                       key={dose.id} 
-                      className="android-card bg-android-surface/40 border-white/5 p-5 flex items-center justify-between group hover:border-android-accent/30 transition-all relative overflow-hidden shadow-xl"
+                      className={cn(
+                        "bg-theme-subtle backdrop-blur-md border border-theme-border flex items-center justify-between group hover:bg-theme-subtle-hover transition-all shadow-sm",
+                        settings.compactMode ? "rounded-xl p-2" : "rounded-2xl p-4"
+                      )}
                     >
-                      <div className="absolute top-0 left-0 w-1.5 h-full opacity-30 shadow-[2px_0_15px_rgba(0,0,0,0.3)]" style={{ backgroundColor: substance.color || '#00f2ff' }} />
-                      
-                      <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-3xl bg-android-bg border border-android-border flex items-center justify-center transition-transform group-hover:scale-110 shadow-inner">
-                          <Activity size={28} style={{ color: substance.color || '#00f2ff' }} />
-                        </div>
+                      <div className="flex items-center gap-3">
+                        {(() => {
+                          const IconComponent = getIconComponent(substance.icon);
+                          const strainColor = dose.strainId ? substance.strains?.find(s => s.name === dose.strainId)?.color : undefined;
+                          const color = strainColor || substance.color || '#00d1ff';
+                          return (
+                            <div className={cn(
+                              "bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-105 transition-transform shadow-inner",
+                              settings.compactMode ? "w-8 h-8 rounded-lg" : "w-12 h-12 rounded-xl"
+                            )}>
+                              <IconComponent size={settings.compactMode ? 16 : 24} style={{ color }} />
+                            </div>
+                          );
+                        })()}
                         <div>
-                          <div className="text-lg font-black text-android-text leading-tight flex items-center gap-3">
+                          <div className={cn(
+                            "font-bold text-theme-text leading-tight tracking-tight",
+                            settings.compactMode ? "text-sm" : "text-base"
+                          )}>
                             {substance.name}
-                            {dose.strainId && <span className="text-[8px] text-android-text-muted font-black uppercase tracking-[0.2em] opacity-80 bg-android-bg px-2 py-0.5 rounded-lg border border-android-border">{dose.strainId}</span>}
+                            {dose.strainId && <span className="text-xs text-md3-gray ml-2 font-bold uppercase tracking-wider opacity-80">({dose.strainId})</span>}
                           </div>
-                          <div className="text-[10px] text-android-text-muted font-black uppercase tracking-[0.1em] mt-2 flex items-center gap-2.5">
-                            <span className="text-android-text text-sm tracking-tight">{dose.amount.toFixed(1)}<span className="text-[10px] ml-0.5">{substance.unit}</span></span>
-                            <div className="w-1 h-1 rounded-full bg-android-border" />
-                            <span className="opacity-70">{new Date(dose.timestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}</span>
-                            {dose.route && (
-                              <>
-                                <div className="w-1 h-1 rounded-full bg-android-border" />
-                                <span className="text-android-accent bg-android-accent/10 px-2 py-0.5 rounded-md border border-android-accent/20">{dose.route}</span>
-                              </>
-                            )}
+                          <div className={cn(
+                            "text-md3-gray font-medium",
+                            settings.compactMode ? "text-[10px] mt-0.5" : "text-xs mt-1"
+                          )}>
+                            <span className="text-theme-text font-bold">{dose.amount.toFixed(1)}{substance.unit}</span> • <span className="text-md3-gray">{formatTime(dose.timestamp, settings)}</span>
+                            {dose.route && ` • ${dose.route}`}
                           </div>
-                          {dose.note && (
-                            <div className="mt-4 text-[10px] text-android-text-muted font-bold italic leading-relaxed bg-android-bg/50 p-2.5 rounded-2xl border-l-4 border-android-accent/40 pl-4">
+                          {!settings.compactMode && dose.note && (
+                            <div className="mt-2 text-xs text-md3-gray italic leading-tight border-l-2 border-theme-border pl-3 py-0.5">
                               {dose.note}
                             </div>
                           )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="flex items-center gap-1">
                         <button 
                           onClick={() => setEditingDose(dose)}
-                          className="p-3 rounded-2xl hover:bg-android-accent/10 text-android-text-muted hover:text-android-accent transition-all android-button"
+                          className={cn(
+                            "rounded-xl hover:bg-cyan-primary/10 text-md3-gray hover:text-cyan-primary transition-all opacity-0 group-hover:opacity-100 active:scale-90",
+                            settings.compactMode ? "p-1.5" : "p-2"
+                          )}
                         >
-                          <Edit2 size={20} />
+                          <Edit2 size={settings.compactMode ? 14 : 16} />
                         </button>
                         <button 
                           onClick={() => onDeleteDose(dose.id)}
-                          className="p-3 rounded-2xl hover:bg-red-500/10 text-android-text-muted hover:text-red-500 transition-all android-button"
+                          className={cn(
+                            "rounded-xl hover:bg-red-500/10 text-md3-gray hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 active:scale-90",
+                            settings.compactMode ? "p-1.5" : "p-2"
+                          )}
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={settings.compactMode ? 14 : 16} />
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
@@ -138,63 +231,57 @@ export default function History({ doses, substances, onDeleteDose, onEditDose, o
         </div>
       )}
 
-      {/* Edit Modal - Modern Bottom Sheet Style */}
+      {/* Edit Modal */}
       <AnimatePresence>
         {editingDose && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setEditingDose(null)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+              className="absolute inset-0 bg-theme-bg/60 backdrop-blur-md"
             />
             <motion.div 
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="w-full max-w-lg android-card p-8 relative z-10 glass-accent rounded-t-[3rem] rounded-b-none border-t border-white/10 shadow-2xl"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-xs bg-md3-card/90 backdrop-blur-3xl border border-md3-border rounded-2xl p-6 relative z-10 shadow-2xl"
             >
-              <div className="w-12 h-1.5 bg-android-border rounded-full mx-auto mb-8 opacity-50" />
-              
-              <div className="flex items-center justify-between mb-10">
-                <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-android-text tracking-tighter">Edit Sequence</h3>
-                  <p className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em]">Recalibrating entry parameters</p>
-                </div>
-                <button onClick={() => setEditingDose(null)} className="p-3 rounded-full bg-android-bg text-android-text-muted hover:text-android-text android-button">
-                  <X size={24} />
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-sm font-black text-md3-text uppercase tracking-widest">Upravit záznam</h3>
+                <button onClick={() => setEditingDose(null)} className="text-md3-gray hover:text-md3-text">
+                  <X size={16} />
                 </button>
               </div>
 
-              <div className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Molecular Concentration</label>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-black text-md3-gray uppercase tracking-widest ml-1 mb-1 block">Množství</label>
                   <input
                     type="number"
                     value={editingDose.amount}
                     onChange={(e) => setEditingDose({ ...editingDose, amount: Number(e.target.value) })}
-                    className="android-input w-full h-16 text-lg font-black tracking-tight"
+                    className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-sm text-theme-text focus:outline-none focus:border-cyan-primary/50"
                   />
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-android-text-muted uppercase tracking-[0.2em] px-2">Encoded Observation</label>
+                <div>
+                  <label className="text-xs font-black text-md3-gray uppercase tracking-widest ml-1 mb-1 block">Poznámka</label>
                   <textarea
                     value={editingDose.note || ''}
                     onChange={(e) => setEditingDose({ ...editingDose, note: e.target.value })}
-                    className="android-input w-full h-32 py-4 resize-none font-bold text-sm"
-                    placeholder="Enter biometric observations..."
+                    className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-sm text-theme-text focus:outline-none focus:border-cyan-primary/50 h-20 resize-none"
+                    placeholder="Přidat poznámku..."
                   />
                 </div>
 
                 <button
                   onClick={handleSaveEdit}
-                  className="w-full bg-android-accent text-android-bg h-16 rounded-[2rem] font-black text-lg uppercase tracking-[0.2em] flex items-center justify-center gap-4 android-button shadow-[0_15px_30px_rgba(0,242,255,0.3)] mt-4"
+                  className="w-full bg-cyan-primary text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-cyan-400 transition-all active:scale-95 shadow-lg shadow-cyan-primary/20"
                 >
-                  <Check size={24} strokeWidth={4} />
-                  Execute Update
+                  <Check size={16} strokeWidth={3} />
+                  ULOŽIT ZMĚNY
                 </button>
               </div>
             </motion.div>

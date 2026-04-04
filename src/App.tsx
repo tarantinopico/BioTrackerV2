@@ -1,15 +1,48 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
+  Activity, 
   Settings as SettingsIcon, 
+  Download, 
   LayoutDashboard, 
+  Zap, 
   PlusCircle, 
   FlaskConical, 
+  BarChart3,
+  HeartPulse,
+  TrendingUp,
+  Clock,
+  ArrowDownCircle,
   History,
+  Database,
+  Package,
+  Wallet,
+  LineChart,
   BarChart2,
+  RefreshCw,
+  GitMerge,
+  Calendar,
+  X,
+  Plus,
+  Minus,
   CheckCircle,
   AlertTriangle,
   Info,
-  X
+  Layers,
+  Timer,
+  Sparkles,
+  ArrowDown,
+  Settings2,
+  User,
+  Monitor,
+  Bell,
+  Trash2,
+  Upload,
+  Search,
+  ChevronRight,
+  ChevronLeft,
+  Maximize2,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
@@ -19,6 +52,7 @@ import {
   Dose, 
   UserSettings, 
   CustomEffect, 
+  SubstanceCategory,
   Shortcut
 } from './types';
 import { 
@@ -30,6 +64,8 @@ import {
 } from './constants';
 import { 
   calculateSubstanceLevelAtTime, 
+  calculateCleanTime, 
+  calculateTolerance,
   getMetabolismMultiplier
 } from './services/pharmacology';
 
@@ -42,7 +78,7 @@ import SubstanceEditor from './components/SubstanceEditor';
 import Settings from './components/Settings';
 import ConfirmationModal from './components/ConfirmationModal';
 
-export type ViewType = 'dashboard' | 'logger' | 'history' | 'analytics' | 'substances';
+export type ViewType = 'dashboard' | 'logger' | 'history' | 'analytics' | 'substances' | 'settings';
 
 export default function App() {
   const [view, setView] = useState<ViewType>('dashboard');
@@ -50,7 +86,6 @@ export default function App() {
   const [doses, setDoses] = useState<Dose[]>([]);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
   const [customEffects, setCustomEffects] = useState<CustomEffect[]>(DEFAULT_EFFECTS);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingSubstanceId, setEditingSubstanceId] = useState<string | null | 'new'>(null);
   const [editingTemplate, setEditingTemplate] = useState<Substance | null>(null);
   const [shortcuts, setShortcuts] = useState<Shortcut[]>([]);
@@ -113,7 +148,21 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('biotracker_pro_settings', JSON.stringify(settings));
-    document.documentElement.classList.add('dark');
+    
+    // Apply theme
+    const root = document.documentElement;
+    root.classList.remove('dark', 'midnight');
+    if (settings.theme === 'dark') {
+      root.classList.add('dark');
+    } else if (settings.theme === 'midnight') {
+      root.classList.add('midnight');
+    } else if (settings.theme === 'light') {
+      // Light theme is default, no class needed
+    } else {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        root.classList.add('dark');
+      }
+    }
   }, [settings]);
 
   useEffect(() => {
@@ -131,6 +180,11 @@ export default function App() {
   }, []);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info') => {
+    if (settings.hapticFeedback && navigator.vibrate) {
+      if (type === 'success') navigator.vibrate(50);
+      else if (type === 'error') navigator.vibrate([50, 50, 50]);
+      else navigator.vibrate(20);
+    }
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -206,6 +260,39 @@ export default function App() {
     showToast('Data exportována', 'success');
   };
 
+  const handleExportCSV = () => {
+    if (doses.length === 0) {
+      showToast('Žádná data k exportu', 'error');
+      return;
+    }
+    
+    const headers = ['Datum', 'Čas', 'Látka', 'Množství', 'Jednotka', 'Způsob', 'Druh', 'Poznámka'];
+    const rows = doses.map(dose => {
+      const substance = substances.find(s => s.id === dose.substanceId);
+      const date = new Date(dose.timestamp);
+      return [
+        date.toLocaleDateString('cs-CZ'),
+        date.toLocaleTimeString('cs-CZ'),
+        substance?.name || dose.substanceId,
+        dose.amount,
+        substance?.unit || 'mg',
+        dose.route,
+        dose.strainId || '',
+        `"${(dose.note || '').replace(/"/g, '""')}"`
+      ].join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `biotracker_historie_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exportováno', 'success');
+  };
+
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -240,6 +327,24 @@ export default function App() {
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
       }
     });
+  };
+
+  const handleQuickDose = (substanceId: string) => {
+    const substance = substances.find(s => s.id === substanceId);
+    if (!substance) return;
+    
+    const dose: Dose = {
+      id: Math.random().toString(36).substr(2, 9),
+      substanceId,
+      amount: substance.step || 1,
+      timestamp: new Date().toISOString(),
+      route: 'oral',
+      note: 'Rychlá dávka',
+      bioavailabilityMultiplier: 1,
+      tmaxMultiplier: 1
+    };
+    
+    handleAddDose(dose);
   };
 
   const handleUseShortcut = (shortcut: Shortcut) => {
@@ -318,38 +423,38 @@ export default function App() {
 
   return (
     <div className={cn(
-      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-android-accent/30 transition-colors duration-500 bg-android-bg pb-32"
+      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-md3-primary/30 pb-28 transition-colors duration-500"
     )}>
       {/* Header */}
-      <header className="px-5 pt-8 pb-4 flex justify-between items-center sticky top-0 z-50 bg-android-bg/60 backdrop-blur-2xl border-b border-android-border">
-        <div className="flex items-center gap-3">
-          <div className={cn("w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,242,255,0.4)]", 
-            systemLoad.label === 'CLEAN' ? 'bg-emerald-400 shadow-emerald-400/40' : 
-            systemLoad.label === 'ACTIVE' ? 'bg-android-accent shadow-android-accent/40' : 
-            systemLoad.label === 'HIGH' ? 'bg-amber-400 shadow-amber-400/40' : 'bg-red-500 shadow-red-500/40')} />
-          <div>
-            <span className="text-[10px] font-bold text-android-text-muted uppercase tracking-[0.2em] leading-none block mb-0.5">{systemLoad.label}</span>
-            <h1 className="text-xl font-bold tracking-tight text-android-text leading-none">BioTracker</h1>
+      <header className="px-4 pt-10 pb-3 flex justify-between items-end sticky top-0 z-50 bg-md3-bg/80 backdrop-blur-xl border-b border-md3-border">
+        <div>
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", systemLoad.color.replace('bg-', 'bg-'))} />
+            <span className="text-xs font-bold text-md3-gray uppercase tracking-widest">{systemLoad.label}</span>
           </div>
+          <h1 className="text-2xl font-bold tracking-tight text-md3-text">BioTracker</h1>
         </div>
         <button 
-          onClick={() => setIsSettingsOpen(true)}
-          className="p-2.5 rounded-2xl bg-android-surface border border-android-border android-button text-android-text-muted hover:text-android-text hover:bg-android-card transition-colors"
+          onClick={() => setView('settings')}
+          className={cn(
+            "p-1.5 rounded-full md3-button transition-colors",
+            view === 'settings' ? "bg-md3-primary text-theme-bg" : "bg-md3-secondary text-md3-gray hover:text-md3-text"
+          )}
         >
           <SettingsIcon size={20} />
         </button>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 px-4 pt-6">
+      <main className="flex-1 px-4 pt-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={view}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className="space-y-8"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="space-y-6"
           >
             {view === 'dashboard' && (
               <Dashboard 
@@ -380,6 +485,7 @@ export default function App() {
               <DoseHistory 
                 doses={doses} 
                 substances={substances} 
+                settings={settings}
                 onDeleteDose={handleDeleteDose}
                 onEditDose={handleEditDose}
                 onClearAll={handleClearAll}
@@ -390,7 +496,7 @@ export default function App() {
                 substances={substances} 
                 doses={doses} 
                 settings={settings} 
-                onToggleTheme={() => {}} 
+                onToggleTheme={() => {}} // Theme is locked to dark for iOS overhaul
               />
             )}
             {view === 'substances' && (
@@ -405,86 +511,78 @@ export default function App() {
                 onToggleFavorite={handleToggleFavorite}
               />
             )}
+            {view === 'settings' && (
+              <Settings 
+                settings={settings}
+                customEffects={customEffects}
+                onSave={setSettings}
+                onSaveEffects={setCustomEffects}
+                onClearData={handleClearAll}
+                onImport={handleImport}
+                onExport={handleExport}
+                onExportCSV={handleExportCSV}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation - Modern Android Floating Style */}
-      <div className="fixed bottom-6 left-4 right-4 z-50">
-        <nav className="android-glass rounded-[2rem] px-2 py-2 flex justify-around items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-white/5">
-          {[
-            { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
-            { id: 'logger', icon: PlusCircle, label: 'Log' },
-            { id: 'history', icon: History, label: 'History' },
-            { id: 'analytics', icon: BarChart2, label: 'Stats' },
-            { id: 'substances', icon: FlaskConical, label: 'Meds' },
-          ].map((item) => {
-            const isActive = view === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id as ViewType)}
-                className={cn(
-                  "flex flex-col items-center gap-1.5 py-2 px-1 min-w-[64px] android-button rounded-2xl relative transition-all duration-300",
-                  isActive ? 'text-android-accent' : 'text-android-text-muted hover:text-android-text'
-                )}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="nav-active"
-                    className="absolute inset-0 bg-android-accent/10 rounded-2xl border border-android-accent/20"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
-                <span className="text-[10px] font-bold uppercase tracking-wider relative z-10">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      {/* Bottom Navigation - Material 3 Style */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-md3-card/90 backdrop-blur-md border-t border-md3-border px-2 pt-2 pb-4 flex justify-around items-center z-50">
+        {[
+          { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
+          { id: 'logger', icon: PlusCircle, label: 'Záznam' },
+          { id: 'history', icon: History, label: 'Historie' },
+          { id: 'analytics', icon: BarChart2, label: 'Analýza' },
+          { id: 'substances', icon: FlaskConical, label: 'Látky' },
+        ].map((item) => {
+          const isActive = view === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id as ViewType)}
+              className={cn(
+                "flex flex-col items-center gap-1 w-16 md3-button py-1",
+                isActive ? 'text-md3-text' : 'text-md3-gray'
+              )}
+            >
+              <div className={cn(
+                "px-4 py-1 rounded-full transition-all duration-300",
+                isActive ? "bg-md3-primary/20 text-md3-primary" : "bg-transparent text-md3-gray"
+              )}>
+                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+              </div>
+              <span className={cn("text-xs font-medium", isActive ? "font-bold" : "")}>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-      {/* Overlays */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <Settings 
-            isOpen={isSettingsOpen} 
-            settings={settings}
-            onClose={() => setIsSettingsOpen(false)} 
-            onSave={setSettings}
-            onExport={handleExport}
-            onImport={handleImport}
-            onClearAll={handleClearAll}
-          />
-        )}
-        
-        {editingSubstanceId && (
-          <SubstanceEditor
-            substanceId={editingSubstanceId === 'new' ? null : editingSubstanceId}
-            template={editingTemplate}
-            substances={substances}
-            onClose={() => {
-              setEditingSubstanceId(null);
-              setEditingTemplate(null);
-            }}
-            onSave={handleSaveSubstance}
-          />
-        )}
+      {/* Modals */}
+      <SubstanceEditor 
+        isOpen={editingSubstanceId !== null}
+        substanceId={editingSubstanceId === 'new' ? null : editingSubstanceId}
+        template={editingTemplate}
+        substances={substances}
+        customEffects={customEffects}
+        onClose={() => {
+          setEditingSubstanceId(null);
+          setEditingTemplate(null);
+        }}
+        onSave={handleSaveSubstance}
+      />
 
-        {confirmConfig.isOpen && (
-          <ConfirmationModal
-            isOpen={confirmConfig.isOpen}
-            title={confirmConfig.title}
-            message={confirmConfig.message}
-            onConfirm={confirmConfig.onConfirm}
-            onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-            variant={confirmConfig.variant}
-          />
-        )}
-      </AnimatePresence>
+      <ConfirmationModal 
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        variant={confirmConfig.variant}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
 
       {/* Toasts */}
-      <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-[280px]">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 w-full max-w-xs">
         <AnimatePresence>
           {toasts.map(toast => (
             <motion.div
@@ -493,17 +591,23 @@ export default function App() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               className={cn(
-                "android-glass px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border-android-accent/20",
-                toast.type === 'success' && "border-emerald-500/30",
-                toast.type === 'error' && "border-red-500/30",
-                toast.type === 'warning' && "border-amber-500/30"
+                "p-4 rounded-2xl shadow-lg border flex items-center justify-between pointer-events-auto",
+                toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200' :
+                toast.type === 'error' ? 'bg-red-950/90 border-red-500/50 text-red-200' :
+                toast.type === 'warning' ? 'bg-amber-950/90 border-amber-500/50 text-amber-200' :
+                'bg-cyan-950/90 border-cyan-500/50 text-cyan-200'
               )}
             >
-              {toast.type === 'success' && <CheckCircle className="text-emerald-400" size={18} />}
-              {toast.type === 'error' && <AlertTriangle className="text-red-400" size={18} />}
-              {toast.type === 'warning' && <Info className="text-amber-400" size={18} />}
-              {toast.type === 'info' && <Info className="text-android-accent" size={18} />}
-              <span className="text-xs font-bold text-android-text">{toast.message}</span>
+              <div className="flex items-center gap-2">
+                {toast.type === 'success' && <CheckCircle className="w-4 h-4" />}
+                {toast.type === 'error' && <AlertTriangle className="w-4 h-4" />}
+                {toast.type === 'info' && <Info className="w-4 h-4" />}
+                {toast.type === 'warning' && <AlertTriangle className="w-4 h-4" />}
+                <span className="text-sm font-medium">{toast.message}</span>
+              </div>
+              <button onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}>
+                <X size={16} />
+              </button>
             </motion.div>
           ))}
         </AnimatePresence>
