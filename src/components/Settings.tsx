@@ -19,11 +19,13 @@ import {
   Moon,
   Sun,
   ChevronRight,
-  Palette
+  Palette,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
 import { cn } from '../lib/utils';
+import PinLock from './PinLock';
 
 interface SettingsProps {
   settings: UserSettings;
@@ -51,6 +53,7 @@ export default function Settings({
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [newEffectName, setNewEffectName] = useState('');
   const [newEffectType, setNewEffectType] = useState<Valence>('positive');
+  const [isSettingPin, setIsSettingPin] = useState(false);
 
   // Auto-save wrapper
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
@@ -88,6 +91,20 @@ export default function Settings({
 
   return (
     <div className="space-y-6 pb-8">
+      {isSettingPin && (
+        <PinLock 
+          correctPin=""
+          onUnlock={() => {}}
+          isSettingPin={true}
+          onSetPin={(pin) => {
+            updateSetting('pinCode', pin);
+            updateSetting('requirePin', true);
+            setIsSettingPin(false);
+          }}
+          onCancel={() => setIsSettingPin(false)}
+        />
+      )}
+
       {/* Settings Navigation */}
       <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4">
         {tabs.map(tab => (
@@ -243,6 +260,7 @@ export default function Settings({
                     { id: 'timeFormat24h', label: '24h formát času', icon: Clock },
                     { id: 'showSeconds', label: 'Zobrazit sekundy', icon: Activity },
                     { id: 'compactMode', label: 'Kompaktní režim', icon: Smartphone },
+                    { id: 'privacyMode', label: 'Režim soukromí (skrýt částky)', icon: ShieldCheck },
                   ].map(item => (
                     <button 
                       key={item.id} 
@@ -269,6 +287,37 @@ export default function Settings({
                       </div>
                     </button>
                   ))}
+
+                  <button 
+                    onClick={() => {
+                      if (settings.requirePin) {
+                        updateSetting('requirePin', false);
+                        updateSetting('pinCode', null);
+                      } else {
+                        setIsSettingPin(true);
+                      }
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                      settings.requirePin 
+                        ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                        : "bg-theme-subtle border-theme-border text-md3-gray"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Lock size={18} />
+                      <span className="font-bold text-sm">Zámek aplikace (PIN)</span>
+                    </div>
+                    <div className={cn(
+                      "w-10 h-6 rounded-full p-1 transition-all",
+                      settings.requirePin ? "bg-md3-primary" : "bg-theme-border"
+                    )}>
+                      <div className={cn(
+                        "w-4 h-4 rounded-full bg-white transition-all",
+                        settings.requirePin ? "translate-x-4" : "translate-x-0"
+                      )} />
+                    </div>
+                  </button>
                 </div>
               </div>
 
@@ -277,18 +326,31 @@ export default function Settings({
                   <Activity size={16} className="text-md3-primary" /> Grafy a analýza
                 </h3>
                 <div className="space-y-3">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Časové okno grafu</label>
-                    <select 
-                      value={settings.chartWindow} 
-                      onChange={e => updateSetting('chartWindow', parseInt(e.target.value) || 24)}
-                      className="w-full md3-input appearance-none"
-                    >
-                      <option value={12} className="bg-theme-bg">12 hodin</option>
-                      <option value={24} className="bg-theme-bg">24 hodin</option>
-                      <option value={48} className="bg-theme-bg">48 hodin</option>
-                      <option value={72} className="bg-theme-bg">72 hodin</option>
-                    </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Časové okno</label>
+                      <select 
+                        value={settings.chartWindow} 
+                        onChange={e => updateSetting('chartWindow', parseInt(e.target.value) || 24)}
+                        className="w-full md3-input appearance-none"
+                      >
+                        <option value={12} className="bg-theme-bg">12 hodin</option>
+                        <option value={24} className="bg-theme-bg">24 hodin</option>
+                        <option value={48} className="bg-theme-bg">48 hodin</option>
+                        <option value={72} className="bg-theme-bg">72 hodin</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">První den v týdnu</label>
+                      <select 
+                        value={settings.firstDayOfWeek ?? 1} 
+                        onChange={e => updateSetting('firstDayOfWeek', parseInt(e.target.value) as 0 | 1)}
+                        className="w-full md3-input appearance-none"
+                      >
+                        <option value={1} className="bg-theme-bg">Pondělí</option>
+                        <option value={0} className="bg-theme-bg">Neděle</option>
+                      </select>
+                    </div>
                   </div>
                   {[
                     { id: 'chartAnimation', label: 'Animace grafů', icon: Sparkles },
@@ -320,6 +382,51 @@ export default function Settings({
                       </div>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Activity size={16} className="text-md3-primary" /> Přehled (Dashboard)
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { id: 'activeEffects', label: 'Aktivní efekty', icon: Sparkles },
+                    { id: 'recentDoses', label: 'Poslední dávky', icon: Clock },
+                    { id: 'quickAdd', label: 'Rychlé přidání', icon: Plus },
+                    { id: 'budget', label: 'Rozpočet', icon: Database },
+                  ].map(item => {
+                    const isEnabled = settings.dashboardWidgets ? (settings.dashboardWidgets as any)[item.id] : true;
+                    return (
+                      <button 
+                        key={item.id} 
+                        onClick={() => {
+                          const currentWidgets = settings.dashboardWidgets || { activeEffects: true, recentDoses: true, quickAdd: true, budget: true };
+                          updateSetting('dashboardWidgets', { ...currentWidgets, [item.id]: !isEnabled });
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                          isEnabled 
+                            ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                            : "bg-theme-subtle border-theme-border text-md3-gray"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon size={18} />
+                          <span className="font-bold text-sm">{item.label}</span>
+                        </div>
+                        <div className={cn(
+                          "w-10 h-6 rounded-full p-1 transition-all",
+                          isEnabled ? "bg-md3-primary" : "bg-theme-border"
+                        )}>
+                          <div className={cn(
+                            "w-4 h-4 rounded-full bg-white transition-all",
+                            isEnabled ? "translate-x-4" : "translate-x-0"
+                          )} />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

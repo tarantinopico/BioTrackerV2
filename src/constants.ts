@@ -322,7 +322,17 @@ export const DEFAULT_SETTINGS: UserSettings = {
   doseWarnings: true, 
   reminders: false, 
   comedownWarnings: true,
-  theme: 'dark'
+  theme: 'dark',
+  privacyMode: false,
+  firstDayOfWeek: 1,
+  dashboardWidgets: {
+    activeEffects: true,
+    recentDoses: true,
+    quickAdd: true,
+    budget: true
+  },
+  pinCode: null,
+  requirePin: false
 };
 
 export const DEFAULT_EFFECTS: CustomEffect[] = [

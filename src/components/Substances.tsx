@@ -43,7 +43,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
   const [selectedCategory, setSelectedCategory] = useState<SubstanceCategory | 'all'>('all');
 
   const categories: (SubstanceCategory | 'all')[] = [
-    'all', 'stimulant', 'depressant', 'psychedelic', 'opioid', 'dissociative', 'cannabinoid', 'nootropic', 'supplement'
+    'all', 'stimulant', 'depressant', 'psychedelic', 'dissociative', 'empathogen', 'opioid', 'cannabinoid', 'nootropic', 'supplement', 'vitamin', 'steroid', 'peptide', 'herb', 'deliriant', 'medication', 'other'
   ];
 
   const filteredSubstances = useMemo(() => {
@@ -57,6 +57,26 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
   }, [substances, search, selectedCategory]);
 
   const presets = DEFAULT_SUBSTANCES.filter(ds => !substances.some(s => s.id === ds.id));
+
+  const categoryTranslations: Record<string, string> = {
+    'all': 'Vše',
+    'stimulant': 'Stimulans',
+    'depressant': 'Depresans',
+    'psychedelic': 'Psychedelikum',
+    'dissociative': 'Disociativum',
+    'empathogen': 'Empatogen',
+    'opioid': 'Opioid',
+    'cannabinoid': 'Kanabinoid',
+    'nootropic': 'Nootropikum',
+    'supplement': 'Doplněk',
+    'vitamin': 'Vitamín',
+    'steroid': 'Steroid',
+    'peptide': 'Peptid',
+    'herb': 'Bylina',
+    'deliriant': 'Deliriant',
+    'medication': 'Lék',
+    'other': 'Jiné'
+  };
 
   return (
     <div className="space-y-6 relative">
@@ -101,7 +121,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
                 : "bg-theme-subtle backdrop-blur-xl border-theme-border text-md3-gray hover:text-theme-text hover:bg-theme-subtle-hover"
             )}
           >
-            {cat === 'all' ? 'Vše' : cat}
+            {categoryTranslations[cat] || cat}
           </button>
         ))}
       </div>

@@ -487,10 +487,16 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       <option value="depressant">Depresans</option>
                       <option value="psychedelic">Psychedelikum</option>
                       <option value="dissociative">Disociativum</option>
+                      <option value="empathogen">Empatogen</option>
                       <option value="opioid">Opioid</option>
                       <option value="cannabinoid">Kanabinoid</option>
                       <option value="nootropic">Nootropikum</option>
                       <option value="supplement">Doplněk stravy</option>
+                      <option value="vitamin">Vitamín/Minerál</option>
+                      <option value="steroid">Steroid</option>
+                      <option value="peptide">Peptid</option>
+                      <option value="herb">Bylina</option>
+                      <option value="deliriant">Deliriant</option>
                       <option value="medication">Lék</option>
                       <option value="other">Jiné</option>
                     </select>
@@ -551,6 +557,19 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Velikost balení ({formData.unit || 'mg'})</label>
+                  <input 
+                    type="number" 
+                    value={formData.packageSize || ''} 
+                    onChange={e => setFormData(prev => ({ ...prev, packageSize: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    step="0.1" 
+                    min="0" 
+                    placeholder="Volitelné (pro výpočet spotřeby)"
+                    className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                  />
                 </div>
                 
                 <div className="space-y-1.5">

@@ -3,10 +3,16 @@ export type SubstanceCategory =
   | 'depressant' 
   | 'psychedelic' 
   | 'dissociative' 
+  | 'empathogen'
   | 'opioid' 
   | 'cannabinoid' 
   | 'nootropic' 
   | 'supplement' 
+  | 'vitamin'
+  | 'steroid'
+  | 'peptide'
+  | 'herb'
+  | 'deliriant'
   | 'medication' 
   | 'other';
 
@@ -52,6 +58,7 @@ export interface Substance {
   price: number;
   step: number;
   dailyLimit?: number;
+  packageSize?: number;
   category: SubstanceCategory;
   onset: number;
   offset: number;
@@ -131,6 +138,16 @@ export interface UserSettings {
   reminders: boolean;
   comedownWarnings: boolean;
   theme: 'dark' | 'light' | 'midnight';
+  privacyMode?: boolean;
+  firstDayOfWeek?: 0 | 1;
+  dashboardWidgets?: {
+    activeEffects: boolean;
+    recentDoses: boolean;
+    quickAdd: boolean;
+    budget: boolean;
+  };
+  pinCode?: string | null;
+  requirePin?: boolean;
 }
 
 export interface CustomEffect {

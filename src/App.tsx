@@ -77,6 +77,7 @@ import Analytics from './components/Analytics';
 import SubstanceEditor from './components/SubstanceEditor';
 import Settings from './components/Settings';
 import ConfirmationModal from './components/ConfirmationModal';
+import PinLock from './components/PinLock';
 
 export type ViewType = 'dashboard' | 'logger' | 'history' | 'analytics' | 'substances' | 'settings';
 
@@ -91,6 +92,7 @@ export default function App() {
   const [shortcuts, setShortcuts] = useState<Shortcut[]>([]);
   const [toasts, setToasts] = useState<{ id: number; message: string; type: 'success' | 'error' | 'info' | 'warning' }[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isUnlocked, setIsUnlocked] = useState(false);
   
   // Confirmation Modal State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -120,7 +122,15 @@ export default function App() {
     if (savedDoses) setDoses(JSON.parse(savedDoses));
 
     const savedSettings = localStorage.getItem('biotracker_pro_settings');
-    if (savedSettings) setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) });
+    if (savedSettings) {
+      const parsedSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
+      setSettings(parsedSettings);
+      if (!parsedSettings.requirePin) {
+        setIsUnlocked(true);
+      }
+    } else {
+      setIsUnlocked(true);
+    }
 
     const savedEffects = localStorage.getItem('biotracker_pro_effects');
     if (savedEffects) setCustomEffects(JSON.parse(savedEffects));
@@ -420,6 +430,15 @@ export default function App() {
     if (totalLoad < 100) return { label: 'HIGH', color: 'bg-amber-400' };
     return { label: 'CRITICAL', color: 'bg-red-500' };
   }, [activeDoses, substances, doses, settings, currentTime]);
+
+  if (settings.requirePin && !isUnlocked) {
+    return (
+      <PinLock 
+        correctPin={settings.pinCode || ''} 
+        onUnlock={() => setIsUnlocked(true)} 
+      />
+    );
+  }
 
   return (
     <div className={cn(

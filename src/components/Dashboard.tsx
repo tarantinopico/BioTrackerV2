@@ -82,10 +82,16 @@ const CATEGORY_COLORS: Record<string, string> = {
   'depressant': '#3b82f6', // Blue
   'psychedelic': '#d946ef', // Fuchsia
   'dissociative': '#8b5cf6', // Violet
+  'empathogen': '#ec4899', // Pink
   'opioid': '#10b981', // Emerald
   'cannabinoid': '#22c55e', // Green
   'nootropic': '#06b6d4', // Cyan
   'supplement': '#64748b', // Slate
+  'vitamin': '#eab308', // Yellow
+  'steroid': '#ef4444', // Red
+  'peptide': '#8b5cf6', // Violet
+  'herb': '#84cc16', // Lime
+  'deliriant': '#57534e', // Stone
   'medication': '#ef4444', // Red
   'other': '#9ca3af' // Gray
 };
@@ -359,20 +365,22 @@ export default function Dashboard({
           </div>
         </section>
 
-        <section className="md3-card p-4 flex flex-col justify-between min-h-[90px]">
-          <div className="flex items-center gap-2 mb-2 opacity-80">
-            <Wallet size={16} className="text-md3-green" />
-            <span className="text-xs font-bold uppercase tracking-wider text-md3-gray">Dnes</span>
-          </div>
-          <div>
-            <div className="text-xs font-bold uppercase tracking-wider mb-1 text-md3-gray">
-              Utraceno
+        {settings.dashboardWidgets?.budget !== false && (
+          <section className="md3-card p-4 flex flex-col justify-between min-h-[90px]">
+            <div className="flex items-center gap-2 mb-2 opacity-80">
+              <Wallet size={16} className="text-md3-green" />
+              <span className="text-xs font-bold uppercase tracking-wider text-md3-gray">Dnes</span>
             </div>
-            <div className="text-xl font-bold text-theme-text tracking-tight leading-none">
-              {dailyCost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}
+            <div>
+              <div className="text-xs font-bold uppercase tracking-wider mb-1 text-md3-gray">
+                Utraceno
+              </div>
+              <div className="text-xl font-bold text-theme-text tracking-tight leading-none">
+                {settings.privacyMode ? '***' : dailyCost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <section className="md3-card p-4 flex flex-col min-h-[90px]">
           <div className="flex items-center gap-2 mb-3 opacity-80">
@@ -389,7 +397,7 @@ export default function Dashboard({
                     <span className="text-xs font-bold text-md3-gray uppercase">{s.name}</span>
                   </div>
                   <span className="text-base font-bold text-theme-text tabular-nums leading-none">
-                    {s.amount}<span className="text-xs text-md3-gray ml-1">{s.unit}</span>
+                    {settings.privacyMode ? '***' : s.amount}<span className="text-xs text-md3-gray ml-1">{s.unit}</span>
                   </span>
                 </div>
               );
@@ -400,37 +408,39 @@ export default function Dashboard({
           </div>
         </section>
 
-        <section className="md3-card p-4 flex flex-col min-h-[90px]">
-          <div className="flex items-center gap-2 mb-3 opacity-80">
-            <Clock size={16} className="text-md3-primary-container" />
-            <span className="text-xs font-bold uppercase tracking-wider text-md3-gray">Historie</span>
-          </div>
-          <div className="space-y-2 max-h-[50px] overflow-hidden">
-            {allSubstancesLastUsed.slice(0, 2).map(s => {
-              const Icon = SUBSTANCE_ICONS[s.icon] || Zap;
-              return (
-                <div key={s.id} className="flex justify-between items-center leading-none">
-                  <div className="flex items-center gap-1.5">
-                    <Icon size={12} style={{ color: s.color }} />
-                    <span className="text-xs font-bold uppercase truncate max-w-[70px]" style={{ color: s.color }}>{s.name}</span>
+        {settings.dashboardWidgets?.recentDoses !== false && (
+          <section className="md3-card p-4 flex flex-col min-h-[90px]">
+            <div className="flex items-center gap-2 mb-3 opacity-80">
+              <Clock size={16} className="text-md3-primary-container" />
+              <span className="text-xs font-bold uppercase tracking-wider text-md3-gray">Historie</span>
+            </div>
+            <div className="space-y-2 max-h-[50px] overflow-hidden">
+              {allSubstancesLastUsed.slice(0, 2).map(s => {
+                const Icon = SUBSTANCE_ICONS[s.icon] || Zap;
+                return (
+                  <div key={s.id} className="flex justify-between items-center leading-none">
+                    <div className="flex items-center gap-1.5">
+                      <Icon size={12} style={{ color: s.color }} />
+                      <span className="text-xs font-bold uppercase truncate max-w-[70px]" style={{ color: s.color }}>{s.name}</span>
+                    </div>
+                    <span className="text-xs font-bold text-md3-gray tabular-nums">
+                      {(() => {
+                        const hrs = Math.floor(s.lastUsedHours!);
+                        const mins = Math.floor((s.lastUsedHours! - hrs) * 60);
+                        if (hrs === 0 && mins === 0) return 'TEĎ';
+                        if (hrs === 0) return `-${mins}m`;
+                        return `-${hrs}h ${mins}m`;
+                      })()}
+                    </span>
                   </div>
-                  <span className="text-xs font-bold text-md3-gray tabular-nums">
-                    {(() => {
-                      const hrs = Math.floor(s.lastUsedHours!);
-                      const mins = Math.floor((s.lastUsedHours! - hrs) * 60);
-                      if (hrs === 0 && mins === 0) return 'TEĎ';
-                      if (hrs === 0) return `-${mins}m`;
-                      return `-${hrs}h ${mins}m`;
-                    })()}
-                  </span>
-                </div>
-              );
-            })}
-            {allSubstancesLastUsed.length === 0 && (
-              <div className="text-xs font-medium text-md3-gray italic">Žádná data</div>
-            )}
-          </div>
-        </section>
+                );
+              })}
+              {allSubstancesLastUsed.length === 0 && (
+                <div className="text-xs font-medium text-md3-gray italic">Žádná data</div>
+              )}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Interaction Alerts */}
@@ -537,53 +547,57 @@ export default function Dashboard({
       </section>
 
       {/* Quick Actions */}
-      <section className="relative z-10">
-        <QuickActions 
-          shortcuts={shortcuts}
-          substances={substances}
-          onUseShortcut={onUseShortcut}
-          onAddShortcut={onAddShortcut}
-          onRemoveShortcut={onRemoveShortcut}
-          onUpdateShortcut={onUpdateShortcut}
-        />
-      </section>
+      {settings.dashboardWidgets?.quickAdd !== false && (
+        <section className="relative z-10">
+          <QuickActions 
+            shortcuts={shortcuts}
+            substances={substances}
+            onUseShortcut={onUseShortcut}
+            onAddShortcut={onAddShortcut}
+            onRemoveShortcut={onRemoveShortcut}
+            onUpdateShortcut={onUpdateShortcut}
+          />
+        </section>
+      )}
 
       {/* Active Substance Monitor */}
-      <section className="space-y-2">
-        <div className="flex items-center justify-between px-1">
-          <span className="text-xs font-bold text-md3-gray uppercase tracking-widest">Aktivní látky</span>
-          <span className="text-xs font-medium text-md3-primary">{activeSubstanceDetails.length} aktivní</span>
-        </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {activeSubstanceDetails.map(({ substance, level }) => {
-            const Icon = SUBSTANCE_ICONS[substance!.icon] || Zap;
-            const color = substance!.color || CATEGORY_COLORS[substance!.category] || '#0a84ff';
-            return (
-              <button 
-                key={substance!.id} 
-                onClick={() => setSelectedDetailsId(substance!.id)}
-                className="flex-shrink-0 md3-card p-2.5 min-w-[110px] text-left md3-button"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5">
-                    <Icon size={12} style={{ color }} />
-                    <span className="text-xs font-bold text-theme-text uppercase truncate max-w-[60px]">{substance!.name}</span>
+      {settings.dashboardWidgets?.activeEffects !== false && (
+        <section className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-bold text-md3-gray uppercase tracking-widest">Aktivní látky</span>
+            <span className="text-xs font-medium text-md3-primary">{activeSubstanceDetails.length} aktivní</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {activeSubstanceDetails.map(({ substance, level }) => {
+              const Icon = SUBSTANCE_ICONS[substance!.icon] || Zap;
+              const color = substance!.color || CATEGORY_COLORS[substance!.category] || '#0a84ff';
+              return (
+                <button 
+                  key={substance!.id} 
+                  onClick={() => setSelectedDetailsId(substance!.id)}
+                  className="flex-shrink-0 md3-card p-2.5 min-w-[110px] text-left md3-button"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Icon size={12} style={{ color }} />
+                      <span className="text-xs font-bold text-theme-text uppercase truncate max-w-[60px]">{substance!.name}</span>
+                    </div>
+                    <span className="text-sm font-bold" style={{ color }}>{level.toFixed(0)}%</span>
                   </div>
-                  <span className="text-sm font-bold" style={{ color }}>{level.toFixed(0)}%</span>
-                </div>
-                <div className="h-1 bg-theme-subtle rounded-full overflow-hidden">
-                  <motion.div animate={{ width: `${level}%` }} className="h-full" style={{ backgroundColor: color }} />
-                </div>
-              </button>
-            );
-          })}
-          {activeSubstanceDetails.length === 0 && (
-            <div className="w-full md3-card p-4 text-center text-md3-gray italic text-xs">
-              Žádné aktivní látky v systému
-            </div>
-          )}
-        </div>
-      </section>
+                  <div className="h-1 bg-theme-subtle rounded-full overflow-hidden">
+                    <motion.div animate={{ width: `${level}%` }} className="h-full" style={{ backgroundColor: color }} />
+                  </div>
+                </button>
+              );
+            })}
+            {activeSubstanceDetails.length === 0 && (
+              <div className="w-full md3-card p-4 text-center text-md3-gray italic text-xs">
+                Žádné aktivní látky v systému
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Substance Details Modal - Glassmorphism */}
       <AnimatePresence>

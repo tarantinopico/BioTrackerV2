@@ -276,6 +276,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
     if (!selectedSubstanceId) return [];
     const data = [];
     const days = period === 7 ? 7 : 30;
+    let cumulativeAmount = 0;
     for (let i = days - 1; i >= 0; i--) {
       const t = now - i * dayMs;
       const d = new Date(t);
@@ -287,17 +288,37 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         return ts >= dayStart && ts < dayEnd;
       });
 
+      const amount = dayDoses.reduce((sum, dose) => sum + dose.amount, 0);
+      cumulativeAmount += amount;
       const histTolerance = calculateTolerance(selectedSubstanceId, substances, doses, dayEnd);
 
       data.push({
         name: d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' }),
-        amount: dayDoses.reduce((sum, dose) => sum + dose.amount, 0),
+        amount,
+        cumulativeAmount,
         count: dayDoses.length,
         tolerance: histTolerance
       });
     }
     return data;
   }, [selectedSubstanceDoses, period, now, selectedSubstanceId, substances, doses]);
+
+  const dayOfWeekStats = useMemo(() => {
+    if (!selectedSubstanceId) return [];
+    const days = [0, 0, 0, 0, 0, 0, 0];
+    const dayNames = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+    selectedSubstanceDoses.forEach(d => {
+      days[new Date(d.timestamp).getDay()] += d.amount;
+    });
+    
+    let result = days.map((amount, i) => ({ day: dayNames[i], amount }));
+    if (settings.firstDayOfWeek === 1) {
+      // Move Sunday to the end
+      const sunday = result.shift();
+      if (sunday) result.push(sunday);
+    }
+    return result;
+  }, [selectedSubstanceDoses, selectedSubstanceId, settings.firstDayOfWeek]);
 
   const substanceRouteStats = useMemo(() => {
     if (!selectedSubstanceId) return [];
@@ -340,6 +361,23 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
     });
     
     return distribution;
+  }, [selectedSubstanceDoses, selectedSubstanceId]);
+
+  const groupedHistory = useMemo(() => {
+    if (!selectedSubstanceId) return [];
+    const groups: Record<string, typeof selectedSubstanceDoses> = {};
+    selectedSubstanceDoses.forEach(dose => {
+      const dateStr = new Date(dose.timestamp).toLocaleDateString('cs-CZ');
+      if (!groups[dateStr]) groups[dateStr] = [];
+      groups[dateStr].push(dose);
+    });
+    return Object.entries(groups)
+      .map(([date, doses]) => ({
+        date,
+        doses: doses.sort((a, b) => b.timestamp - a.timestamp),
+        totalAmount: doses.reduce((sum, d) => sum + d.amount, 0)
+      }))
+      .sort((a, b) => new Date(b.doses[0].timestamp).getTime() - new Date(a.doses[0].timestamp).getTime());
   }, [selectedSubstanceDoses, selectedSubstanceId]);
 
   const lastDosesInfo = useMemo(() => {
@@ -391,7 +429,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Útrata ({period}D)</span>
           </div>
           <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
+            {settings.privacyMode ? '***' : totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
           </div>
         </div>
         <div className="md3-card p-5">
@@ -402,7 +440,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Celkem</span>
           </div>
           <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
+            {settings.privacyMode ? '***' : allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
           </div>
         </div>
       </div>
@@ -414,7 +452,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             <TrendingUp size={16} className="text-md3-primary" />
             <h2 className="text-sm font-bold text-theme-text uppercase tracking-wider">Trend Výdajů</h2>
           </div>
-          <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">{(totalCost / period).toFixed(0)} {settings.currency || 'Kč'} / den</span>
+          <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">{settings.privacyMode ? '***' : (totalCost / period).toFixed(0)} {settings.currency || 'Kč'} / den</span>
         </div>
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -492,7 +530,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             {predictionData.map((p, i) => (
               <div key={i} className="text-center p-3 rounded-2xl bg-theme-subtle">
                 <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
-                <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+                <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
               </div>
             ))}
           </div>
@@ -677,9 +715,62 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                       <Area 
                         type="monotone" 
                         dataKey="amount" 
+                        name="Množství"
                         stroke={substance.color} 
                         fillOpacity={1} 
                         fill="url(#colorAmount)" 
+                        strokeWidth={3} 
+                        animationDuration={1500}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp size={16} className="text-md3-primary" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kumulativní spotřeba</h3>
+                </div>
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dailyTrend}>
+                      <defs>
+                        <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis 
+                        dataKey="name" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        dy={10}
+                      />
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
+                          borderRadius: '16px', 
+                          border: '1px solid rgba(255, 255, 255, 0.1)', 
+                          backdropFilter: 'blur(20px)'
+                        }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
+                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="cumulativeAmount" 
+                        name="Celkem"
+                        stroke={substance.color} 
+                        fillOpacity={1} 
+                        fill="url(#colorCumulative)" 
                         strokeWidth={3} 
                         animationDuration={1500}
                       />
@@ -701,7 +792,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="md3-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Clock size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kdy užívám nejvíc</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kdy užívám nejvíc (Hodiny)</h3>
                 </div>
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -728,6 +819,47 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                       />
                       <Bar 
                         dataKey="count" 
+                        name="Počet dávek"
+                        fill={substance.color} 
+                        radius={[6, 6, 0, 0]} 
+                        animationDuration={1500}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </section>
+
+              <section className="md3-card p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <Calendar size={16} className="text-md3-primary" />
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Dny v týdnu (Množství)</h3>
+                </div>
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dayOfWeekStats}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      <XAxis 
+                        dataKey="day" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        dy={10}
+                      />
+                      <YAxis hide />
+                      <Tooltip 
+                        cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
+                          borderRadius: '16px', 
+                          border: '1px solid rgba(255, 255, 255, 0.1)', 
+                          backdropFilter: 'blur(20px)'
+                        }}
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
+                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                      />
+                      <Bar 
+                        dataKey="amount" 
+                        name={`Množství (${substance.unit})`}
                         fill={substance.color} 
                         radius={[6, 6, 0, 0]} 
                         animationDuration={1500}
@@ -839,6 +971,22 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                       {(sDoses.length / period).toFixed(1)}x
                     </span>
                   </div>
+                  {substance.packageSize && substance.packageSize > 0 && (
+                    <>
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+                        <span className="text-sm font-bold text-md3-gray">Spotřebovaná balení</span>
+                        <span className="text-lg font-bold text-theme-text">
+                          {(totalAmount / substance.packageSize).toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+                        <span className="text-sm font-bold text-md3-gray">Průměrná výdrž balení</span>
+                        <span className="text-lg font-bold text-theme-text">
+                          {totalAmount > 0 ? (substance.packageSize / (totalAmount / period)).toFixed(1) : '-'} dní
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
             </motion.div>
@@ -855,11 +1003,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <div className="grid grid-cols-2 gap-4">
                 <div className="md3-card p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celková útrata</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{cost.toFixed(0)} {settings.currency || 'Kč'}</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : cost.toFixed(0)} {settings.currency || 'Kč'}</div>
                 </div>
                 <div className="md3-card p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{(cost / (sDoses.length || 1)).toFixed(0)} {settings.currency || 'Kč'}</div>
+                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : (cost / (sDoses.length || 1)).toFixed(0)} {settings.currency || 'Kč'}</div>
                 </div>
               </div>
 
@@ -868,7 +1016,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   <Zap size={16} className="text-md3-orange" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce výdajů</h3>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: 'Denně', value: substancePredictions.daily },
                     { label: 'Měsíčně', value: substancePredictions.monthly },
@@ -876,7 +1024,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   ].map((p, i) => (
                     <div key={i} className="text-center p-4 rounded-2xl bg-theme-subtle">
                       <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.label}</div>
-                      <div className="text-sm font-bold text-theme-text tracking-tight">{p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
                     </div>
                   ))}
                 </div>
@@ -895,37 +1043,52 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="md3-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <History size={16} className="text-md3-gray" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Poslední záznamy</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Historie po dnech</h3>
                 </div>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto no-scrollbar">
-                  {sDoses.slice(0, 10).map((dose) => (
-                    <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border group hover:bg-theme-subtle-hover transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform">
-                          <Clock size={16} className="text-md3-gray" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-bold text-theme-text tracking-tight">
-                            {dose.amount} {substance.unit}
-                            {dose.strainId && <span className="text-xs text-md3-primary ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
-                          </div>
-                          <div className="text-xs text-md3-gray font-bold uppercase tracking-wider mt-0.5">
-                            {new Date(dose.timestamp).toLocaleDateString('cs-CZ')} • {formatTime(dose.timestamp, settings)}
-                          </div>
-                        </div>
+                <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
+                  {groupedHistory.map((group) => (
+                    <div key={group.date} className="space-y-3">
+                      <div className="flex items-center justify-between sticky top-0 bg-theme-card/90 backdrop-blur-md py-2 z-10">
+                        <h4 className="text-sm font-bold text-theme-text">{group.date}</h4>
+                        <span className="text-xs font-bold text-md3-primary bg-md3-primary/10 px-2 py-1 rounded-lg">
+                          Celkem: {group.totalAmount.toFixed(1)} {substance.unit}
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">
-                          {dose.route}
-                        </div>
-                        {dose.cost && (
-                          <div className="text-sm font-bold text-md3-green tracking-tight">
-                            {dose.cost} {settings.currency || 'Kč'}
+                      <div className="space-y-2">
+                        {group.doses.map((dose) => (
+                          <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border group hover:bg-theme-subtle-hover transition-all">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform">
+                                <Clock size={16} className="text-md3-gray" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-bold text-theme-text tracking-tight">
+                                  {dose.amount} {substance.unit}
+                                  {dose.strainId && <span className="text-xs text-md3-primary ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
+                                </div>
+                                <div className="text-xs text-md3-gray font-bold uppercase tracking-wider mt-0.5">
+                                  {formatTime(dose.timestamp, settings)}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">
+                                {dose.route}
+                              </div>
+                              {dose.cost && (
+                                <div className="text-sm font-bold text-md3-green tracking-tight">
+                                  {dose.cost} {settings.currency || 'Kč'}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
                   ))}
+                  {groupedHistory.length === 0 && (
+                    <div className="text-center py-8 text-md3-gray text-sm">Zatím žádné záznamy</div>
+                  )}
                 </div>
               </section>
             </motion.div>
