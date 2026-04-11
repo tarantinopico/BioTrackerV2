@@ -20,7 +20,14 @@ import {
   Sun,
   ChevronRight,
   Palette,
-  Lock
+  Lock,
+  Zap,
+  BarChart3,
+  EyeOff,
+  Fingerprint,
+  Cpu,
+  LineChart,
+  ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -625,28 +632,70 @@ export default function Settings({
                   <h2 className="text-2xl font-black text-theme-text tracking-tight">BioTracker Pro</h2>
                   <p className="text-sm font-bold text-md3-gray tracking-widest uppercase mt-1">Verze 2.1.0</p>
                 </div>
-                <p className="text-sm text-md3-gray font-medium max-w-xs leading-relaxed">
-                  Pokročilý systém pro sledování farmakokinetiky, biometrických dat a analýzu užívání látek.
+                <p className="text-sm text-md3-gray font-medium max-w-sm leading-relaxed">
+                  Pokročilý systém pro sledování farmakokinetiky, biometrických dat a hloubkovou analýzu užívání látek. Navrženo pro maximální kontrolu a bezpečnost.
                 </p>
                 
-                <div className="w-full text-left space-y-3 mt-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-md3-text">Hlavní funkce</h3>
-                  <ul className="text-sm text-md3-gray space-y-2">
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Výpočet plazmatické koncentrace</li>
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Sledování tolerance a interakcí</li>
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Analýza výdajů a zvyklostí</li>
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-md3-primary" /> Plně lokální a privátní úložiště</li>
-                  </ul>
+                <div className="w-full text-left space-y-4 mt-6">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-md3-text border-b border-theme-border pb-2">Hlavní funkce</h3>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-500 mt-0.5">
+                        <Activity size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-theme-text">Farmakokinetika</h4>
+                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Výpočet plazmatické koncentrace v reálném čase na základě poločasu rozpadu, hmotnosti a metabolismu.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 mt-0.5">
+                        <BarChart3 size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-theme-text">Pokročilá analytika</h4>
+                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Detailní grafy, sledování výdajů, analýza denní doby užívání a výpočet průměrné výdrže balení.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500 mt-0.5">
+                        <ShieldAlert size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-theme-text">Prevence a bezpečnost</h4>
+                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Automatické varování před nebezpečnými interakcemi, sledování budování tolerance a upozornění na comedown.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="w-full p-4 rounded-2xl bg-theme-subtle border border-theme-border text-left mt-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-md3-text mb-2 flex items-center gap-2">
-                    <ShieldCheck size={14} className="text-emerald-500" />
-                    Ochrana soukromí
-                  </h3>
-                  <p className="text-xs text-md3-gray leading-relaxed">
-                    Všechna data jsou ukládána výhradně ve vašem zařízení (Local Storage). Aplikace neodesílá žádné informace na externí servery. Pro zálohování použijte funkci exportu v záložce Data.
-                  </p>
+                <div className="w-full text-left space-y-4 mt-6">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-md3-text border-b border-theme-border pb-2">Ochrana soukromí</h3>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 mt-0.5">
+                        <Database size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-theme-text">Lokální úložiště</h4>
+                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Všechna data jsou ukládána výhradně ve vašem zařízení. Aplikace neodesílá žádné informace na externí servery.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="p-2 rounded-lg bg-rose-500/10 text-rose-500 mt-0.5">
+                        <Lock size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-theme-text">Zabezpečení přístupu</h4>
+                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Možnost uzamknout aplikaci PIN kódem a skrýt citlivé finanční údaje pomocí Režimu soukromí.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -43,7 +43,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
   const [selectedCategory, setSelectedCategory] = useState<SubstanceCategory | 'all'>('all');
 
   const categories: (SubstanceCategory | 'all')[] = [
-    'all', 'stimulant', 'depressant', 'psychedelic', 'dissociative', 'empathogen', 'opioid', 'cannabinoid', 'nootropic', 'supplement', 'vitamin', 'steroid', 'peptide', 'herb', 'deliriant', 'medication', 'other'
+    'all', 'stimulant', 'depressant', 'psychedelic', 'dissociative', 'empathogen', 'opioid', 'cannabinoid', 'nootropic', 'supplement', 'vitamin', 'steroid', 'peptide', 'herb', 'deliriant', 'medication', 'antidepressant', 'antipsychotic', 'anxiolytic', 'sedative', 'entactogen', 'other'
   ];
 
   const filteredSubstances = useMemo(() => {

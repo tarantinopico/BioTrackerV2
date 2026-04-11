@@ -488,6 +488,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       <option value="psychedelic">Psychedelikum</option>
                       <option value="dissociative">Disociativum</option>
                       <option value="empathogen">Empatogen</option>
+                      <option value="entactogen">Entaktogen</option>
                       <option value="opioid">Opioid</option>
                       <option value="cannabinoid">Kanabinoid</option>
                       <option value="nootropic">Nootropikum</option>
@@ -498,6 +499,10 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       <option value="herb">Bylina</option>
                       <option value="deliriant">Deliriant</option>
                       <option value="medication">Lék</option>
+                      <option value="antidepressant">Antidepresivum</option>
+                      <option value="antipsychotic">Antipsychotikum</option>
+                      <option value="anxiolytic">Anxiolytikum</option>
+                      <option value="sedative">Sedativum</option>
                       <option value="other">Jiné</option>
                     </select>
                   </div>

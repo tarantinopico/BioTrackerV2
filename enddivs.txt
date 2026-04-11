@@ -1,0 +1,141 @@
+454:        </div>
+470:        </div>
+471:      </div>
+479:            </div>
+481:          </div>
+484:          </div>
+485:        </div>
+490:            </div>
+492:          </div>
+495:          </div>
+496:        </div>
+501:            </div>
+503:          </div>
+506:          </div>
+507:        </div>
+512:            </div>
+514:          </div>
+517:          </div>
+518:        </div>
+519:      </div>
+527:          </div>
+553:          </div>
+563:          </div>
+565:        </div>
+609:        </div>
+617:        </div>
+645:        </div>
+654:          </div>
+665:          </div>
+672:          </div>
+676:                <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
+677:                <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+678:              </div>
+680:          </div>
+682:      </div>
+697:          </div>
+698:        </div>
+713:                </div>
+715:                  <div className="text-base font-bold text-theme-text tracking-tight">{s.name}</div>
+716:                  <div className="text-xs text-md3-gray font-medium">{s.count} záznamů</div>
+717:                </div>
+718:              </div>
+721:                  <div className="text-xs font-bold text-theme-text">{s.tolerance.toFixed(0)}%</div>
+722:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest">Tolerance</div>
+723:                </div>
+725:              </div>
+729:        </div>
+730:      </div>
+731:    </div>
+776:          </div>
+777:        </div>
+789:          </div>
+790:        </div>
+818:        </div>
+831:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Tolerance</div>
+832:                  <div className="text-2xl font-bold text-theme-text tracking-tight">{tolerance.toFixed(0)}%</div>
+833:                </div>
+835:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celkem</div>
+838:                  </div>
+839:                </div>
+840:              </div>
+846:                </div>
+891:                </div>
+898:                </div>
+943:                </div>
+960:                </div>
+993:                </div>
+1000:                </div>
+1033:                </div>
+1050:                </div>
+1082:                </div>
+1097:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměrná dávka</div>
+1100:                  </div>
+1101:                </div>
+1103:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Maximální dávka</div>
+1106:                  </div>
+1107:                </div>
+1108:              </div>
+1114:                </div>
+1119:                  </div>
+1131:                  </div>
+1137:                  </div>
+1145:                      </div>
+1151:                      </div>
+1157:                      </div>
+1163:                      </div>
+1166:                </div>
+1183:                </div>
+1210:                    </div>
+1217:                          </div>
+1219:                            <div className="text-sm font-bold text-theme-text">{strain.value.toFixed(1)} <span className="text-xs text-md3-gray">{substance.unit}</span></div>
+1220:                            <div className="text-xs text-md3-gray font-medium">{strain.count}x</div>
+1221:                          </div>
+1222:                        </div>
+1224:                    </div>
+1225:                  </div>
+1229:                  </div>
+1245:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celková útrata</div>
+1246:                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : cost.toFixed(0)} {settings.currency || 'Kč'}</div>
+1247:                </div>
+1249:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
+1250:                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : (cost / (sDoses.length || 1)).toFixed(0)} {settings.currency || 'Kč'}</div>
+1251:                </div>
+1252:              </div>
+1258:                </div>
+1266:                      <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.label}</div>
+1267:                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+1268:                    </div>
+1270:                </div>
+1287:                </div>
+1296:                      </div>
+1303:                              </div>
+1308:                                </div>
+1311:                                </div>
+1312:                              </div>
+1313:                            </div>
+1317:                              </div>
+1321:                                </div>
+1323:                            </div>
+1324:                          </div>
+1326:                      </div>
+1327:                    </div>
+1330:                    <div className="text-center py-8 text-md3-gray text-sm">Zatím žádné záznamy</div>
+1332:                </div>
+1349:                  </div>
+1356:                </div>
+1367:                      </div>
+1385:                      </div>
+1414:                      </div>
+1423:                              </div>
+1425:                                <div className="text-sm font-bold text-theme-text">{formatTime(dose.timestamp, settings)}</div>
+1426:                                <div className="text-xs text-md3-gray font-medium">{dose.route}</div>
+1427:                              </div>
+1428:                            </div>
+1430:                              <div className="text-sm font-bold text-theme-text">{dose.amount} {substance.unit}</div>
+1431:                              {dose.strainId && <div className="text-xs text-md3-primary font-bold">{dose.strainId}</div>}
+1432:                            </div>
+1433:                          </div>
+1435:                      </div>
+1436:                    </div>
+1443:      </div>

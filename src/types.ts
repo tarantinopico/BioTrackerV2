@@ -14,6 +14,11 @@ export type SubstanceCategory =
   | 'herb'
   | 'deliriant'
   | 'medication' 
+  | 'antidepressant'
+  | 'antipsychotic'
+  | 'anxiolytic'
+  | 'sedative'
+  | 'entactogen'
   | 'other';
 
 export type MetabolismCurveType = 
@@ -108,7 +113,7 @@ export interface Dose {
   id: string;
   substanceId: string;
   amount: number;
-  timestamp: string;
+  timestamp: number;
   route: string;
   stomach?: string | null;
   note: string;

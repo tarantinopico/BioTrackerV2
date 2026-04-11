@@ -1,0 +1,144 @@
+448:    <div className="space-y-6 relative">
+450:      <div className="flex items-center justify-between px-2 relative z-10">
+451:        <div>
+455:        <div className="flex bg-md3-secondary p-1 rounded-xl">
+474:      <div className="grid grid-cols-2 gap-4 relative z-10">
+475:        <div className="md3-card p-5">
+476:          <div className="flex items-center gap-2 mb-3">
+477:            <div className="w-8 h-8 rounded-lg bg-md3-primary/10 flex items-center justify-center text-md3-primary">
+482:          <div className="text-2xl font-bold text-theme-text tracking-tight">
+486:        <div className="md3-card p-5">
+487:          <div className="flex items-center gap-2 mb-3">
+488:            <div className="w-8 h-8 rounded-lg bg-md3-green/10 flex items-center justify-center text-md3-green">
+493:          <div className="text-2xl font-bold text-theme-text tracking-tight">
+497:        <div className="md3-card p-5">
+498:          <div className="flex items-center gap-2 mb-3">
+499:            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+504:          <div className="text-2xl font-bold text-theme-text tracking-tight">
+508:        <div className="md3-card p-5">
+509:          <div className="flex items-center gap-2 mb-3">
+510:            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500">
+515:          <div className="text-2xl font-bold text-theme-text tracking-tight">
+524:          <div className="flex items-center gap-2 mb-6">
+528:          <div className="h-48 w-full">
+559:        <div className="flex items-center justify-between mb-6">
+560:          <div className="flex items-center gap-2">
+566:        <div className="h-48 w-full">
+614:        <div className="flex items-center gap-2 mb-6">
+618:        <div className="h-48 w-full">
+649:      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+651:          <div className="flex items-center gap-2 mb-6">
+655:          <div className="flex flex-wrap gap-2 justify-center">
+657:              <div 
+669:          <div className="flex items-center gap-2 mb-6">
+673:          <div className="grid grid-cols-3 gap-3">
+675:              <div key={i} className="text-center p-3 rounded-2xl bg-theme-subtle">
+676:                <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
+677:                <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+685:      <div className="space-y-4 relative z-10 pb-24">
+686:        <div className="flex items-center justify-between px-2">
+688:          <div className="relative">
+700:        <div className="grid grid-cols-1 gap-3">
+709:              <div className="flex items-center gap-4">
+710:                <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative">
+711:                  <div className="absolute inset-0 blur-lg opacity-20 rounded-full" style={{ backgroundColor: s.color }} />
+714:                <div>
+715:                  <div className="text-base font-bold text-theme-text tracking-tight">{s.name}</div>
+716:                  <div className="text-xs text-md3-gray font-medium">{s.count} záznamů</div>
+719:              <div className="flex items-center gap-4">
+720:                <div className="text-right">
+721:                  <div className="text-xs font-bold text-theme-text">{s.tolerance.toFixed(0)}%</div>
+722:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest">Tolerance</div>
+764:      <div className="space-y-6 relative pb-24">
+766:        <div className="flex items-center justify-between relative z-10">
+774:          <div className="w-10 h-10 rounded-2xl bg-theme-subtle flex items-center justify-center">
+780:        <div className="px-2">
+782:          <div className="flex items-center gap-2">
+793:        <div className="flex bg-md3-secondary p-1 rounded-2xl relative z-10 overflow-x-auto no-scrollbar">
+829:              <div className="grid grid-cols-2 gap-4">
+830:                <div className="md3-card p-5">
+831:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Tolerance</div>
+832:                  <div className="text-2xl font-bold text-theme-text tracking-tight">{tolerance.toFixed(0)}%</div>
+834:                <div className="md3-card p-5">
+835:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celkem</div>
+836:                  <div className="text-2xl font-bold text-theme-text tracking-tight">
+843:                <div className="flex items-center gap-2 mb-6">
+847:                <div className="h-56 w-full">
+895:                <div className="flex items-center gap-2 mb-6">
+899:                <div className="h-56 w-full">
+957:                <div className="flex items-center gap-2 mb-6">
+961:                <div className="h-56 w-full">
+997:                <div className="flex items-center gap-2 mb-6">
+1001:                <div className="h-56 w-full">
+1047:                <div className="flex items-center gap-2 mb-6">
+1051:                <div className="h-56 w-full">
+1095:              <div className="grid grid-cols-2 gap-4">
+1096:                <div className="md3-card p-5">
+1097:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměrná dávka</div>
+1098:                  <div className="text-2xl font-bold text-theme-text tracking-tight">
+1102:                <div className="md3-card p-5">
+1103:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Maximální dávka</div>
+1104:                  <div className="text-2xl font-bold text-theme-text tracking-tight">
+1111:                <div className="flex items-center gap-2 mb-6">
+1115:                <div className="space-y-4">
+1116:                  <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1120:                  <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1132:                  <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1140:                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1146:                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1152:                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1158:                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1180:                <div className="flex items-center gap-2 mb-6">
+1185:                  <div className="space-y-4">
+1186:                    <div className="h-48 w-full mb-6">
+1211:                    <div className="space-y-2">
+1213:                        <div key={strain.name} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border">
+1214:                          <div className="flex items-center gap-3">
+1215:                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `hsl(${(index * 137.5) % 360}, 70%, 50%)` }} />
+1218:                          <div className="text-right">
+1219:                            <div className="text-sm font-bold text-theme-text">{strain.value.toFixed(1)} <span className="text-xs text-md3-gray">{substance.unit}</span></div>
+1220:                            <div className="text-xs text-md3-gray font-medium">{strain.count}x</div>
+1227:                  <div className="text-center py-8 text-md3-gray text-sm font-medium">
+1243:              <div className="grid grid-cols-2 gap-4">
+1244:                <div className="md3-card p-5">
+1245:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celková útrata</div>
+1246:                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : cost.toFixed(0)} {settings.currency || 'Kč'}</div>
+1248:                <div className="md3-card p-5">
+1249:                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
+1250:                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : (cost / (sDoses.length || 1)).toFixed(0)} {settings.currency || 'Kč'}</div>
+1255:                <div className="flex items-center gap-2 mb-6">
+1259:                <div className="grid grid-cols-3 gap-3">
+1265:                    <div key={i} className="text-center p-4 rounded-2xl bg-theme-subtle">
+1266:                      <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.label}</div>
+1267:                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+1284:                <div className="flex items-center gap-2 mb-6">
+1288:                <div className="space-y-6 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
+1290:                    <div key={group.date} className="space-y-3">
+1291:                      <div className="flex items-center justify-between sticky top-0 bg-theme-card/90 backdrop-blur-md py-2 z-10">
+1297:                      <div className="space-y-2">
+1299:                          <div key={dose.id} className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border group hover:bg-theme-subtle-hover transition-all">
+1300:                            <div className="flex items-center gap-4">
+1301:                              <div className="w-10 h-10 rounded-xl bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform">
+1304:                              <div>
+1305:                                <div className="text-sm font-bold text-theme-text tracking-tight">
+1309:                                <div className="text-xs text-md3-gray font-bold uppercase tracking-wider mt-0.5">
+1314:                            <div className="text-right">
+1315:                              <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">
+1319:                                <div className="text-sm font-bold text-md3-green tracking-tight">
+1330:                    <div className="text-center py-8 text-md3-gray text-sm">Zatím žádné záznamy</div>
+1345:                <div className="flex items-center justify-between mb-6">
+1346:                  <div className="flex items-center gap-2">
+1365:                      <div className="text-center py-8 text-md3-gray text-sm font-medium">
+1381:                    <div className="space-y-6">
+1382:                      <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
+1387:                      <div className="h-48 w-full">
+1416:                      <div className="space-y-2">
+1419:                          <div key={dose.id} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border">
+1420:                            <div className="flex items-center gap-3">
+1421:                              <div className="w-8 h-8 rounded-lg bg-theme-card flex items-center justify-center border border-theme-border">
+1424:                              <div>
+1425:                                <div className="text-sm font-bold text-theme-text">{formatTime(dose.timestamp, settings)}</div>
+1426:                                <div className="text-xs text-md3-gray font-medium">{dose.route}</div>
+1429:                            <div className="text-right">
+1430:                              <div className="text-sm font-bold text-theme-text">{dose.amount} {substance.unit}</div>
+1431:                              {dose.strainId && <div className="text-xs text-md3-primary font-bold">{dose.strainId}</div>}

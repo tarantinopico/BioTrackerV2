@@ -59,6 +59,7 @@ import {
   DEFAULT_SUBSTANCES, 
   DEFAULT_SETTINGS, 
   DEFAULT_EFFECTS,
+  DEFAULT_DOSES,
   ROUTE_MULTIPLIERS,
   STOMACH_MULTIPLIERS
 } from './constants';
@@ -110,38 +111,55 @@ export default function App() {
 
   // Load data
   useEffect(() => {
-    const savedSubstances = localStorage.getItem('biotracker_pro_substances');
-    if (savedSubstances) {
-      setSubstances(JSON.parse(savedSubstances));
-    } else {
+    const migrationVersion = localStorage.getItem('biotracker_pro_migration_v3');
+    if (!migrationVersion) {
+      // Force overwrite with new user provided defaults
       setSubstances(DEFAULT_SUBSTANCES);
       localStorage.setItem('biotracker_pro_substances', JSON.stringify(DEFAULT_SUBSTANCES));
-    }
+      
+      setDoses(DEFAULT_DOSES as any);
+      localStorage.setItem('biotracker_pro_doses', JSON.stringify(DEFAULT_DOSES));
+      
+      setSettings(DEFAULT_SETTINGS);
+      localStorage.setItem('biotracker_pro_settings', JSON.stringify(DEFAULT_SETTINGS));
+      
+      setCustomEffects(DEFAULT_EFFECTS);
+      localStorage.setItem('biotracker_pro_effects', JSON.stringify(DEFAULT_EFFECTS));
+      
+      localStorage.setItem('biotracker_pro_migration_v3', 'true');
+      setIsUnlocked(true);
+    } else {
+      const savedSubstances = localStorage.getItem('biotracker_pro_substances');
+      if (savedSubstances) {
+        setSubstances(JSON.parse(savedSubstances));
+      } else {
+        setSubstances(DEFAULT_SUBSTANCES);
+        localStorage.setItem('biotracker_pro_substances', JSON.stringify(DEFAULT_SUBSTANCES));
+      }
 
-    const savedDoses = localStorage.getItem('biotracker_pro_doses');
-    if (savedDoses) setDoses(JSON.parse(savedDoses));
+      const savedDoses = localStorage.getItem('biotracker_pro_doses');
+      if (savedDoses) setDoses(JSON.parse(savedDoses));
 
-    const savedSettings = localStorage.getItem('biotracker_pro_settings');
-    if (savedSettings) {
-      const parsedSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
-      setSettings(parsedSettings);
-      if (!parsedSettings.requirePin) {
+      const savedSettings = localStorage.getItem('biotracker_pro_settings');
+      if (savedSettings) {
+        const parsedSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
+        setSettings(parsedSettings);
+        if (!parsedSettings.requirePin) {
+          setIsUnlocked(true);
+        }
+      } else {
         setIsUnlocked(true);
       }
-    } else {
-      setIsUnlocked(true);
-    }
 
-    const savedEffects = localStorage.getItem('biotracker_pro_effects');
-    if (savedEffects) setCustomEffects(JSON.parse(savedEffects));
+      const savedEffects = localStorage.getItem('biotracker_pro_effects');
+      if (savedEffects) setCustomEffects(JSON.parse(savedEffects));
+    }
 
     const savedShortcuts = localStorage.getItem('biotracker_pro_shortcuts');
     if (savedShortcuts) {
       setShortcuts(JSON.parse(savedShortcuts));
     } else {
-      const defaultShortcuts: Shortcut[] = [
-        { id: 'sc_coffee', name: 'Káva 100mg', substanceId: 'caffeine', amount: 100, route: 'oral', icon: 'zap', color: '#8b5cf6' }
-      ];
+      const defaultShortcuts: Shortcut[] = [];
       setShortcuts(defaultShortcuts);
       localStorage.setItem('biotracker_pro_shortcuts', JSON.stringify(defaultShortcuts));
     }
@@ -347,7 +365,7 @@ export default function App() {
       id: Math.random().toString(36).substr(2, 9),
       substanceId,
       amount: substance.step || 1,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
       route: 'oral',
       note: 'Rychlá dávka',
       bioavailabilityMultiplier: 1,
@@ -369,7 +387,7 @@ export default function App() {
       substanceId: shortcut.substanceId,
       strainId: shortcut.strainId,
       amount: shortcut.amount,
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
       route: shortcut.route,
       stomach: 'full',
       note: `Zkratka: ${shortcut.name}`,
@@ -401,7 +419,7 @@ export default function App() {
     return doses.filter(dose => {
       const substance = substances.find(s => s.id === dose.substanceId);
       if (!substance) return false;
-      const doseTime = new Date(dose.timestamp).getTime();
+      const doseTime = dose.timestamp;
       const elapsed = (now - doseTime) / 3600000;
       
       let eliminationTime = substance.halfLife * 5 / metabolismMult;

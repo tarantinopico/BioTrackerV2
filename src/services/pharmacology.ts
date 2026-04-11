@@ -19,8 +19,8 @@ export function calculateTolerance(substanceId: string, substances: Substance[],
   const sevenDaysAgo = atTimestamp - (7 * 24 * 3600000);
   const recentDoses = doses.filter(d => 
     targetIds.includes(d.substanceId) && 
-    new Date(d.timestamp).getTime() > sevenDaysAgo &&
-    new Date(d.timestamp).getTime() <= atTimestamp
+    d.timestamp > sevenDaysAgo &&
+    d.timestamp <= atTimestamp
   );
 
   if (recentDoses.length === 0) return 0;
@@ -191,7 +191,7 @@ export function calculateSubstanceLevelAtTime(
   const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substanceId, substances, doses);
 
   relevantDoses.forEach(dose => {
-    const doseTime = new Date(dose.timestamp).getTime();
+    const doseTime = dose.timestamp;
     const hoursSinceDose = (timestamp - doseTime) / 3600000;
     if (hoursSinceDose < 0) return;
 
@@ -211,7 +211,7 @@ export function calculateCleanTime(substances: Substance[], doses: Dose[], setti
     const substance = substances.find(s => s.id === dose.substanceId);
     if (!substance) return;
 
-    const doseTime = new Date(dose.timestamp).getTime();
+    const doseTime = dose.timestamp;
     let eliminationTime = substance.halfLife * 5 / metabolismMult;
     
     if (substance.metabolismCurve === 'custom' && substance.customCurve && substance.customCurve.length > 0) {
@@ -250,7 +250,7 @@ export function calculateEffectIntensityAtTime(
     const tolerance = precalculatedTolerances?.[substance.id];
     
     relevantDoses.forEach(dose => {
-      const doseTime = new Date(dose.timestamp).getTime();
+      const doseTime = dose.timestamp;
       const hoursSinceDose = (timestamp - doseTime) / 3600000;
       if (hoursSinceDose < 0) return;
       

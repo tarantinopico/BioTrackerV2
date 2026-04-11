@@ -27,7 +27,7 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                             dose.strainId?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSubstance = selectedSubstanceId === 'all' || dose.substanceId === selectedSubstanceId;
       return matchesSearch && matchesSubstance;
-    }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    }).sort((a, b) => b.timestamp - a.timestamp);
   }, [doses, substances, searchQuery, selectedSubstanceId]);
 
   const groupedDoses = filteredDoses.reduce((groups: Record<string, Dose[]>, dose) => {

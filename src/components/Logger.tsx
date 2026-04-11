@@ -60,7 +60,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       tmaxMultiplier /= stomachMult.speed;
     }
 
-    const timestamp = new Date(Date.now() - timeOffset * 60000).toISOString();
+    const timestamp = Date.now() - timeOffset * 60000;
 
       const dose: Dose = {
         id: 'dose_' + Date.now(),
@@ -93,7 +93,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
     const lastDose = doses.find(d => d.substanceId === selectedSubstanceId);
     if (lastDose) {
       const minInterval = 2; // hours, could be substance specific
-      const elapsed = (Date.now() - new Date(lastDose.timestamp).getTime()) / 3600000;
+      const elapsed = (Date.now() - lastDose.timestamp) / 3600000;
       if (elapsed < minInterval) {
         list.push({
           type: 'time',
@@ -107,7 +107,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
     // Interaction warning
     const metabolismMult = getMetabolismMultiplier(settings);
     const activeDoses = doses.filter(d => {
-      const elapsed = (Date.now() - new Date(d.timestamp).getTime()) / 3600000;
+      const elapsed = (Date.now() - d.timestamp) / 3600000;
       const sub = substances.find(s => s.id === d.substanceId);
       if (!sub) return false;
       
@@ -145,7 +145,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       todayStart.setHours(0, 0, 0, 0);
       const todayDoses = doses.filter(d => 
         d.substanceId === selectedSubstanceId && 
-        new Date(d.timestamp) >= todayStart
+        d.timestamp >= todayStart.getTime()
       );
       const totalToday = todayDoses.reduce((sum, d) => sum + d.amount, 0) + amount;
       

@@ -182,9 +182,9 @@ export default function Dashboard({
       const level = calculateSubstanceLevelAtTime(id, now, substances, doses, settings);
       const tolerance = calculateTolerance(id, substances, doses);
       
-      const substanceDoses = doses.filter(d => d.substanceId === id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const substanceDoses = doses.filter(d => d.substanceId === id).sort((a, b) => b.timestamp - a.timestamp);
       const lastDose = substanceDoses[0];
-      const lastUsedHours = lastDose ? (now - new Date(lastDose.timestamp).getTime()) / 3600000 : null;
+      const lastUsedHours = lastDose ? (now - lastDose.timestamp) / 3600000 : null;
 
       return { substance, level, tolerance, lastUsedHours };
     }).filter(item => item.substance !== undefined && item.level > 0.1);
@@ -192,9 +192,9 @@ export default function Dashboard({
 
   const allSubstancesLastUsed = useMemo(() => {
     return substances.map(s => {
-      const substanceDoses = doses.filter(d => d.substanceId === s.id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const substanceDoses = doses.filter(d => d.substanceId === s.id).sort((a, b) => b.timestamp - a.timestamp);
       const lastDose = substanceDoses[0];
-      const lastUsedHours = lastDose ? (now - new Date(lastDose.timestamp).getTime()) / 3600000 : null;
+      const lastUsedHours = lastDose ? (now - lastDose.timestamp) / 3600000 : null;
       return { id: s.id, name: s.name, lastUsedHours, color: s.color || CATEGORY_COLORS[s.category] || '#0a84ff', icon: s.icon };
     }).filter(s => s.lastUsedHours !== null);
   }, [substances, doses, now]);
@@ -723,7 +723,7 @@ export default function Dashboard({
                         id: Date.now().toString(),
                         substanceId: s.id,
                         amount: s.dosage?.common || 1,
-                        timestamp: new Date().toISOString(),
+                        timestamp: Date.now(),
                         route: 'oral',
                         note: 'Quick Log',
                         bioavailabilityMultiplier: 1,
