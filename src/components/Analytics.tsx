@@ -63,7 +63,7 @@ const calculatePredictions = (doses: Dose[], substances: Substance[], period: nu
     return dosesList.reduce((sum, d) => {
       const substance = substances.find(s => s.id === d.substanceId);
       if (!substance) return sum;
-      const strainPrice = d.strainId ? substance.strains.find(s => s.name === d.strainId)?.price : null;
+      const strainPrice = d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
       const price = strainPrice || substance.price || 0;
       return sum + (d.amount * price);
     }, 0);
@@ -130,7 +130,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
     return dosesList.reduce((sum, d) => {
       const substance = substances.find(s => s.id === d.substanceId);
       if (!substance) return sum;
-      const strainPrice = d.strainId ? substance.strains.find(s => s.name === d.strainId)?.price : null;
+      const strainPrice = d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
       const price = strainPrice || substance.price || 0;
       return sum + (d.amount * price);
     }, 0);
@@ -147,7 +147,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       if (!data[s.id]) {
         data[s.id] = { name: s.name, value: 0, color: s.color || '#00d1ff' };
       }
-      const strainPrice = d.strainId ? s.strains.find(st => st.name === d.strainId)?.price : null;
+      const strainPrice = d.strainId ? s.strains?.find(st => st.name === d.strainId)?.price : null;
       const price = strainPrice || s.price || 0;
       data[s.id].value += d.amount * price;
     });

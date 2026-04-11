@@ -111,6 +111,13 @@ export default function App() {
 
   // Load data
   useEffect(() => {
+    const migrateDoses = (dosesData: any[]): Dose[] => {
+      return dosesData.map(d => ({
+        ...d,
+        timestamp: typeof d.timestamp === 'string' ? new Date(d.timestamp).getTime() : d.timestamp
+      }));
+    };
+
     const migrationVersion = localStorage.getItem('biotracker_pro_migration_v3');
     if (!migrationVersion) {
       // Force overwrite with new user provided defaults
@@ -138,7 +145,13 @@ export default function App() {
       }
 
       const savedDoses = localStorage.getItem('biotracker_pro_doses');
-      if (savedDoses) setDoses(JSON.parse(savedDoses));
+      if (savedDoses) {
+        try {
+          setDoses(migrateDoses(JSON.parse(savedDoses)));
+        } catch (e) {
+          console.error("Failed to parse doses", e);
+        }
+      }
 
       const savedSettings = localStorage.getItem('biotracker_pro_settings');
       if (savedSettings) {
@@ -329,7 +342,13 @@ export default function App() {
       try {
         const data = JSON.parse(event.target?.result as string);
         if (data.substances) setSubstances(data.substances);
-        if (data.doses) setDoses(data.doses);
+        if (data.doses) {
+          const migratedDoses = data.doses.map((d: any) => ({
+            ...d,
+            timestamp: typeof d.timestamp === 'string' ? new Date(d.timestamp).getTime() : d.timestamp
+          }));
+          setDoses(migratedDoses);
+        }
         if (data.settings) setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
         if (data.customEffects) setCustomEffects(data.customEffects);
         showToast('Data importována', 'success');

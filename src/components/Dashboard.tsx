@@ -307,7 +307,7 @@ export default function Dashboard({
       .reduce((sum, d) => {
         const substance = substances.find(s => s.id === d.substanceId);
         if (!substance) return sum;
-        const strainPrice = d.strainId ? substance.strains.find(s => s.name === d.strainId)?.price : null;
+        const strainPrice = d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
         const price = strainPrice || substance.price || 0;
         return sum + (d.amount * price);
       }, 0);
