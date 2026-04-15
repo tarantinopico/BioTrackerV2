@@ -50,7 +50,8 @@ import {
   ReferenceLine,
   BarChart,
   Bar,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import { Substance, Dose, UserSettings, Shortcut, Effect } from '../types';
@@ -271,30 +272,56 @@ export default function Dashboard({
     return max > 0 ? max * 1.1 : 100;
   }, [chartData]);
 
-  const interactions = useMemo(() => {
-    const activeIds = activeSubstanceDetails.map(d => d.substance!.id);
-    if (activeIds.length < 2) return [];
-    
+  const warnings = useMemo(() => {
     const alerts: { type: string; message: string; severity: 'low' | 'medium' | 'high' }[] = [];
     
-    activeSubstanceDetails.forEach((item, i) => {
-      const s = item.substance!;
-      if (!s.interactions) return;
+    // 1. Interactions
+    const activeIds = activeSubstanceDetails.map(d => d.substance!.id);
+    if (activeIds.length >= 2) {
+      activeSubstanceDetails.forEach((item, i) => {
+        const s = item.substance!;
+        if (!s.interactions) return;
+        
+        activeSubstanceDetails.slice(i + 1).forEach(other => {
+          const o = other.substance!;
+          if (s.interactions.includes(o.id) || o.interactions?.includes(s.id)) {
+            alerts.push({
+              type: `${s.name} + ${o.name}`,
+              message: s.interactionMessage || o.interactionMessage || 'Potenciálně nebezpečná kombinace.',
+              severity: s.isSevere || o.isSevere ? 'high' : 'medium'
+            });
+          }
+        });
+      });
+    }
+
+    // 2. Daily Limits
+    if (settings.doseWarnings) {
+      const today = new Date().toDateString();
+      const todayDoses = doses.filter(d => new Date(d.timestamp).toDateString() === today);
       
-      activeSubstanceDetails.slice(i + 1).forEach(other => {
-        const o = other.substance!;
-        if (s.interactions.includes(o.id) || o.interactions?.includes(s.id)) {
-          alerts.push({
-            type: `${s.name} + ${o.name}`,
-            message: s.interactionMessage || o.interactionMessage || 'Potenciálně nebezpečná kombinace.',
-            severity: s.isSevere || o.isSevere ? 'high' : 'medium'
-          });
+      substances.forEach(s => {
+        if (s.dailyLimit) {
+          const totalToday = todayDoses.filter(d => d.substanceId === s.id).reduce((sum, d) => sum + d.amount, 0);
+          if (totalToday > s.dailyLimit) {
+            alerts.push({
+              type: `Překročen limit: ${s.name}`,
+              message: `Dnes jste užili ${totalToday}${s.unit}, což překračuje váš denní limit ${s.dailyLimit}${s.unit}.`,
+              severity: 'high'
+            });
+          } else if (totalToday > s.dailyLimit * 0.8) {
+            alerts.push({
+              type: `Blížíte se limitu: ${s.name}`,
+              message: `Dnes jste užili ${totalToday}${s.unit} (limit je ${s.dailyLimit}${s.unit}).`,
+              severity: 'medium'
+            });
+          }
         }
       });
-    });
+    }
     
     return alerts;
-  }, [activeSubstanceDetails]);
+  }, [activeSubstanceDetails, doses, substances, settings.doseWarnings]);
 
   const cleanTime = calculateCleanTime(substances, doses, settings);
   const cleanHours = Math.floor(cleanTime / 3600000);
@@ -306,9 +333,8 @@ export default function Dashboard({
       .filter(d => new Date(d.timestamp).toDateString() === today)
       .reduce((sum, d) => {
         const substance = substances.find(s => s.id === d.substanceId);
-        if (!substance) return sum;
-        const strainPrice = d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
-        const price = strainPrice || substance.price || 0;
+        const strainPrice = substance && d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
+        const price = strainPrice || (substance ? substance.price : 0) || 0;
         return sum + (d.amount * price);
       }, 0);
   }, [doses, substances]);
@@ -320,8 +346,14 @@ export default function Dashboard({
     const stats: Record<string, { amount: number; unit: string; color: string; name: string; icon: string }> = {};
     
     todayDoses.forEach(d => {
-      const substance = substances.find(s => s.id === d.substanceId);
-      if (!substance) return;
+      const substance = substances.find(s => s.id === d.substanceId) || {
+        id: d.substanceId,
+        name: d.substanceId,
+        unit: '?',
+        color: '#8e8e93',
+        icon: 'pill',
+        category: 'other'
+      } as unknown as Substance;
       
       if (!stats[d.substanceId]) {
         stats[d.substanceId] = { 
@@ -346,8 +378,25 @@ export default function Dashboard({
     return { label: 'VYSOKÁ ZÁTĚŽ!', color: 'text-red-500', bg: 'bg-red-500/10', icon: AlertCircle, pulse: true };
   }, [activeSubstanceDetails]);
 
+  const greeting = useMemo(() => {
+    const hour = currentTime.getHours();
+    if (hour < 5) return 'Dobrou noc';
+    if (hour < 11) return 'Dobré ráno';
+    if (hour < 18) return 'Dobré odpoledne';
+    return 'Dobrý večer';
+  }, [currentTime]);
+
   return (
     <div className="space-y-6 pb-4 relative">
+      <div className="px-1">
+        <h2 className="text-2xl font-bold text-md3-text">{greeting}</h2>
+        <p className="text-sm text-md3-gray mt-1">
+          {activeSubstanceDetails.length === 0 
+            ? 'Váš systém je aktuálně čistý.' 
+            : `Aktivní látky: ${activeSubstanceDetails.length}`}
+        </p>
+      </div>
+
       {/* Main Status & History - Material 3 Style Cards */}
       <div className="grid grid-cols-2 gap-3">
         <section className="md3-card p-4 flex flex-col justify-between min-h-[90px]">
@@ -443,18 +492,29 @@ export default function Dashboard({
         )}
       </div>
 
-      {/* Interaction Alerts */}
-      {interactions.length > 0 && (
-        <section className="bg-md3-error/10 rounded-2xl p-3 border border-md3-error/20">
-          <div className="flex items-start gap-2.5">
-            <AlertCircle size={16} className="text-md3-error shrink-0 mt-0.5" />
-            <div>
-              <div className="text-xs font-bold text-md3-error uppercase tracking-wider mb-0.5">Varování: Interakce</div>
-              <div className="text-xs text-red-200/80 leading-snug">
-                {interactions[0].type}: {interactions[0].message}
+      {/* Warnings & Alerts */}
+      {warnings.length > 0 && (
+        <section className="space-y-2">
+          {warnings.map((warning, idx) => (
+            <div key={idx} className={cn(
+              "rounded-2xl p-3 border",
+              warning.severity === 'high' ? "bg-md3-error/10 border-md3-error/20" : "bg-amber-500/10 border-amber-500/20"
+            )}>
+              <div className="flex items-start gap-2.5">
+                <AlertCircle size={16} className={cn(
+                  "shrink-0 mt-0.5",
+                  warning.severity === 'high' ? "text-md3-error" : "text-amber-500"
+                )} />
+                <div>
+                  <div className={cn(
+                    "text-xs font-bold uppercase tracking-wider mb-0.5",
+                    warning.severity === 'high' ? "text-md3-error" : "text-amber-500"
+                  )}>{warning.type}</div>
+                  <div className="text-sm font-medium text-theme-text leading-snug">{warning.message}</div>
+                </div>
               </div>
             </div>
-          </div>
+          ))}
         </section>
       )}
 
@@ -481,7 +541,7 @@ export default function Dashboard({
           </div>
         </div>
         
-        <div className="h-[260px] w-full">
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ left: -10, right: 10, top: 10, bottom: 0 }}>
               <defs>
@@ -516,13 +576,20 @@ export default function Dashboard({
                 stroke="rgba(255,255,255,0.2)"
                 tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
                 tickFormatter={(val) => `${val.toFixed(0)}%`}
-                width={35}
+                width={45}
+                label={{ value: chartType === 'kinetic' ? 'Krevní hladina' : 'Intenzita účinku', angle: -90, position: 'insideLeft', style: { fill: 'rgba(255,255,255,0.5)', fontSize: 10 } }}
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--md3-card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', fontSize: '12px', color: 'var(--md3-text)' }}
                 itemStyle={{ padding: '2px 0', fontWeight: 'bold' }}
                 labelFormatter={(time) => formatTime(time, settings)}
-                formatter={(value: number) => [`${value.toFixed(1)}%`, '']}
+                formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
+              />
+              <Legend 
+                verticalAlign="top" 
+                height={36} 
+                iconType="circle"
+                wrapperStyle={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--md3-text)' }}
               />
               {chartType === 'kinetic' ? (
                 substances.map(s => (

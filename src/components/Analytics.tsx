@@ -56,15 +56,50 @@ interface AnalyticsProps {
   onToggleTheme?: () => void;
 }
 
-type Period = 7 | 30 | 90 | 365;
+type Period = 7 | 30 | 90 | 365 | 'all';
+
+const CustomTooltip = ({ active, payload, label, type = 'default', currency = 'Kč' }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-theme-card/95 backdrop-blur-xl border border-theme-border p-4 rounded-2xl shadow-xl">
+        <p className="text-xs font-bold text-md3-gray mb-3 uppercase tracking-wider border-b border-theme-border pb-2">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <div key={index} className="flex items-center justify-between gap-6 mb-2 last:mb-0">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color || entry.payload?.fill || '#0a84ff' }} />
+              <span className="text-sm font-medium text-theme-text">{entry.name}</span>
+            </div>
+            <span className="text-sm font-black text-theme-text">
+              {type === 'currency' 
+                ? `${entry.value.toLocaleString('cs-CZ')} ${currency}` 
+                : type === 'amount'
+                  ? `${entry.value.toLocaleString('cs-CZ')} ${entry.payload?.unit || ''}`
+                  : `${entry.value}x`}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const calculateActiveIngredient = (dosesList: Dose[], substance: Substance) => {
+  if (!substance.activeIngredientName) return 0;
+  return dosesList.reduce((sum, d) => {
+    const strain = d.strainId ? substance.strains?.find(s => s.name === d.strainId) : null;
+    const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage;
+    if (!activePct) return sum;
+    return sum + ((d.amount * activePct) / 100);
+  }, 0);
+};
 
 const calculatePredictions = (doses: Dose[], substances: Substance[], period: number) => {
   const calculateCost = (dosesList: Dose[]) => {
     return dosesList.reduce((sum, d) => {
       const substance = substances.find(s => s.id === d.substanceId);
-      if (!substance) return sum;
-      const strainPrice = d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
-      const price = strainPrice || substance.price || 0;
+      const strainPrice = substance && d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
+      const price = strainPrice || (substance ? substance.price : 0) || 0;
       return sum + (d.amount * price);
     }, 0);
   };
@@ -117,10 +152,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
 
-  const now = Date.now();
+  // Stabilize 'now' to prevent excessive re-renders. Updates every 5 minutes.
+  const roundedNow = Math.floor(Date.now() / 300000) * 300000;
+  const now = useMemo(() => roundedNow, [roundedNow]);
+
   const dayMs = 86400000;
-  const periodMs = period * dayMs;
-  const startTime = now - periodMs;
+  const periodMs = period === 'all' ? Infinity : period * dayMs;
+  const startTime = period === 'all' ? 0 : now - periodMs;
 
   const filteredDoses = useMemo(() => {
     return doses.filter(d => d.timestamp > startTime);
@@ -129,9 +167,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const calculateCost = (dosesList: Dose[]) => {
     return dosesList.reduce((sum, d) => {
       const substance = substances.find(s => s.id === d.substanceId);
-      if (!substance) return sum;
-      const strainPrice = d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
-      const price = strainPrice || substance.price || 0;
+      const strainPrice = substance && d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
+      const price = strainPrice || (substance ? substance.price : 0) || 0;
       return sum + (d.amount * price);
     }, 0);
   };
@@ -142,8 +179,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const costBySubstance = useMemo(() => {
     const data: Record<string, { name: string, value: number, color: string }> = {};
     filteredDoses.forEach(d => {
-      const s = substances.find(sub => sub.id === d.substanceId);
-      if (!s) return;
+      const s = substances.find(sub => sub.id === d.substanceId) || { id: d.substanceId, name: d.substanceId, color: '#8e8e93', price: 0 } as Substance;
       if (!data[s.id]) {
         data[s.id] = { name: s.name, value: 0, color: s.color || '#00d1ff' };
       }
@@ -261,7 +297,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   }, [doses, substances, period, now]);
 
   const substanceStats = useMemo(() => {
-    return substances.map(s => {
+    const stats = substances.map(s => {
       const sDoses = filteredDoses.filter(d => d.substanceId === s.id);
       const totalAmount = sDoses.reduce((sum, d) => sum + d.amount, 0);
       const cost = calculateCost(sDoses);
@@ -276,11 +312,66 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         tolerance,
         avgDose
       };
-    }).filter(s => s.count > 0 || s.isFavorite).sort((a, b) => b.count - a.count);
+    });
+
+    // Add unknown substances
+    const knownIds = new Set(substances.map(s => s.id));
+    const unknownDoses = filteredDoses.filter(d => !knownIds.has(d.substanceId));
+    const unknownIds = new Set<string>(unknownDoses.map(d => d.substanceId));
+    
+    unknownIds.forEach((id: string) => {
+      const sDoses = unknownDoses.filter(d => d.substanceId === id);
+      const totalAmount = sDoses.reduce((sum, d) => sum + d.amount, 0);
+      stats.push({
+        id,
+        name: id,
+        color: '#8e8e93',
+        icon: 'pill',
+        unit: '?',
+        step: 1,
+        price: 0,
+        category: 'other',
+        description: '',
+        halfLife: 1,
+        tmax: 1,
+        bioavailability: 100,
+        onset: 0,
+        offset: null,
+        toxicity: 1,
+        toleranceRate: 0,
+        toleranceReset: 1,
+        metabolismCurve: 'linear',
+        metabolismRate: 1,
+        absorptionRate: 1,
+        beta: 1,
+        ka: 1,
+        proteinBinding: 0,
+        volumeOfDistribution: 1,
+        addictionPotential: 'low',
+        legalityStatus: 'legal',
+        toleranceHalfLife: null,
+        crossTolerance: [],
+        comedownEnabled: false,
+        comedownDuration: 0,
+        comedownIntensity: 0,
+        comedownSymptoms: [],
+        strains: [],
+        effects: [],
+        interactions: [],
+        interactionMessage: '',
+        isSevere: false,
+        count: sDoses.length,
+        totalAmount,
+        cost: 0,
+        tolerance: 0,
+        avgDose: sDoses.length > 0 ? totalAmount / sDoses.length : 0
+      });
+    });
+
+    return stats.filter(s => s.count > 0 || (s as any).isFavorite).sort((a, b) => b.count - a.count);
   }, [substances, filteredDoses, doses]);
 
   const spendingStats = useMemo(() => {
-    const now = Date.now();
     const periods = [
       { label: '7 dní', days: 7 },
       { label: '30 dní', days: 30 },
@@ -339,7 +430,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   );
 
   const strainUsage = useMemo(() => {
-    if (!selectedSubstance || !selectedSubstanceId) return [];
+    if (!selectedSubstanceId) return [];
     const data: Record<string, { name: string, count: number, amount: number, cost: number }> = {};
     selectedSubstanceDoses.forEach(d => {
       const strainName = d.strainId || 'Základní';
@@ -348,8 +439,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       }
       data[strainName].count++;
       data[strainName].amount += d.amount;
-      const strainPrice = d.strainId ? selectedSubstance.strains.find(st => st.name === d.strainId)?.price : null;
-      const price = strainPrice || selectedSubstance.price || 0;
+      const strainPrice = selectedSubstance && d.strainId ? selectedSubstance.strains?.find(st => st.name === d.strainId)?.price : null;
+      const price = strainPrice || (selectedSubstance ? selectedSubstance.price : 0) || 0;
       data[strainName].cost += d.amount * price;
     });
     return Object.values(data).sort((a, b) => b.amount - a.amount);
@@ -485,7 +576,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
           <p className="text-sm font-medium text-md3-gray">Přehled vašich dat</p>
         </div>
         <div className="flex bg-md3-secondary p-1 rounded-xl">
-          {[7, 30, 90].map((p) => (
+          {[7, 30, 90, 365, 'all'].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p as Period)}
@@ -496,7 +587,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   : "text-md3-gray hover:text-theme-text"
               )}
             >
-              {p}D
+              {p === 'all' ? 'VŠE' : `${p}D`}
             </button>
           ))}
         </div>
@@ -618,17 +709,14 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  isAnimationActive={settings.chartAnimation}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1D1B20', border: 'none', borderRadius: '16px', color: '#E6E0E9', fontWeight: 'bold' }}
-                  itemStyle={{ color: '#E6E0E9' }}
-                  formatter={(value: number) => [`${value}x`, 'Počet']}
-                />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: '#8e8e93' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -649,11 +737,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             <AreaChart data={trendData}>
               <defs>
                 <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0a84ff" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#0a84ff" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="var(--md3-primary, #0a84ff)" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="var(--md3-primary, #0a84ff)" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
               <XAxis 
                 dataKey="name" 
                 axisLine={false} 
@@ -665,25 +753,20 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 axisLine={false} 
                 tickLine={false} 
                 tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                tickFormatter={(value) => `${value}`}
+                width={40}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                  borderRadius: '16px', 
-                  border: '1px solid rgba(255, 255, 255, 0.1)', 
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                }}
-                itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-              />
+              <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
               <Area 
                 type="monotone" 
                 dataKey="cost" 
-                stroke="#0a84ff" 
+                name="Výdaje"
+                stroke="var(--md3-primary, #0a84ff)" 
                 strokeWidth={3}
                 fillOpacity={1} 
                 fill="url(#colorCost)" 
+                isAnimationActive={settings.chartAnimation}
+                activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: "var(--md3-primary, #0a84ff)" } : false}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -699,7 +782,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={usageByTimeOfDay}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
               <XAxis 
                 dataKey="hour" 
                 axisLine={false} 
@@ -708,19 +791,20 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 dy={10}
                 interval={3}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                  borderRadius: '16px', 
-                  border: '1px solid rgba(255, 255, 255, 0.1)', 
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                }}
-                itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                formatter={(value: number) => [`${value}x`, 'Počet']}
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                width={30}
               />
-              <Bar dataKey="count" fill="#D0BCFF" radius={[4, 4, 0, 0]} />
+              <Tooltip content={<CustomTooltip type="count" />} />
+              <Bar 
+                dataKey="count" 
+                name="Počet užití"
+                fill="var(--md3-primary, #D0BCFF)" 
+                radius={[4, 4, 0, 0]} 
+                isAnimationActive={settings.chartAnimation}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -898,10 +982,16 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 const dayCost = calculateCost(dayDoses);
 
                 // Hourly distribution for the day (count of doses)
-                const hourlyData = Array.from({ length: 24 }, (_, i) => ({ hour: `${i}:00`, count: 0 }));
+                const hourlyData = Array.from({ length: 24 }, (_, i) => {
+                  const obj: any = { hour: `${i}:00` };
+                  uniqueSubstances.forEach(subId => {
+                    obj[subId] = 0;
+                  });
+                  return obj;
+                });
                 dayDoses.forEach(d => {
                   const hour = new Date(d.timestamp).getHours();
-                  hourlyData[hour].count += 1;
+                  hourlyData[hour][d.substanceId] += 1;
                 });
 
                 return (
@@ -952,7 +1042,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     <div className="h-32 w-full mt-4">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={hourlyData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                          {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                           <XAxis 
                             dataKey="hour" 
                             axisLine={false} 
@@ -961,19 +1051,27 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                             dy={10}
                             interval={3}
                           />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                              borderRadius: '16px', 
-                              border: '1px solid rgba(255, 255, 255, 0.1)', 
-                              backdropFilter: 'blur(20px)',
-                              boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                            }}
-                            itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                            labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                            formatter={(value: number) => [`${value}x`, 'Počet dávek']}
+                          <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                            width={30}
                           />
-                          <Bar dataKey="count" fill="#0a84ff" radius={[4, 4, 0, 0]} />
+                          <Tooltip content={<CustomTooltip type="count" />} />
+                          {uniqueSubstances.map((subId, index) => {
+                            const sub = substances.find(s => s.id === subId);
+                            return (
+                              <Bar 
+                                key={subId}
+                                dataKey={subId} 
+                                name={sub?.name || subId}
+                                stackId="a"
+                                fill={sub?.color || `hsl(${(index * 137.5) % 360}, 70%, 50%)`} 
+                                radius={index === uniqueSubstances.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} 
+                                isAnimationActive={settings.chartAnimation}
+                              />
+                            );
+                          })}
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -981,8 +1079,14 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     <div className="space-y-6 pt-4 border-t border-theme-border">
                       <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest">Detailní rozpis</h4>
                       {Object.entries(dosesBySubstance).map(([substanceId, sDoses]) => {
-                      const substance = substances.find(s => s.id === substanceId);
-                      if (!substance) return null;
+                      const substance = substances.find(s => s.id === substanceId) || {
+                        id: substanceId,
+                        name: substanceId,
+                        unit: '?',
+                        color: '#8e8e93',
+                        icon: 'pill',
+                        category: 'other'
+                      } as unknown as Substance;
                       
                       const dayTotal = sDoses.reduce((sum, d) => sum + d.amount, 0);
                       const IconComponent = getIconComponent(substance.icon);
@@ -995,7 +1099,14 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                 <div className="absolute inset-0 blur-md opacity-20 rounded-full" style={{ backgroundColor: substance.color }} />
                                 <IconComponent size={18} style={{ color: substance.color }} className="relative z-10" />
                               </div>
-                              <span className="text-sm font-bold text-theme-text">{substance.name}</span>
+                              <div>
+                                <span className="text-sm font-bold text-theme-text block">{substance.name}</span>
+                                {substance.activeIngredientName && calculateActiveIngredient(sDoses, substance) > 0 && (
+                                  <span className="text-[10px] font-bold text-md3-primary">
+                                    {calculateActiveIngredient(sDoses, substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <span className="text-base font-bold text-theme-text">{dayTotal.toFixed(1)} {substance.unit}</span>
                           </div>
@@ -1014,7 +1125,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                 </div>
                                 <div className="text-right">
                                   <div className="text-sm font-bold text-theme-text">{dose.amount} {substance.unit}</div>
+                                  {substance.activeIngredientName && calculateActiveIngredient([dose], substance) > 0 && (
+                                    <div className="text-[10px] font-bold text-md3-primary">
+                                      {calculateActiveIngredient([dose], substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                    </div>
+                                  )}
                                   {dose.strainId && <div className="text-xs text-md3-primary font-bold">{dose.strainId}</div>}
+                                  {dose.rating && <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-0.5">Hodnocení: <span className="text-theme-text">{dose.rating}/5</span></div>}
                                 </div>
                               </div>
                             ))}
@@ -1119,16 +1236,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 <div className="h-48 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={trendData} margin={{ left: -20, right: 0, top: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                      <XAxis dataKey="name" stroke="#666" fontSize={10} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#666" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => settings.privacyMode ? '***' : `${val}`} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1D1B20', border: 'none', borderRadius: '16px', color: '#E6E0E9', fontWeight: 'bold' }}
-                        itemStyle={{ color: '#0a84ff' }}
-                        formatter={(value: number) => [`${settings.privacyMode ? '***' : value.toFixed(0)} ${settings.currency || 'Kč'}`, 'Útrata']}
-                        labelStyle={{ color: '#9ca3af', marginBottom: '4px' }}
-                      />
-                      <Bar dataKey="cost" fill="#0a84ff" radius={[4, 4, 0, 0]} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+                      <XAxis dataKey="name" stroke="#8e8e93" fontSize={10} tickLine={false} axisLine={false} dy={10} />
+                      <YAxis stroke="#8e8e93" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => settings.privacyMode ? '***' : `${val}`} width={40} />
+                      <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
+                      <Bar dataKey="cost" name="Útrata" fill="var(--md3-primary, #0a84ff)" radius={[4, 4, 0, 0]} isAnimationActive={settings.chartAnimation} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -1153,16 +1265,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         paddingAngle={5}
                         dataKey="value"
                         stroke="none"
+                        isAnimationActive={settings.chartAnimation}
                       >
                         {costBySubstance.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1D1B20', border: 'none', borderRadius: '16px', color: '#E6E0E9', fontWeight: 'bold' }}
-                        itemStyle={{ color: '#E6E0E9' }}
-                        formatter={(value: number) => [`${settings.privacyMode ? '***' : value.toFixed(0)} ${settings.currency || 'Kč'}`, 'Útrata']}
-                      />
+                      <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -1186,8 +1295,14 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   );
 
   const renderSubstanceDetail = (substanceId: string) => {
-    const substance = selectedSubstance;
-    if (!substance) return null;
+    const substance = selectedSubstance || {
+      id: substanceId,
+      name: substanceId,
+      unit: '?',
+      color: '#8e8e93',
+      icon: 'pill',
+      category: 'other'
+    } as unknown as Substance;
 
     const sDoses = selectedSubstanceDoses;
     const totalAmount = sDoses.reduce((sum, d) => sum + d.amount, 0);
@@ -1233,14 +1348,28 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         {/* Substance Title Card */}
         <div className="px-2">
           <h2 className="text-3xl font-bold text-theme-text tracking-tight mb-1">{substance.name}</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="px-2 py-0.5 rounded-lg bg-md3-secondary text-xs font-bold text-md3-gray uppercase tracking-widest">
               {substance.category}
             </span>
             <span className="text-xs font-medium text-md3-gray">
               {sDoses.length} záznamů v období
             </span>
+            {substance.stash !== undefined && (
+              <span className="px-2 py-0.5 rounded-lg border border-theme-border text-xs font-bold text-md3-gray uppercase tracking-widest">
+                Zásoba: <span style={{ color: substance.color }}>{substance.stash.toFixed(1)}{substance.unit}</span>
+              </span>
+            )}
           </div>
+          {substance.tags && substance.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {substance.tags.map(tag => (
+                <span key={tag} className="px-2 py-0.5 rounded-md bg-theme-subtle border border-theme-border text-[9px] font-bold text-md3-gray uppercase tracking-widest">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -1290,6 +1419,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {totalAmount.toFixed(1)} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
+                  {substance.activeIngredientName && calculateActiveIngredient(sDoses, substance) > 0 && (
+                    <div className="text-xs font-bold text-md3-primary mt-1">
+                      {calculateActiveIngredient(sDoses, substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1307,7 +1441,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                           <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
@@ -1319,26 +1453,19 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         axisLine={false} 
                         tickLine={false} 
                         tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={30}
                       />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                      />
+                      <Tooltip content={<CustomTooltip type="amount" />} />
                       <Area 
                         type="monotone" 
                         dataKey="amount" 
                         name="Množství"
                         stroke={substance.color} 
+                        strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorAmount)" 
-                        strokeWidth={3} 
-                        animationDuration={1500}
+                        isAnimationActive={settings.chartAnimation}
+                        activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: substance.color } : false}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -1359,7 +1486,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                           <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
@@ -1371,17 +1498,9 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         axisLine={false} 
                         tickLine={false} 
                         tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={30}
                       />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                      />
+                      <Tooltip content={<CustomTooltip type="amount" />} />
                       <Area 
                         type="monotone" 
                         dataKey="cumulativeAmount" 
@@ -1390,7 +1509,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         fillOpacity={1} 
                         fill="url(#colorCumulative)" 
                         strokeWidth={3} 
-                        animationDuration={1500}
+                        isAnimationActive={settings.chartAnimation}
+                        activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: substance.color } : false}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -1415,7 +1535,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={substanceTimeStats}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="hour" 
                         axisLine={false} 
@@ -1423,18 +1543,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
                         dy={10}
                       />
-                      <YAxis hide />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={30}
                       />
+                      <Tooltip content={<CustomTooltip type="count" />} />
                       <Bar 
                         dataKey="count" 
                         name="Počet dávek"
@@ -1455,7 +1570,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dayOfWeekStats}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="day" 
                         axisLine={false} 
@@ -1463,24 +1578,19 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
                         dy={10}
                       />
-                      <YAxis hide />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={30}
                       />
+                      <Tooltip content={<CustomTooltip type="amount" />} />
                       <Bar 
                         dataKey="amount" 
                         name={`Množství (${substance.unit})`}
                         fill={substance.color} 
                         radius={[6, 6, 0, 0]} 
-                        animationDuration={1500}
+                        isAnimationActive={settings.chartAnimation}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1505,7 +1615,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dosageDistribution}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="range" 
                         axisLine={false} 
@@ -1513,23 +1623,19 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
                         dy={10}
                       />
-                      <YAxis hide />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={30}
                       />
+                      <Tooltip content={<CustomTooltip type="count" />} />
                       <Bar 
                         dataKey="count" 
+                        name="Počet"
                         fill={substance.color} 
                         radius={[6, 6, 0, 0]} 
-                        animationDuration={1500}
+                        isAnimationActive={settings.chartAnimation}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1552,14 +1658,52 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {sDoses.length > 0 ? (totalAmount / sDoses.length).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
+                  {substance.activeIngredientName && sDoses.length > 0 && calculateActiveIngredient(sDoses, substance) > 0 && (
+                    <div className="text-xs font-bold text-md3-primary mt-1">
+                      {(calculateActiveIngredient(sDoses, substance) / sDoses.length).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                    </div>
+                  )}
                 </div>
                 <div className="md3-card p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Maximální dávka</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {sDoses.length > 0 ? Math.max(...sDoses.map(d => d.amount)).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
+                  {substance.activeIngredientName && sDoses.length > 0 && Math.max(...sDoses.map(d => calculateActiveIngredient([d], substance))) > 0 && (
+                    <div className="text-xs font-bold text-md3-primary mt-1">
+                      {Math.max(...sDoses.map(d => calculateActiveIngredient([d], substance))).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {substance.dosage && (
+                <div className="md3-card p-5">
+                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-4">Orientační dávkování</div>
+                  <div className="grid grid-cols-5 gap-2 text-center">
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-md3-gray uppercase">Práh</div>
+                      <div className="text-sm font-bold text-theme-text">{substance.dosage.threshold}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-md3-gray uppercase">Lehká</div>
+                      <div className="text-sm font-bold text-theme-text">{substance.dosage.light}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-md3-gray uppercase">Běžná</div>
+                      <div className="text-sm font-bold text-theme-text">{substance.dosage.common}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-md3-gray uppercase">Silná</div>
+                      <div className="text-sm font-bold text-theme-text">{substance.dosage.strong}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-bold text-md3-gray uppercase">Těžká</div>
+                      <div className="text-sm font-bold text-rose-500">{substance.dosage.heavy}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <section className="md3-card p-6">
                 <div className="flex items-center gap-2 mb-6">
@@ -1649,16 +1793,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                             paddingAngle={5}
                             dataKey="value"
                             stroke="none"
+                            isAnimationActive={settings.chartAnimation}
                           >
                             {strainsData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={`hsl(${(index * 137.5) % 360}, 70%, 50%)`} />
                             ))}
                           </Pie>
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: '#1D1B20', border: 'none', borderRadius: '16px', color: '#E6E0E9', fontWeight: 'bold' }}
-                            itemStyle={{ color: '#E6E0E9' }}
-                            formatter={(value: number) => [`${value.toFixed(1)} ${substance.unit}`, 'Množství']}
-                          />
+                          <Tooltip content={<CustomTooltip type="amount" />} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
@@ -1771,11 +1912,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     })()}>
                       <defs>
                         <linearGradient id="colorCostSubstance" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={substance.color || "#0a84ff"} stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor={substance.color || "#0a84ff"} stopOpacity={0}/>
+                          <stop offset="5%" stopColor={substance.color || "var(--md3-primary, #0a84ff)"} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={substance.color || "var(--md3-primary, #0a84ff)"} stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="date" 
                         axisLine={false} 
@@ -1787,30 +1928,23 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         }}
                         dy={10}
                       />
-                      <YAxis hide />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                        formatter={(value: number) => [`${settings.privacyMode ? '***' : value.toFixed(0)} ${settings.currency || 'Kč'}`, 'Útrata']}
-                        labelFormatter={(label) => {
-                          const d = new Date(label as string);
-                          return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
-                        }}
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={40}
                       />
+                      <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
                       <Area 
                         type="monotone" 
                         dataKey="cost" 
-                        stroke={substance.color || "#0a84ff"} 
+                        name="Útrata"
+                        stroke={substance.color || "var(--md3-primary, #0a84ff)"} 
                         fillOpacity={1} 
                         fill="url(#colorCostSubstance)" 
                         strokeWidth={3} 
+                        isAnimationActive={settings.chartAnimation}
+                        activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: substance.color || "var(--md3-primary, #0a84ff)" } : false}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -1839,7 +1973,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         };
                       });
                     })()}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                       <XAxis 
                         dataKey="date" 
                         axisLine={false} 
@@ -1847,24 +1981,19 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
                         dy={10}
                       />
-                      <YAxis hide />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(255,255,255,0.05)', radius: 8 }}
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                          borderRadius: '16px', 
-                          border: '1px solid rgba(255, 255, 255, 0.1)', 
-                          backdropFilter: 'blur(20px)'
-                        }}
-                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                        labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                        formatter={(value: number, name: string, props: any) => [`${settings.privacyMode ? '***' : value.toFixed(0)} ${settings.currency || 'Kč'}`, `Dávka: ${props.payload.amount} ${substance.unit} (${props.payload.route})`]}
-                        labelFormatter={(label, payload) => payload.length > 0 ? `${label} ${payload[0].payload.time}` : label}
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                        width={40}
                       />
+                      <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
                       <Bar 
                         dataKey="cost" 
-                        fill={substance.color || "#0a84ff"} 
+                        name="Cena dávky"
+                        fill={substance.color || "var(--md3-primary, #0a84ff)"} 
                         radius={[4, 4, 0, 0]} 
+                        isAnimationActive={settings.chartAnimation}
                       />
                     </BarChart>
                   </ResponsiveContainer>
@@ -1906,16 +2035,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                               paddingAngle={5}
                               dataKey="value"
                               stroke="none"
+                              isAnimationActive={settings.chartAnimation}
                             >
                               {routeData.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={`hsl(${(index * 137.5) % 360}, 70%, 50%)`} />
                               ))}
                             </Pie>
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: '#1D1B20', border: 'none', borderRadius: '16px', color: '#E6E0E9', fontWeight: 'bold' }}
-                              itemStyle={{ color: '#E6E0E9' }}
-                              formatter={(value: number) => [`${settings.privacyMode ? '***' : value.toFixed(0)} ${settings.currency || 'Kč'}`, 'Útrata']}
-                            />
+                            <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -1955,9 +2081,16 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     <div key={group.date} className="space-y-3">
                       <div className="flex items-center justify-between sticky top-0 bg-theme-card/90 backdrop-blur-md py-2 z-10">
                         <h4 className="text-sm font-bold text-theme-text">{group.date}</h4>
-                        <span className="text-xs font-bold text-md3-primary bg-md3-primary/10 px-2 py-1 rounded-lg">
-                          Celkem: {group.totalAmount.toFixed(1)} {substance.unit}
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs font-bold text-md3-primary bg-md3-primary/10 px-2 py-1 rounded-lg">
+                            Celkem: {group.totalAmount.toFixed(1)} {substance.unit}
+                          </span>
+                          {substance.activeIngredientName && calculateActiveIngredient(group.doses, substance) > 0 && (
+                            <span className="text-[10px] font-bold text-md3-primary mt-1">
+                              {calculateActiveIngredient(group.doses, substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         {group.doses.map((dose) => (
@@ -1971,8 +2104,20 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                   {dose.amount} {substance.unit}
                                   {dose.strainId && <span className="text-xs text-md3-primary ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
                                 </div>
-                                <div className="text-xs text-md3-gray font-bold uppercase tracking-wider mt-0.5">
-                                  {formatTime(dose.timestamp, settings)}
+                                {substance.activeIngredientName && calculateActiveIngredient([dose], substance) > 0 && (
+                                  <div className="text-[10px] font-bold text-md3-primary mt-0.5">
+                                    {calculateActiveIngredient([dose], substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <div className="text-xs text-md3-gray font-bold uppercase tracking-wider">
+                                    {formatTime(dose.timestamp, settings)}
+                                  </div>
+                                  {dose.rating && (
+                                    <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest">
+                                      • Hodnocení: <span className="text-theme-text">{dose.rating}/5</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -2090,7 +2235,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                       <div className="h-48 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={hourlyData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
                             <XAxis 
                               dataKey="hour" 
                               axisLine={false} 
@@ -2099,19 +2244,20 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                               dy={10}
                               interval={3}
                             />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: 'rgba(28, 28, 30, 0.9)', 
-                                borderRadius: '16px', 
-                                border: '1px solid rgba(255, 255, 255, 0.1)', 
-                                backdropFilter: 'blur(20px)',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-                              }}
-                              itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: '700' }}
-                              labelStyle={{ color: '#8e8e93', fontSize: '10px', marginBottom: '4px', fontWeight: '600' }}
-                              formatter={(value: number) => [value.toFixed(1) + ' ' + substance.unit, 'Množství']}
+                            <YAxis 
+                              axisLine={false} 
+                              tickLine={false} 
+                              tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                              width={30}
                             />
-                            <Bar dataKey="amount" fill={substance.color || "#0a84ff"} radius={[4, 4, 0, 0]} />
+                            <Tooltip content={<CustomTooltip type="amount" />} />
+                            <Bar 
+                              dataKey="amount" 
+                              name="Množství"
+                              fill={substance.color || "var(--md3-primary, #0a84ff)"} 
+                              radius={[4, 4, 0, 0]} 
+                              isAnimationActive={settings.chartAnimation}
+                            />
                           </BarChart>
                         </ResponsiveContainer>
                       </div>

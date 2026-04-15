@@ -158,6 +158,16 @@ export default function Settings({
                     />
                   </div>
                   <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Výška (cm)</label>
+                    <input 
+                      type="number" 
+                      value={settings.userHeight || ''} 
+                      onChange={e => updateSetting('userHeight', parseInt(e.target.value) || undefined)}
+                      className="w-full md3-input" 
+                      placeholder="Volitelné"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Věk</label>
                     <input 
                       type="number" 
@@ -165,6 +175,18 @@ export default function Settings({
                       onChange={e => updateSetting('userAge', parseInt(e.target.value) || 25)}
                       className="w-full md3-input" 
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Pohlaví</label>
+                    <select 
+                      value={settings.userGender} 
+                      onChange={e => updateSetting('userGender', e.target.value as any)}
+                      className="w-full md3-input appearance-none"
+                    >
+                      <option value="male" className="bg-theme-bg">Muž</option>
+                      <option value="female" className="bg-theme-bg">Žena</option>
+                      <option value="other" className="bg-theme-bg">Jiné</option>
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -178,6 +200,58 @@ export default function Settings({
                     <option value="normal" className="bg-theme-bg">Normální</option>
                     <option value="fast" className="bg-theme-bg">Rychlý (+20%)</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Úroveň aktivity</label>
+                  <select 
+                    value={settings.activityLevel || 'moderate'} 
+                    onChange={e => updateSetting('activityLevel', e.target.value as any)}
+                    className="w-full md3-input appearance-none"
+                  >
+                    <option value="sedentary" className="bg-theme-bg">Sedavá (minimální pohyb)</option>
+                    <option value="light" className="bg-theme-bg">Lehká (1-3 dny v týdnu)</option>
+                    <option value="moderate" className="bg-theme-bg">Střední (3-5 dní v týdnu)</option>
+                    <option value="active" className="bg-theme-bg">Aktivní (6-7 dní v týdnu)</option>
+                    <option value="very_active" className="bg-theme-bg">Velmi aktivní (fyzická práce)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Tělesný tuk (%)</label>
+                  <input 
+                    type="number" 
+                    value={settings.bodyFatPercentage || ''} 
+                    onChange={e => updateSetting('bodyFatPercentage', parseInt(e.target.value) || undefined)}
+                    className="w-full md3-input" 
+                    placeholder="Volitelné"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Krevní skupina</label>
+                  <select 
+                    value={settings.bloodType || 'unknown'} 
+                    onChange={e => updateSetting('bloodType', e.target.value as any)}
+                    className="w-full md3-input appearance-none"
+                  >
+                    <option value="unknown" className="bg-theme-bg">Neznámá</option>
+                    <option value="A+" className="bg-theme-bg">A+</option>
+                    <option value="A-" className="bg-theme-bg">A-</option>
+                    <option value="B+" className="bg-theme-bg">B+</option>
+                    <option value="B-" className="bg-theme-bg">B-</option>
+                    <option value="AB+" className="bg-theme-bg">AB+</option>
+                    <option value="AB-" className="bg-theme-bg">AB-</option>
+                    <option value="0+" className="bg-theme-bg">0+</option>
+                    <option value="0-" className="bg-theme-bg">0-</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Zdravotní stav / Alergie (oddělené čárkou)</label>
+                  <input 
+                    type="text" 
+                    value={settings.medicalConditions || ''} 
+                    onChange={e => updateSetting('medicalConditions', e.target.value)}
+                    className="w-full md3-input" 
+                    placeholder="Např. astma, alergie na penicilin..."
+                  />
                 </div>
               </div>
 
@@ -263,7 +337,39 @@ export default function Settings({
                       </button>
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Velikost písma</label>
+                    <select 
+                      value={settings.fontSize || 'medium'} 
+                      onChange={e => updateSetting('fontSize', e.target.value as any)}
+                      className="w-full md3-input appearance-none"
+                    >
+                      <option value="small" className="bg-theme-bg">Malé</option>
+                      <option value="medium" className="bg-theme-bg">Střední</option>
+                      <option value="large" className="bg-theme-bg">Velké</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Barevný akcent</label>
+                    <select 
+                      value={settings.colorAccent || 'emerald'} 
+                      onChange={e => updateSetting('colorAccent', e.target.value as any)}
+                      className="w-full md3-input appearance-none"
+                    >
+                      <option value="emerald" className="bg-theme-bg">Smaragdová (Výchozí)</option>
+                      <option value="blue" className="bg-theme-bg">Modrá</option>
+                      <option value="purple" className="bg-theme-bg">Fialová</option>
+                      <option value="orange" className="bg-theme-bg">Oranžová</option>
+                      <option value="pink" className="bg-theme-bg">Růžová</option>
+                      <option value="cyan" className="bg-theme-bg">Azurová</option>
+                    </select>
+                  </div>
                   {[
+                    { id: 'bentoMode', label: 'Moderní Bento Grid', icon: Palette },
+                    { id: 'ambientBackground', label: 'Prémiové ambientní pozadí', icon: Sparkles },
+                    { id: 'glassEffects', label: 'Vylepšené Glass efekty', icon: Sparkles },
+                    { id: 'glowEffects', label: 'Jemně zářící efekty', icon: Sparkles },
+                    { id: 'animations', label: 'Povolit animace', icon: Activity },
                     { id: 'timeFormat24h', label: '24h formát času', icon: Clock },
                     { id: 'showSeconds', label: 'Zobrazit sekundy', icon: Activity },
                     { id: 'compactMode', label: 'Kompaktní režim', icon: Smartphone },
@@ -402,13 +508,15 @@ export default function Settings({
                     { id: 'recentDoses', label: 'Poslední dávky', icon: Clock },
                     { id: 'quickAdd', label: 'Rychlé přidání', icon: Plus },
                     { id: 'budget', label: 'Rozpočet', icon: Database },
+                    { id: 'systemLoad', label: 'Zátěž systému', icon: Cpu },
+                    { id: 'shortcuts', label: 'Zkratky', icon: Zap },
                   ].map(item => {
                     const isEnabled = settings.dashboardWidgets ? (settings.dashboardWidgets as any)[item.id] : true;
                     return (
                       <button 
                         key={item.id} 
                         onClick={() => {
-                          const currentWidgets = settings.dashboardWidgets || { activeEffects: true, recentDoses: true, quickAdd: true, budget: true };
+                          const currentWidgets = settings.dashboardWidgets || { activeEffects: true, recentDoses: true, quickAdd: true, budget: true, systemLoad: true, shortcuts: true };
                           updateSetting('dashboardWidgets', { ...currentWidgets, [item.id]: !isEnabled });
                         }}
                         className={cn(
@@ -453,6 +561,7 @@ export default function Settings({
                     { id: 'comedownWarnings', label: 'Upozornění na comedown', icon: Clock },
                     { id: 'reminders', label: 'Připomenutí dávky', icon: Bell },
                     { id: 'hapticFeedback', label: 'Haptická odezva', icon: Sparkles },
+                    { id: 'soundAlerts', label: 'Zvuková upozornění', icon: Bell },
                   ].map(item => (
                     <button 
                       key={item.id} 
@@ -479,6 +588,55 @@ export default function Settings({
                       </div>
                     </button>
                   ))}
+                  
+                  <div className="pt-4 border-t border-theme-border">
+                    <button 
+                      onClick={() => updateSetting('quietHoursEnabled', !settings.quietHoursEnabled)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm mb-3",
+                        settings.quietHoursEnabled 
+                          ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                          : "bg-theme-subtle border-theme-border text-md3-gray"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Moon size={18} />
+                        <span className="font-bold text-sm">Klidový režim (Nerušit)</span>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-6 rounded-full p-1 transition-all",
+                        settings.quietHoursEnabled ? "bg-md3-primary" : "bg-theme-border"
+                      )}>
+                        <div className={cn(
+                          "w-4 h-4 rounded-full bg-white transition-all",
+                          settings.quietHoursEnabled ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </div>
+                    </button>
+                    
+                    {settings.quietHoursEnabled && (
+                      <div className="grid grid-cols-2 gap-3 pl-2">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Od</label>
+                          <input 
+                            type="time" 
+                            value={settings.quietHoursStart || '22:00'} 
+                            onChange={e => updateSetting('quietHoursStart', e.target.value)}
+                            className="w-full md3-input" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Do</label>
+                          <input 
+                            type="time" 
+                            value={settings.quietHoursEnd || '07:00'} 
+                            onChange={e => updateSetting('quietHoursEnd', e.target.value)}
+                            className="w-full md3-input" 
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -554,6 +712,49 @@ export default function Settings({
                   <Database size={16} className="text-md3-primary" /> Správa dat
                 </h3>
                 <div className="space-y-3">
+                  <div className="space-y-2 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Automatická záloha</label>
+                    <select 
+                      value={settings.autoBackup || 'none'} 
+                      onChange={e => updateSetting('autoBackup', e.target.value as any)}
+                      className="w-full md3-input appearance-none"
+                    >
+                      <option value="none" className="bg-theme-bg">Vypnuto</option>
+                      <option value="daily" className="bg-theme-bg">Denně</option>
+                      <option value="weekly" className="bg-theme-bg">Týdně</option>
+                      <option value="monthly" className="bg-theme-bg">Měsíčně</option>
+                    </select>
+                  </div>
+                  
+                  <div className="pt-2 pb-4">
+                    <button 
+                      onClick={() => updateSetting('privacyMode', !settings.privacyMode)}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                        settings.privacyMode 
+                          ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                          : "bg-theme-subtle border-theme-border text-md3-gray"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck size={18} />
+                        <div className="text-left">
+                          <span className="font-bold text-sm block">Anonymizace dat</span>
+                          <span className="text-xs opacity-80">Při exportu skryje osobní údaje</span>
+                        </div>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-6 rounded-full p-1 transition-all",
+                        settings.privacyMode ? "bg-md3-primary" : "bg-theme-border"
+                      )}>
+                        <div className={cn(
+                          "w-4 h-4 rounded-full bg-white transition-all",
+                          settings.privacyMode ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </div>
+                    </button>
+                  </div>
+
                   <button 
                     onClick={onExport}
                     className="w-full flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border text-theme-text hover:bg-theme-subtle-hover transition-all group md3-button"

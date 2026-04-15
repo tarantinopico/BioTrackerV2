@@ -4,7 +4,9 @@ import {
   Minus, 
   AlertTriangle, 
   Fingerprint,
-  Clock
+  Clock,
+  Activity,
+  ChevronDown
 } from 'lucide-react';
 import { Substance, Dose, UserSettings } from '../types';
 import { cn } from '../lib/utils';
@@ -30,6 +32,15 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
   const [route, setRoute] = useState('oral');
   const [stomach, setStomach] = useState('full');
   const [note, setNote] = useState('');
+  
+  // Advanced details state
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [purpose, setPurpose] = useState<'medical' | 'recreational' | 'functional' | 'spiritual' | 'other'>('recreational');
+  const [environment, setEnvironment] = useState<'home' | 'social' | 'work' | 'nature' | 'other'>('home');
+  const [mood, setMood] = useState(3);
+  const [rating, setRating] = useState(3);
+  const [heartRate, setHeartRate] = useState<number | undefined>();
+  const [bloodPressure, setBloodPressure] = useState('');
 
   const selectedSubstance = useMemo(() => 
     substances.find(s => s.id === selectedSubstanceId), 
@@ -39,6 +50,9 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
     if (selectedSubstance) {
       setAmount(selectedSubstance.step || 1);
       setSelectedStrainId('');
+      if (selectedSubstance.defaultRoute) {
+        setRoute(selectedSubstance.defaultRoute);
+      }
     }
   }, [selectedSubstanceId, selectedSubstance]);
 
@@ -72,13 +86,24 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         note,
         strainId: selectedStrainId || null,
         bioavailabilityMultiplier,
-        tmaxMultiplier
+        tmaxMultiplier,
+        ...(showAdvanced && {
+          purpose,
+          environment,
+          mood,
+          rating,
+          heartRate,
+          bloodPressure: bloodPressure.trim() || undefined
+        })
       };
 
       onAddDose(dose);
       // Reset offset and note but keep substance
       setTimeOffset(0);
       setNote('');
+      setHeartRate(undefined);
+      setBloodPressure('');
+      setMood(3);
     };
 
   const getSubstanceIcon = (substance: Substance | undefined) => {
@@ -166,6 +191,25 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       }
     }
 
+    // Stash warning
+    if (selectedSubstance.stash !== undefined) {
+      if (amount > selectedSubstance.stash) {
+        list.push({
+          type: 'limit',
+          title: 'Nedostatek v zásobě',
+          message: `Požadované množství (${amount} ${selectedSubstance.unit}) překračuje aktuální zásobu (${selectedSubstance.stash.toFixed(1)} ${selectedSubstance.unit}).`,
+          severity: 'high'
+        });
+      } else if (selectedSubstance.packageSize && selectedSubstance.stash <= selectedSubstance.packageSize * 0.1) {
+        list.push({
+          type: 'limit',
+          title: 'Nízká zásoba',
+          message: `Vaše zásoba (${selectedSubstance.stash.toFixed(1)} ${selectedSubstance.unit}) klesla pod 10% velikosti balení.`,
+          severity: 'medium'
+        });
+      }
+    }
+
     return list;
   }, [selectedSubstanceId, doses, selectedSubstance, substances, amount]);
 
@@ -222,6 +266,15 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         </div>
       </section>
 
+      {/* Substance Description */}
+      {selectedSubstance?.description && (
+        <section className="relative z-10">
+          <div className="bg-theme-subtle/50 backdrop-blur-sm border border-theme-border rounded-xl p-3 text-xs text-md3-gray leading-relaxed">
+            {selectedSubstance.description}
+          </div>
+        </section>
+      )}
+
       {/* Strain Selection */}
       {selectedSubstance?.strains && selectedSubstance.strains.length > 0 && (
         <section className="relative z-10">
@@ -249,6 +302,19 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         </section>
       )}
 
+      {/* Tags Display */}
+      {selectedSubstance?.tags && selectedSubstance.tags.length > 0 && (
+        <section className="relative z-10">
+          <div className="flex flex-wrap gap-2">
+            {selectedSubstance.tags.map(tag => (
+              <span key={tag} className="px-2 py-1 rounded-lg bg-theme-subtle border border-theme-border text-[10px] font-bold text-md3-gray uppercase tracking-widest">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Amount Control */}
       <section className="bg-theme-card/40 backdrop-blur-md rounded-[2rem] p-6 border border-theme-border flex flex-col items-center relative overflow-hidden z-10 shadow-lg group">
         <div 
@@ -256,7 +322,13 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           style={{ background: `radial-gradient(circle at center, ${currentStrain?.color || selectedSubstance?.color || '#00d1ff'}, transparent 70%)` }}
         />
         
-        <div className="flex items-center justify-between w-full max-w-[280px] relative z-10">
+        {selectedSubstance?.stash !== undefined && (
+          <div className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-widest text-md3-gray bg-theme-subtle px-2 py-1 rounded-lg border border-theme-border">
+            Zásoba: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{selectedSubstance.stash.toFixed(1)} {selectedSubstance.unit}</span>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between w-full max-w-[280px] relative z-10 mt-2">
           <button 
             onClick={() => handleAdjust(-1)}
             className="w-14 h-14 rounded-full flex items-center justify-center bg-theme-subtle border border-theme-border text-md3-gray active:scale-95 transition-all hover:bg-theme-subtle-hover hover:border-theme-border"
@@ -280,8 +352,14 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           </button>
         </div>
 
+        {selectedSubstance?.activeIngredientName && (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage) && (
+          <div className="mt-2 text-[10px] font-bold uppercase tracking-widest text-md3-gray">
+            Obsahuje cca <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{((amount * (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage || 0)) / 100).toFixed(2)}{selectedSubstance.unit}</span> {selectedSubstance.activeIngredientName}
+          </div>
+        )}
+
         {/* Quick Amount Presets */}
-        <div className="flex gap-2 mt-6 relative z-10 overflow-x-auto no-scrollbar max-w-full px-1">
+        <div className="flex gap-2 mt-4 relative z-10 overflow-x-auto no-scrollbar max-w-full px-1">
           {[1, 5, 10, 25, 50, 100].map(val => (
             <button
               key={val}
@@ -317,6 +395,112 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
             );
           })}
         </div>
+      </section>
+
+      {/* Advanced Details Toggle */}
+      <section className="relative z-10 pt-2">
+        <button 
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border text-sm font-bold text-md3-gray hover:text-theme-text transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Activity size={16} />
+            <span>Podrobnosti (Kontext)</span>
+          </div>
+          <ChevronDown size={16} className={cn("transition-transform", showAdvanced && "rotate-180")} />
+        </button>
+        
+        <AnimatePresence>
+          {showAdvanced && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 mt-2 rounded-2xl bg-theme-card/40 backdrop-blur-md border border-theme-border space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray">Účel</label>
+                    <select 
+                      value={purpose} 
+                      onChange={e => setPurpose(e.target.value as any)}
+                      className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-sm text-theme-text outline-none"
+                    >
+                      <option value="recreational">Rekreační</option>
+                      <option value="functional">Funkční / Práce</option>
+                      <option value="medical">Léčebný</option>
+                      <option value="spiritual">Spirituální</option>
+                      <option value="other">Jiné</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray">Prostředí</label>
+                    <select 
+                      value={environment} 
+                      onChange={e => setEnvironment(e.target.value as any)}
+                      className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-sm text-theme-text outline-none"
+                    >
+                      <option value="home">Doma</option>
+                      <option value="social">Společnost / Párty</option>
+                      <option value="work">Práce / Škola</option>
+                      <option value="nature">Příroda</option>
+                      <option value="other">Jiné</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray flex justify-between">
+                      <span>Nálada před</span>
+                      <span className="text-theme-text">{mood}/5</span>
+                    </label>
+                    <input 
+                      type="range" min="1" max="5" step="1"
+                      value={mood} onChange={e => setMood(parseInt(e.target.value))}
+                      className="w-full accent-cyan-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray flex justify-between">
+                      <span>Hodnocení</span>
+                      <span className="text-theme-text">{rating}/5</span>
+                    </label>
+                    <input 
+                      type="range" min="1" max="5" step="1"
+                      value={rating} onChange={e => setRating(parseInt(e.target.value))}
+                      className="w-full accent-cyan-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray">Tep (BPM)</label>
+                    <input 
+                      type="number" 
+                      value={heartRate || ''}
+                      onChange={e => setHeartRate(parseInt(e.target.value) || undefined)}
+                      placeholder="např. 75"
+                      className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-sm text-theme-text outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray">Tlak</label>
+                    <input 
+                      type="text" 
+                      value={bloodPressure}
+                      onChange={e => setBloodPressure(e.target.value)}
+                      placeholder="např. 120/80"
+                      className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-sm text-theme-text outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       {/* Notes & Submit */}

@@ -22,7 +22,8 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
   const filteredDoses = useMemo(() => {
     return doses.filter(dose => {
       const substance = substances.find(s => s.id === dose.substanceId);
-      const matchesSearch = substance?.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      const substanceName = substance ? substance.name : dose.substanceId;
+      const matchesSearch = substanceName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             dose.note?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             dose.strainId?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSubstance = selectedSubstanceId === 'all' || dose.substanceId === selectedSubstanceId;
@@ -108,8 +109,14 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
               Vše
             </button>
             {Array.from(new Set(doses.map(d => d.substanceId))).map(subId => {
-              const substance = substances.find(s => s.id === subId);
-              if (!substance) return null;
+              const substance = substances.find(s => s.id === subId) || {
+                id: subId,
+                name: subId,
+                unit: '?',
+                color: '#8e8e93',
+                icon: 'pill',
+                category: 'other'
+              } as unknown as Substance;
               const isActive = selectedSubstanceId === subId;
               return (
                 <button
@@ -154,8 +161,14 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
               
               <div className="space-y-2">
                 {(dayDoses as Dose[]).map(dose => {
-                  const substance = substances.find(s => s.id === dose.substanceId);
-                  if (!substance) return null;
+                  const substance = substances.find(s => s.id === dose.substanceId) || {
+                    id: dose.substanceId,
+                    name: dose.substanceId,
+                    unit: '?',
+                    color: '#8e8e93',
+                    icon: 'pill',
+                    category: 'other'
+                  } as unknown as Substance;
                   
                   return (
                     <div 
@@ -194,9 +207,29 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                             <span className="text-theme-text font-bold">{dose.amount.toFixed(1)}{substance.unit}</span> • <span className="text-md3-gray">{formatTime(dose.timestamp, settings)}</span>
                             {dose.route && ` • ${dose.route}`}
                           </div>
+                          {(() => {
+                            const strain = dose.strainId ? substance.strains?.find(s => s.name === dose.strainId) : null;
+                            const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage;
+                            if (substance.activeIngredientName && activePct) {
+                              return (
+                                <div className={cn(
+                                  "text-md3-primary font-bold",
+                                  settings.compactMode ? "text-[10px] mt-0.5" : "text-xs mt-1"
+                                )}>
+                                  {((dose.amount * activePct) / 100).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
                           {!settings.compactMode && dose.note && (
                             <div className="mt-2 text-xs text-md3-gray italic leading-tight border-l-2 border-theme-border pl-3 py-0.5">
                               {dose.note}
+                            </div>
+                          )}
+                          {!settings.compactMode && dose.rating && (
+                            <div className="mt-1 text-[10px] font-bold text-md3-gray uppercase tracking-widest">
+                              Hodnocení: <span className="text-theme-text">{dose.rating}/5</span>
                             </div>
                           )}
                         </div>

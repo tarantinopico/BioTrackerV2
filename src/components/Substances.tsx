@@ -36,9 +36,10 @@ interface SubstancesProps {
   onDeleteSubstance: (id: string) => void;
   onAddPreset: (preset: Substance) => void;
   onToggleFavorite: (id: string) => void;
+  onRestockSubstance: (id: string) => void;
 }
 
-export default function Substances({ substances, onEditSubstance, onDeleteSubstance, onAddPreset, onToggleFavorite }: SubstancesProps) {
+export default function Substances({ substances, onEditSubstance, onDeleteSubstance, onAddPreset, onToggleFavorite, onRestockSubstance }: SubstancesProps) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SubstanceCategory | 'all'>('all');
 
@@ -174,10 +175,29 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
                     )}>
                       {substance.category}
                     </span>
+                    {substance.stash !== undefined && (
+                      <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md border border-theme-border text-md3-gray ml-auto">
+                        Zásoba: <span style={{ color: substance.color }}>{substance.stash.toFixed(1)}{substance.unit}</span>
+                      </span>
+                    )}
                   </div>
-                  <div className="text-xs text-md3-gray font-medium uppercase tracking-wider">
+                  <div className="text-xs text-md3-gray font-medium uppercase tracking-wider mb-1">
                     T₁/₂: <span className="text-theme-text font-bold">{substance.halfLife}h</span> • Tmax: <span className="text-theme-text font-bold">{substance.tmax}h</span>
                   </div>
+                  {substance.tags && substance.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {substance.tags.map(tag => (
+                        <span key={tag} className="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-theme-subtle border border-theme-border text-md3-gray">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {substance.description && (
+                    <div className="text-[10px] text-md3-gray mt-1.5 line-clamp-1">
+                      {substance.description}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -193,6 +213,18 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
                   >
                     <Star size={16} fill={substance.isFavorite ? "currentColor" : "none"} />
                   </button>
+                  {substance.packageSize !== undefined && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRestockSubstance(substance.id);
+                      }}
+                      className="p-2 rounded-xl hover:bg-cyan-500/10 text-md3-gray hover:text-cyan-primary transition-all active:scale-90"
+                      title={`Doplnit zásobu (+${substance.packageSize}${substance.unit})`}
+                    >
+                      <Package size={16} />
+                    </button>
+                  )}
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();

@@ -44,7 +44,7 @@ import {
   ZoomIn,
   ZoomOut
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import { cn } from './lib/utils';
 import DoseHistory from './components/DoseHistory';
 import { 
@@ -112,15 +112,44 @@ export default function App() {
   // Load data
   useEffect(() => {
     const migrateDoses = (dosesData: any[]): Dose[] => {
-      return dosesData.map(d => ({
-        ...d,
-        timestamp: typeof d.timestamp === 'string' ? new Date(d.timestamp).getTime() : d.timestamp
-      }));
+      return dosesData.map(d => {
+        let ts = d.timestamp;
+        if (typeof ts === 'string') {
+          // Check if it's a string representation of a number
+          if (/^\d+$/.test(ts)) {
+            ts = parseInt(ts, 10);
+          } else {
+            ts = new Date(ts).getTime();
+          }
+        } else if (ts instanceof Date) {
+          ts = ts.getTime();
+        }
+        
+        // Fallback if parsing failed
+        if (typeof ts !== 'number' || isNaN(ts)) {
+          ts = Date.now();
+        }
+
+        // Migrate old substance IDs
+        let subId = d.substanceId;
+        if (subId === 'kratom') subId = 'substance_1774623139275';
+        if (subId === 'nikotin' || subId === 'nicotine') subId = 'substance_1774626436230';
+
+        return {
+          ...d,
+          substanceId: subId,
+          timestamp: ts,
+          amount: typeof d.amount === 'string' ? parseFloat(d.amount) : (d.amount || 0)
+        };
+      });
     };
 
+    const existingDoses = localStorage.getItem('biotracker_pro_doses');
+    const existingSubstances = localStorage.getItem('biotracker_pro_substances');
     const migrationVersion = localStorage.getItem('biotracker_pro_migration_v3');
-    if (!migrationVersion) {
-      // Force overwrite with new user provided defaults
+
+    if (!existingDoses && !existingSubstances && !migrationVersion) {
+      // Only load defaults if there is NO existing data at all
       setSubstances(DEFAULT_SUBSTANCES);
       localStorage.setItem('biotracker_pro_substances', JSON.stringify(DEFAULT_SUBSTANCES));
       
@@ -136,18 +165,17 @@ export default function App() {
       localStorage.setItem('biotracker_pro_migration_v3', 'true');
       setIsUnlocked(true);
     } else {
-      const savedSubstances = localStorage.getItem('biotracker_pro_substances');
-      if (savedSubstances) {
-        setSubstances(JSON.parse(savedSubstances));
+      // Load existing data
+      if (existingSubstances) {
+        setSubstances(JSON.parse(existingSubstances));
       } else {
         setSubstances(DEFAULT_SUBSTANCES);
         localStorage.setItem('biotracker_pro_substances', JSON.stringify(DEFAULT_SUBSTANCES));
       }
 
-      const savedDoses = localStorage.getItem('biotracker_pro_doses');
-      if (savedDoses) {
+      if (existingDoses) {
         try {
-          setDoses(migrateDoses(JSON.parse(savedDoses)));
+          setDoses(migrateDoses(JSON.parse(existingDoses)));
         } catch (e) {
           console.error("Failed to parse doses", e);
         }
@@ -166,6 +194,10 @@ export default function App() {
 
       const savedEffects = localStorage.getItem('biotracker_pro_effects');
       if (savedEffects) setCustomEffects(JSON.parse(savedEffects));
+      
+      if (!migrationVersion) {
+        localStorage.setItem('biotracker_pro_migration_v3', 'true');
+      }
     }
 
     const savedShortcuts = localStorage.getItem('biotracker_pro_shortcuts');
@@ -192,15 +224,29 @@ export default function App() {
     
     // Apply theme
     const root = document.documentElement;
-    root.classList.remove('dark', 'midnight');
+    root.classList.remove('dark', 'midnight', 'bento-mode', 'glass-mode', 'text-sm', 'text-base', 'text-lg', 'reduced-motion', 'accent-blue', 'accent-purple', 'accent-orange', 'accent-pink', 'accent-cyan', 'accent-emerald');
     if (settings.theme === 'dark') {
       root.classList.add('dark');
     } else if (settings.theme === 'midnight') {
       root.classList.add('midnight');
-    } else if (settings.theme === 'light') {
+    }
+    
+    if (settings.bentoMode) root.classList.add('bento-mode');
+    if (settings.glassEffects !== false) root.classList.add('glass-mode');
+    if (settings.animations === false || settings.reducedMotion) root.classList.add('reduced-motion');
+    
+    if (settings.fontSize === 'small') root.classList.add('text-sm');
+    else if (settings.fontSize === 'large') root.classList.add('text-lg');
+    else root.classList.add('text-base');
+
+    if (settings.colorAccent) {
+      root.classList.add(`accent-${settings.colorAccent}`);
+    }
+    
+    if (settings.theme === 'light') {
       // Light theme is default, no class needed
     } else {
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches && settings.theme !== 'midnight') {
         root.classList.add('dark');
       }
     }
@@ -214,9 +260,9 @@ export default function App() {
     localStorage.setItem('biotracker_pro_shortcuts', JSON.stringify(shortcuts));
   }, [shortcuts]);
 
-  // Clock
+  // Clock - update every 60 seconds to prevent excessive re-renders and lag
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
@@ -239,8 +285,27 @@ export default function App() {
     ));
   };
 
+  const handleRestockSubstance = (id: string) => {
+    setSubstances(prev => prev.map(s => {
+      if (s.id === id && s.packageSize !== undefined) {
+        const currentStash = s.stash || 0;
+        return { ...s, stash: currentStash + s.packageSize };
+      }
+      return s;
+    }));
+    showToast('Zásoba doplněna', 'success');
+  };
+
   const handleAddDose = (dose: Dose) => {
     setDoses(prev => [...prev, dose]);
+    
+    setSubstances(prev => prev.map(s => {
+      if (s.id === dose.substanceId && s.stash !== undefined) {
+        return { ...s, stash: Math.max(0, s.stash - dose.amount) };
+      }
+      return s;
+    }));
+
     showToast('Dávka zaznamenána', 'success');
   };
 
@@ -250,6 +315,15 @@ export default function App() {
       title: 'Smazat záznam?',
       message: 'Opravdu chcete smazat tento záznam? Tato akce je nevratná.',
       onConfirm: () => {
+        const doseToDelete = doses.find(d => d.id === id);
+        if (doseToDelete) {
+          setSubstances(prev => prev.map(s => {
+            if (s.id === doseToDelete.substanceId && s.stash !== undefined) {
+              return { ...s, stash: s.stash + doseToDelete.amount };
+            }
+            return s;
+          }));
+        }
         setDoses(prev => prev.filter(d => d.id !== id));
         showToast('Záznam smazán', 'info');
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -258,6 +332,16 @@ export default function App() {
   };
 
   const handleEditDose = (updatedDose: Dose) => {
+    const oldDose = doses.find(d => d.id === updatedDose.id);
+    if (oldDose && oldDose.amount !== updatedDose.amount) {
+      const diff = updatedDose.amount - oldDose.amount;
+      setSubstances(prev => prev.map(s => {
+        if (s.id === updatedDose.substanceId && s.stash !== undefined) {
+          return { ...s, stash: Math.max(0, s.stash - diff) };
+        }
+        return s;
+      }));
+    }
     setDoses(prev => prev.map(d => d.id === updatedDose.id ? updatedDose : d));
     showToast('Záznam upraven', 'success');
   };
@@ -343,10 +427,32 @@ export default function App() {
         const data = JSON.parse(event.target?.result as string);
         if (data.substances) setSubstances(data.substances);
         if (data.doses) {
-          const migratedDoses = data.doses.map((d: any) => ({
-            ...d,
-            timestamp: typeof d.timestamp === 'string' ? new Date(d.timestamp).getTime() : d.timestamp
-          }));
+          const migratedDoses = data.doses.map((d: any) => {
+            let ts = d.timestamp;
+            if (typeof ts === 'string') {
+              if (/^\d+$/.test(ts)) {
+                ts = parseInt(ts, 10);
+              } else {
+                ts = new Date(ts).getTime();
+              }
+            } else if (ts instanceof Date) {
+              ts = ts.getTime();
+            }
+            if (typeof ts !== 'number' || isNaN(ts)) {
+              ts = Date.now();
+            }
+            
+            let subId = d.substanceId;
+            if (subId === 'kratom') subId = 'substance_1774623139275';
+            if (subId === 'nikotin' || subId === 'nicotine') subId = 'substance_1774626436230';
+
+            return { 
+              ...d, 
+              substanceId: subId,
+              timestamp: ts,
+              amount: typeof d.amount === 'string' ? parseFloat(d.amount) : (d.amount || 0)
+            };
+          });
           setDoses(migratedDoses);
         }
         if (data.settings) setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
@@ -478,17 +584,48 @@ export default function App() {
   }
 
   return (
-    <div className={cn(
-      "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-md3-primary/30 pb-28 transition-colors duration-500"
-    )}>
-      {/* Header */}
+    <MotionConfig transition={{ duration: settings.animations === false ? 0 : undefined }}>
+      <div className={cn(
+        "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-md3-primary/30 pb-28 transition-colors duration-500",
+        settings.glassEffects !== false ? "glass-effects-enabled" : "",
+        settings.glowEffects !== false ? "glow-effects-enabled" : ""
+      )}>
+        {/* Ambient Background */}
+        {settings.ambientBackground !== false && (
+          <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
+            <div className={cn(
+              "absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full filter blur-[100px] opacity-20",
+              "bg-md3-primary",
+              settings.animations !== false && "animate-blob"
+            )} />
+            <div className={cn(
+              "absolute top-[20%] right-[-10%] w-[60%] h-[60%] rounded-full filter blur-[120px] opacity-20",
+              "bg-purple-500",
+              settings.animations !== false && "animate-blob animation-delay-2000"
+            )} />
+            <div className={cn(
+              "absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full filter blur-[150px] opacity-20",
+              "bg-blue-500",
+              settings.animations !== false && "animate-blob animation-delay-4000"
+            )} />
+          </div>
+        )}
+
+        {/* Header */}
       <header className="px-4 pt-10 pb-3 flex justify-between items-end sticky top-0 z-50 bg-md3-bg/80 backdrop-blur-xl border-b border-md3-border">
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", systemLoad.color.replace('bg-', 'bg-'))} />
             <span className="text-xs font-bold text-md3-gray uppercase tracking-widest">{systemLoad.label}</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-md3-text">BioTracker</h1>
+          <h1 className={cn(
+            "text-2xl font-bold tracking-tight",
+            settings.ambientBackground !== false 
+              ? "bg-gradient-to-r from-md3-text to-md3-gray bg-clip-text text-transparent" 
+              : "text-md3-text"
+          )}>
+            BioTracker
+          </h1>
         </div>
         <button 
           onClick={() => setView('settings')}
@@ -565,6 +702,7 @@ export default function App() {
                 onDeleteSubstance={handleDeleteSubstance}
                 onAddPreset={(preset) => setSubstances(prev => [...prev, preset])}
                 onToggleFavorite={handleToggleFavorite}
+                onRestockSubstance={handleRestockSubstance}
               />
             )}
             {view === 'settings' && (
@@ -604,7 +742,8 @@ export default function App() {
             >
               <div className={cn(
                 "px-4 py-1 rounded-full transition-all duration-300",
-                isActive ? "bg-md3-primary/20 text-md3-primary" : "bg-transparent text-md3-gray"
+                isActive ? "bg-md3-primary/20 text-md3-primary" : "bg-transparent text-md3-gray",
+                isActive && settings.glassEffects !== false && "drop-shadow-[0_0_8px_var(--md3-primary)]"
               )}>
                 <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
               </div>
@@ -668,6 +807,7 @@ export default function App() {
           ))}
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+    </MotionConfig>
   );
 }

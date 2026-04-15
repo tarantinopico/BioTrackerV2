@@ -40,6 +40,7 @@ export interface Strain {
   name: string;
   price: number;
   color?: string;
+  activeIngredientPercentage?: number;
 }
 
 export interface Effect {
@@ -80,6 +81,8 @@ export interface Substance {
   comedownDuration: number;
   comedownIntensity: number;
   comedownSymptoms: string[];
+  activeIngredientName?: string;
+  activeIngredientPercentage?: number;
   strains: Strain[];
   effects: Effect[];
   interactions: string[];
@@ -107,6 +110,9 @@ export interface Substance {
     strong: number;
     heavy: number;
   };
+  stash?: number;
+  defaultRoute?: string;
+  tags?: string[];
 }
 
 export interface Dose {
@@ -120,39 +126,83 @@ export interface Dose {
   strainId?: string | null;
   bioavailabilityMultiplier: number;
   tmaxMultiplier: number;
+  mood?: number; // 1-5
+  sleepQuality?: number; // 1-5
+  hydration?: number; // 1-5
+  purpose?: 'medical' | 'recreational' | 'functional' | 'spiritual' | 'other';
+  environment?: 'home' | 'social' | 'work' | 'nature' | 'other';
+  heartRate?: number;
+  bloodPressure?: string;
+  rating?: number; // 1-5
 }
 
 export interface UserSettings {
+  // Profile
   userWeight: number;
+  userHeight?: number;
   userAge: number;
   userMetabolism: 'slow' | 'normal' | 'fast';
-  userGender: 'male' | 'female';
+  userGender: 'male' | 'female' | 'other';
+  activityLevel?: 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
+  bodyFatPercentage?: number;
+  bloodType?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | '0+' | '0-' | 'unknown';
+  medicalConditions?: string;
+
+  // Appearance
   timeFormat24h: boolean;
   showSeconds: boolean;
   compactMode: boolean;
   hapticFeedback: boolean;
   language: string;
   currency: string;
+  theme: 'dark' | 'light' | 'midnight';
+  bentoMode?: boolean;
+  glassmorphism?: boolean;
+  privacyMode?: boolean;
+  fontSize?: 'small' | 'medium' | 'large';
+  colorAccent?: 'blue' | 'green' | 'purple' | 'orange' | 'pink' | 'emerald' | 'cyan';
+  reducedMotion?: boolean;
+  animations?: boolean;
+  glassEffects?: boolean;
+  glowEffects?: boolean;
+  ambientBackground?: boolean;
+
+  // Charts
   chartWindow: number;
-  weeklyBudget: number;
+  firstDayOfWeek?: 0 | 1;
   chartAnimation: boolean;
   chartGrid: boolean;
   chartPoints: boolean;
-  interactionWarnings: boolean;
-  doseWarnings: boolean;
-  reminders: boolean;
-  comedownWarnings: boolean;
-  theme: 'dark' | 'light' | 'midnight';
-  privacyMode?: boolean;
-  firstDayOfWeek?: 0 | 1;
+
+  // Dashboard
   dashboardWidgets?: {
     activeEffects: boolean;
     recentDoses: boolean;
     quickAdd: boolean;
     budget: boolean;
+    systemLoad?: boolean;
+    shortcuts?: boolean;
   };
+
+  // Notifications
+  interactionWarnings: boolean;
+  doseWarnings: boolean;
+  reminders: boolean;
+  comedownWarnings: boolean;
+  soundAlerts?: boolean;
+  quietHoursEnabled?: boolean;
+  quietHoursStart?: string;
+  quietHoursEnd?: string;
+
+  // Data
+  autoBackup?: 'none' | 'daily' | 'weekly' | 'monthly';
+
+  // Security
   pinCode?: string | null;
   requirePin?: boolean;
+  
+  // Goals
+  weeklyBudget: number;
 }
 
 export interface CustomEffect {

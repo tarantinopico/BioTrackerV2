@@ -551,6 +551,54 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     />
                   </div>
                   <div className="space-y-1.5">
+                    <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Velikost balení</label>
+                    <input 
+                      type="number" 
+                      value={formData.packageSize || ''} 
+                      onChange={e => setFormData(prev => ({ ...prev, packageSize: parseFloat(e.target.value) }))}
+                      placeholder="Volitelné"
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-theme-card border border-theme-border space-y-4">
+                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest flex items-center gap-2">
+                    <Sparkles size={14} className="text-md3-primary" />
+                    Účinná látka (Volitelné)
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Název</label>
+                      <input 
+                        type="text" 
+                        value={formData.activeIngredientName || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, activeIngredientName: e.target.value }))}
+                        placeholder="Např. Mitragynin"
+                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Koncentrace (%)</label>
+                      <input 
+                        type="number" 
+                        value={formData.activeIngredientPercentage || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, activeIngredientPercentage: parseFloat(e.target.value) }))}
+                        placeholder="Např. 1.5"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-md3-gray leading-relaxed">
+                    Pokud vyplníte tyto údaje, aplikace bude automaticky počítat a zobrazovat množství čisté účinné látky v každé dávce (např. 2% Mitragyninu v 5g Kratomu = 0.1g Mitragyninu).
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
                     <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Denní limit ({formData.unit || 'mg'})</label>
                     <input 
                       type="number" 
@@ -562,17 +610,27 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Zásoba ({formData.unit || 'mg'})</label>
+                    <input 
+                      type="number" 
+                      value={formData.stash ?? ''} 
+                      onChange={e => setFormData(prev => ({ ...prev, stash: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      step="0.1" 
+                      min="0" 
+                      placeholder="Aktuální zásoba"
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Velikost balení ({formData.unit || 'mg'})</label>
+                  <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Tagy / Štítky</label>
                   <input 
-                    type="number" 
-                    value={formData.packageSize || ''} 
-                    onChange={e => setFormData(prev => ({ ...prev, packageSize: e.target.value ? parseFloat(e.target.value) : undefined }))}
-                    step="0.1" 
-                    min="0" 
-                    placeholder="Volitelné (pro výpočet spotřeby)"
+                    type="text" 
+                    value={formData.tags?.join(', ') || ''} 
+                    onChange={e => setFormData(prev => ({ ...prev, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }))}
+                    placeholder="Např. stimulant, nootropic, ranní (oddělené čárkou)"
                     className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
                   />
                 </div>
@@ -644,18 +702,39 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                             <Trash2 size={18} />
                           </button>
                         </div>
-                        <div className="flex items-center gap-2.5 p-1.5 rounded-xl bg-theme-secondary border border-theme-border w-fit">
-                          <input 
-                            type="color" 
-                            value={strain.color || formData.color || '#00d1ff'} 
-                            onChange={e => {
-                              const next = [...(formData.strains || [])];
-                              next[i].color = e.target.value;
-                              setFormData(prev => ({ ...prev, strains: next }));
-                            }}
-                            className="w-6 h-6 rounded-lg cursor-pointer bg-transparent border-none p-0" 
-                          />
-                          <span className="text-[10px] font-mono text-md3-gray uppercase pr-2">Barva druhu</span>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex items-center gap-2.5 p-1.5 rounded-xl bg-theme-secondary border border-theme-border w-fit">
+                            <input 
+                              type="color" 
+                              value={strain.color || formData.color || '#00d1ff'} 
+                              onChange={e => {
+                                const next = [...(formData.strains || [])];
+                                next[i].color = e.target.value;
+                                setFormData(prev => ({ ...prev, strains: next }));
+                              }}
+                              className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-none p-0" 
+                            />
+                            <span className="text-xs font-mono text-md3-gray uppercase pr-2">{strain.color || formData.color || '#00d1ff'}</span>
+                          </div>
+                          {formData.activeIngredientName && (
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs font-bold text-md3-gray uppercase">Koncentrace {formData.activeIngredientName} (%)</label>
+                              <input 
+                                type="number" 
+                                value={strain.activeIngredientPercentage ?? formData.activeIngredientPercentage ?? ''} 
+                                onChange={e => {
+                                  const next = [...(formData.strains || [])];
+                                  next[i].activeIngredientPercentage = e.target.value ? parseFloat(e.target.value) : undefined;
+                                  setFormData(prev => ({ ...prev, strains: next }));
+                                }}
+                                className="w-24 p-2 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all" 
+                                placeholder="Výchozí" 
+                                step="0.01"
+                                min="0"
+                                max="100"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
@@ -1326,6 +1405,22 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   <p className="text-xs text-md3-gray font-medium px-1">Užívání vybraných látek bude zvyšovat toleranci i pro tuto látku.</p>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-md3-gray ml-1">Výchozí způsob aplikace</label>
+                  <select 
+                    value={formData.defaultRoute || 'oral'} 
+                    onChange={e => setFormData(prev => ({ ...prev, defaultRoute: e.target.value }))}
+                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text"
+                  >
+                    <option value="oral">Ústně</option>
+                    <option value="sublingual">Sublingválně</option>
+                    <option value="insufflated">Šňupání</option>
+                    <option value="smoked">Kouření</option>
+                    <option value="vaped">Vaporizace</option>
+                    <option value="iv">Intravenózně</option>
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-md3-gray ml-1">Vazba na proteiny (%)</label>
@@ -1476,7 +1571,68 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-4 pt-6 border-t border-theme-border">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-md3-gray ml-1">Dávkování (Orientační)</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-md3-gray ml-1">Práh (Threshold)</label>
+                      <input 
+                        type="number" 
+                        value={formData.dosage?.threshold || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, threshold: parseFloat(e.target.value) } as any }))}
+                        step="0.01" 
+                        min="0" 
+                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-md3-gray ml-1">Lehká (Light)</label>
+                      <input 
+                        type="number" 
+                        value={formData.dosage?.light || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, light: parseFloat(e.target.value) } as any }))}
+                        step="0.01" 
+                        min="0" 
+                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-md3-gray ml-1">Běžná (Common)</label>
+                      <input 
+                        type="number" 
+                        value={formData.dosage?.common || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, common: parseFloat(e.target.value) } as any }))}
+                        step="0.01" 
+                        min="0" 
+                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-md3-gray ml-1">Silná (Strong)</label>
+                      <input 
+                        type="number" 
+                        value={formData.dosage?.strong || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, strong: parseFloat(e.target.value) } as any }))}
+                        step="0.01" 
+                        min="0" 
+                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-md3-gray ml-1">Těžká (Heavy)</label>
+                      <input 
+                        type="number" 
+                        value={formData.dosage?.heavy || ''} 
+                        onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, heavy: parseFloat(e.target.value) } as any }))}
+                        step="0.01" 
+                        min="0" 
+                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3 pt-6 border-t border-theme-border">
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, isPrescription: !prev.isPrescription }))}
