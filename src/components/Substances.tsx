@@ -146,6 +146,19 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
             <Plus className="w-6 h-6 text-black" strokeWidth={3} />
           </button>
         </div>
+
+        {(() => {
+          const totalValue = substances.reduce((sum, s) => sum + ((s.stash || 0) * (s.price || 0)), 0);
+          if (totalValue > 0) {
+            return (
+              <div className="mb-6 p-4 rounded-2xl bg-theme-card border border-theme-border flex items-center justify-between">
+                <span className="text-sm font-bold text-md3-gray uppercase tracking-widest">Celková hodnota zásob</span>
+                <span className="text-lg font-black text-theme-text">{totalValue.toFixed(0)} Kč</span>
+              </div>
+            );
+          }
+          return null;
+        })()}
         
         <div className="space-y-3">
           {filteredSubstances.length === 0 ? (

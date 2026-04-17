@@ -37,7 +37,8 @@ import {
   Cigarette,
   TestTube,
   FlaskConical,
-  Beaker
+  Beaker,
+  Heart
 } from 'lucide-react';
 import { 
   XAxis, 
