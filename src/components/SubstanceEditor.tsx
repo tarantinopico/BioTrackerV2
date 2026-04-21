@@ -259,6 +259,30 @@ const MetabolismPreview = ({ type, beta, color, customCurve }: { type: Metabolis
   );
 };
 
+const CustomOptionsInput = ({ 
+  initialOptions = [],
+  onChange 
+}: { 
+  initialOptions?: string[]; 
+  onChange: (parsed: string[]) => void; 
+}) => {
+  const [val, setVal] = useState(initialOptions.join(', '));
+  
+  return (
+    <input 
+      type="text"
+      value={val}
+      onChange={e => {
+        const newVal = e.target.value;
+        setVal(newVal);
+        onChange(newVal.split(',').map(s => s.trim()).filter(Boolean));
+      }}
+      placeholder="např. Rekreační, Práce, Společnost"
+      className="w-full p-2 rounded-lg bg-theme-card border border-theme-border outline-none text-theme-text text-xs"
+    />
+  );
+};
+
 interface SubstanceEditorProps {
   isOpen: boolean;
   substanceId: string | null;
@@ -351,25 +375,25 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-theme-bg/90 backdrop-blur-md"
+        className="absolute inset-0 bg-theme-bg/60 backdrop-blur-md"
       />
       <motion.div 
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        className="relative bg-theme-bg/95 backdrop-blur-3xl rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-2xl h-[92vh] md:h-auto md:max-h-[88vh] overflow-hidden flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.6)] border-t md:border border-theme-border"
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="relative bg-md3-card/95 backdrop-blur-2xl rounded-[2.5rem] w-full max-w-2xl h-[92vh] md:h-auto md:max-h-[88vh] overflow-hidden flex flex-col shadow-2xl border border-theme-border"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-theme-border bg-theme-subtle">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)]">
-              <Settings2 className="text-black" size={24} strokeWidth={3} />
+            <div className="w-12 h-12 rounded-2xl bg-md3-primary flex items-center justify-center shadow-lg">
+              <Settings2 className="text-theme-bg" size={24} strokeWidth={3} />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-theme-text uppercase tracking-tight">
@@ -392,7 +416,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
               className={cn(
                 "px-5 py-4 text-xs font-bold uppercase tracking-wider whitespace-nowrap flex flex-col items-center gap-2 border-b-2 transition-all relative",
                 activeTab === tab.id 
-                  ? "border-cyan-primary text-cyan-primary bg-cyan-primary/5" 
+                  ? "border-md3-primary text-md3-primary bg-md3-primary/5" 
                   : "border-transparent text-md3-gray hover:text-theme-text"
               )}
             >
@@ -401,7 +425,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
               {activeTab === tab.id && (
                 <motion.div 
                   layoutId="activeTabIndicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-primary shadow-[0_0_10px_rgba(0,209,255,0.8)]"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-md3-primary shadow-[0_0_10px_var(--md3-primary-50)]"
                 />
               )}
             </button>
@@ -453,7 +477,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         className={cn(
                           "flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all",
                           formData.icon === iconObj.id 
-                            ? "bg-cyan-primary text-black shadow-[0_0_15px_rgba(0,209,255,0.4)] scale-110" 
+                            ? "bg-md3-primary text-theme-bg shadow-[0_0_15px_var(--md3-primary-40)] scale-110" 
                             : "bg-theme-card border border-theme-border text-md3-gray hover:text-theme-text hover:bg-theme-subtle-hover"
                         )}
                       >
@@ -533,7 +557,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, step: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0.01" 
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
                 </div>
@@ -547,7 +571,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0" 
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -557,7 +581,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       value={formData.packageSize || ''} 
                       onChange={e => setFormData(prev => ({ ...prev, packageSize: parseFloat(e.target.value) }))}
                       placeholder="Volitelné"
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
                 </div>
@@ -575,7 +599,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         value={formData.activeIngredientName || ''} 
                         onChange={e => setFormData(prev => ({ ...prev, activeIngredientName: e.target.value }))}
                         placeholder="Např. Mitragynin"
-                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -588,7 +612,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         step="0.01"
                         min="0"
                         max="100"
-                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                       />
                     </div>
                   </div>
@@ -607,7 +631,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="0.1" 
                       min="0" 
                       placeholder="Volitelné"
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -619,7 +643,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="0.1" 
                       min="0" 
                       placeholder="Aktuální zásoba"
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
                     />
                   </div>
                 </div>
@@ -1495,7 +1519,106 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 pt-4 border-t border-theme-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-theme-text">Vlastní parametry záznamu</h4>
+                      <p className="text-xs text-md3-gray mt-1">Nadefinujte pole k zobrazení při přidávání záznamu</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData(prev => ({ 
+                        ...prev, 
+                        customFields: [...(prev.customFields || []), { id: crypto.randomUUID(), name: '', type: 'boolean' }] 
+                      }))}
+                      className="w-8 h-8 rounded-full bg-cyan-primary/10 text-cyan-primary flex items-center justify-center hover:bg-cyan-primary hover:text-black transition-all"
+                    >
+                      <Plus size={16} strokeWidth={3} />
+                    </button>
+                  </div>
+                  
+                  {formData.customFields && formData.customFields.length > 0 && (
+                    <div className="space-y-3">
+                      {formData.customFields.map((field, index) => (
+                        <div key={field.id} className="flex flex-col gap-2 p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                          <div className="flex gap-2 items-start">
+                            <input 
+                              type="text" 
+                              value={field.name || ''} 
+                              onChange={(e) => {
+                                const newFields = [...(formData.customFields || [])];
+                                newFields[index].name = e.target.value;
+                                setFormData(prev => ({ ...prev, customFields: newFields }));
+                              }}
+                              placeholder="Název (Př. Tep, Hodnocení, Kombinace)" 
+                              className="flex-1 p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm"
+                            />
+                            <select
+                              value={field.type}
+                              onChange={(e) => {
+                                const newFields = [...(formData.customFields || [])];
+                                newFields[index].type = e.target.value as any;
+                                setFormData(prev => ({ ...prev, customFields: newFields }));
+                              }}
+                              className="w-32 p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm"
+                            >
+                              <option value="boolean">Zaškrtávací (Ano/Ne)</option>
+                              <option value="select">Výběr z možností</option>
+                              <option value="multiselect">Vícenásobný výběr</option>
+                              <option value="number">Číslo</option>
+                              <option value="rating">Hodnocení (1-5)</option>
+                              <option value="text">Krátký text</option>
+                            </select>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newFields = [...(formData.customFields || [])];
+                                newFields.splice(index, 1);
+                                setFormData(prev => ({ ...prev, customFields: newFields }));
+                              }}
+                              className="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shrink-0"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                          
+                          {(field.type === 'select' || field.type === 'multiselect') && (
+                            <div className="mt-2 pl-2">
+                              <label className="text-xs font-bold uppercase tracking-widest text-md3-gray mb-1 block">Možnosti (oddělte čárkou)</label>
+                              <CustomOptionsInput 
+                                initialOptions={field.options}
+                                onChange={(parsed) => {
+                                  const newFields = [...(formData.customFields || [])];
+                                  newFields[index].options = parsed;
+                                  setFormData(prev => ({ ...prev, customFields: newFields }));
+                                }}
+                              />
+                            </div>
+                          )}
+                          
+                          {field.type === 'number' && (
+                            <div className="mt-2 pl-2">
+                              <label className="text-xs font-bold uppercase tracking-widest text-md3-gray mb-1 block">Jednotka (nepovinné)</label>
+                              <input 
+                                type="text"
+                                value={field.unit || ''}
+                                onChange={e => {
+                                  const newFields = [...(formData.customFields || [])];
+                                  newFields[index].unit = e.target.value;
+                                  setFormData(prev => ({ ...prev, customFields: newFields }));
+                                }}
+                                placeholder="např. BPM"
+                                className="w-full p-2 rounded-lg bg-theme-card border border-theme-border outline-none text-theme-text text-xs"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-theme-border">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-widest text-md3-gray ml-1">Potenciál závislosti</label>
                     <select 
@@ -1667,7 +1790,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
         </div>
         
         {/* Footer */}
-        <div className="p-6 border-t border-theme-border bg-theme-subtle flex gap-4 backdrop-blur-2xl">
+        <div className="p-6 border-t border-theme-border bg-theme-subtle flex gap-4 backdrop-blur-2xl pb-safe">
           <button 
             type="button" 
             onClick={onClose} 
@@ -1678,7 +1801,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
           <button 
             form="substance-form"
             type="submit" 
-            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-xs bg-gradient-to-r from-cyan-500 to-cyan-600 text-black shadow-[0_0_20px_rgba(0,209,255,0.3)] hover:shadow-[0_0_30px_rgba(0,209,255,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-xs bg-md3-primary text-theme-bg shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 glow-effects-enabled:shadow-[0_0_20px_var(--md3-primary-20)]"
           >
             <CheckCircle size={16} strokeWidth={3} />
             Uložit konfiguraci

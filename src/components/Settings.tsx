@@ -27,7 +27,8 @@ import {
   Fingerprint,
   Cpu,
   LineChart,
-  ShieldAlert
+  ShieldAlert,
+  Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -351,18 +352,29 @@ export default function Settings({
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Barevný akcent</label>
-                    <select 
-                      value={settings.colorAccent || 'emerald'} 
-                      onChange={e => updateSetting('colorAccent', e.target.value as any)}
-                      className="w-full md3-input appearance-none"
-                    >
-                      <option value="emerald" className="bg-theme-bg">Smaragdová (Výchozí)</option>
-                      <option value="blue" className="bg-theme-bg">Modrá</option>
-                      <option value="purple" className="bg-theme-bg">Fialová</option>
-                      <option value="orange" className="bg-theme-bg">Oranžová</option>
-                      <option value="pink" className="bg-theme-bg">Růžová</option>
-                      <option value="cyan" className="bg-theme-bg">Azurová</option>
-                    </select>
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                      {[
+                        { id: 'emerald', color: 'bg-emerald-500', label: 'Smaragdová' },
+                        { id: 'blue', color: 'bg-blue-500', label: 'Modrá' },
+                        { id: 'purple', color: 'bg-purple-500', label: 'Fialová' },
+                        { id: 'orange', color: 'bg-orange-500', label: 'Oranžová' },
+                        { id: 'pink', color: 'bg-pink-500', label: 'Růžová' },
+                        { id: 'cyan', color: 'bg-cyan-500', label: 'Azurová' }
+                      ].map(accent => (
+                        <button
+                          key={accent.id}
+                          onClick={() => updateSetting('colorAccent', accent.id as any)}
+                          className={cn(
+                            "w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center transition-all border-2",
+                            settings.colorAccent === accent.id ? "border-theme-text scale-110 shadow-lg" : "border-transparent hover:scale-105",
+                            accent.color
+                          )}
+                          title={accent.label}
+                        >
+                          {settings.colorAccent === accent.id && <Check size={20} className="text-white" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   {[
                     { id: 'bentoMode', label: 'Moderní Bento Grid', icon: Palette },

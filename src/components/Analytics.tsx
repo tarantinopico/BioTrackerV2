@@ -28,7 +28,9 @@ import {
   Activity,
   Smile,
   Sparkles,
-  FlaskConical
+  FlaskConical,
+  Lightbulb,
+  Radar as Target
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -48,7 +50,12 @@ import {
   Legend,
   ScatterChart,
   Scatter,
-  ZAxis
+  ZAxis,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar
 } from 'recharts';
 import { Substance, Dose, UserSettings, Strain } from '../types';
 import { cn, formatTime } from '../lib/utils';
@@ -91,14 +98,39 @@ const CustomTooltip = ({ active, payload, label, type = 'default', currency = 'K
   return null;
 };
 
-const calculateActiveIngredient = (dosesList: Dose[], substance: Substance) => {
-  if (!substance.activeIngredientName) return 0;
-  return dosesList.reduce((sum, d) => {
+export const calculateActiveIngredients = (dosesList: Dose[], substance: Substance): Record<string, number> => {
+  const ingredients: Record<string, number> = {};
+  
+  dosesList.forEach(d => {
     const strain = d.strainId ? substance.strains?.find(s => s.name === d.strainId) : null;
-    const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage;
-    if (!activePct) return sum;
-    return sum + ((d.amount * activePct) / 100);
-  }, 0);
+    
+    // Legacy support
+    const legacyName = substance.activeIngredientName;
+    if (legacyName) {
+      const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage;
+      if (activePct) {
+        ingredients[legacyName] = (ingredients[legacyName] || 0) + ((d.amount * activePct) / 100);
+      }
+    }
+
+    // New array support
+    const baseIngredients = substance.activeIngredients || [];
+    const strainIngredients = strain?.activeIngredients || [];
+    const arrToUse = strainIngredients.length > 0 ? strainIngredients : baseIngredients;
+
+    arrToUse.forEach(i => {
+      ingredients[i.name] = (ingredients[i.name] || 0) + ((d.amount * i.percentage) / 100);
+    });
+  });
+
+  return ingredients;
+};
+
+const renderActiveIngredientsString = (dosesList: Dose[], substance: Substance): string => {
+  const ingredients = calculateActiveIngredients(dosesList, substance);
+  const entries = Object.entries(ingredients).filter(([, val]) => val > 0);
+  if (entries.length === 0) return '';
+  return entries.map(([name, val]) => `${val.toFixed(2)}${substance.unit} ${name}`).join(' + ');
 };
 
 const calculatePredictions = (doses: Dose[], substances: Substance[], period: number) => {
@@ -156,7 +188,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const [period, setPeriod] = useState<Period>(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients'>('trends');
-  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance'>('overview');
+  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Stabilize 'now' to prevent excessive re-renders. Updates every 5 minutes.
@@ -601,11 +633,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
       </div>
 
       {/* Overview Tabs */}
-      <div className="flex bg-md3-secondary p-1 rounded-2xl relative z-10">
+      <div className="flex bg-md3-secondary p-1 rounded-2xl relative z-10 overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setOverviewTab('overview')}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
             overviewTab === 'overview' 
               ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
               : "text-md3-gray hover:text-theme-text"
@@ -617,19 +649,19 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         <button
           onClick={() => setOverviewTab('day-view')}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
             overviewTab === 'day-view' 
               ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
               : "text-md3-gray hover:text-theme-text"
           )}
         >
           <Calendar size={14} />
-          Denní přehled
+          Denní
         </button>
         <button
           onClick={() => setOverviewTab('finance')}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
             overviewTab === 'finance' 
               ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
               : "text-md3-gray hover:text-theme-text"
@@ -637,6 +669,18 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         >
           <DollarSign size={14} />
           Finance
+        </button>
+        <button
+          onClick={() => setOverviewTab('insights')}
+          className={cn(
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            overviewTab === 'insights' 
+              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+              : "text-md3-gray hover:text-theme-text"
+          )}
+        >
+          <Lightbulb size={14} />
+          Pokročilé
         </button>
       </div>
 
@@ -789,26 +833,26 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={usageByTimeOfDay}>
-              {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+              {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="var(--md3-border)" vertical={false} />}
               <XAxis 
                 dataKey="hour" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                tick={{ fill: 'var(--md3-gray)', fontSize: 10, fontWeight: 600 }}
                 dy={10}
                 interval={3}
               />
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
+                tick={{ fill: 'var(--md3-gray)', fontSize: 10, fontWeight: 600 }}
                 width={30}
               />
               <Tooltip content={<CustomTooltip type="count" />} />
               <Bar 
                 dataKey="count" 
                 name="Počet užití"
-                fill="var(--md3-primary, #D0BCFF)" 
+                fill="var(--md3-primary)" 
                 radius={[4, 4, 0, 0]} 
                 isAnimationActive={settings.chartAnimation}
               />
@@ -1108,9 +1152,9 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                               </div>
                               <div>
                                 <span className="text-sm font-bold text-theme-text block">{substance.name}</span>
-                                {substance.activeIngredientName && calculateActiveIngredient(sDoses, substance) > 0 && (
+                                {renderActiveIngredientsString(sDoses, substance) && (
                                   <span className="text-[10px] font-bold text-md3-primary">
-                                    {calculateActiveIngredient(sDoses, substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                    {renderActiveIngredientsString(sDoses, substance)}
                                   </span>
                                 )}
                               </div>
@@ -1132,13 +1176,13 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                 </div>
                                 <div className="text-right">
                                   <div className="text-sm font-bold text-theme-text">{dose.amount} {substance.unit}</div>
-                                  {substance.activeIngredientName && calculateActiveIngredient([dose], substance) > 0 && (
+                                  {renderActiveIngredientsString([dose], substance) && (
                                     <div className="text-[10px] font-bold text-md3-primary">
-                                      {calculateActiveIngredient([dose], substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                      {renderActiveIngredientsString([dose], substance)}
                                     </div>
                                   )}
                                   {dose.strainId && <div className="text-xs text-md3-primary font-bold">{dose.strainId}</div>}
-                                  {dose.rating && <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-0.5">Hodnocení: <span className="text-theme-text">{dose.rating}/5</span></div>}
+                                  {dose.customFieldValues?.rating && <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-0.5">Hodnocení: <span className="text-theme-text">{dose.customFieldValues.rating}/5</span></div>}
                                 </div>
                               </div>
                             ))}
@@ -1297,6 +1341,233 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             )}
           </motion.div>
         )}
+        {overviewTab === 'insights' && (
+          <motion.div
+            key="insights"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4 relative z-10 pb-24"
+          >
+            {/* Radar: Circadian Rhythm */}
+            <section className="md3-card p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Target size={16} className="text-md3-primary" />
+                <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Cirkadiánní rytmus (Čas užívání)</h3>
+              </div>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  {(() => {
+                    // Collect doses by hour 0-23
+                    const hourlyCounts = new Array(24).fill(0);
+                    doses.forEach(d => {
+                      const hour = new Date(d.timestamp).getHours();
+                      hourlyCounts[hour]++;
+                    });
+                    const radarData = hourlyCounts.map((count, hour) => ({
+                      time: `${hour}:00`,
+                      count
+                    }));
+
+                    return (
+                      <RadarChart cx="50%" cy="50%" outerRadius="60%" data={radarData}>
+                        <PolarGrid stroke="var(--md3-border)" />
+                        <PolarAngleAxis dataKey="time" tick={{ fill: 'var(--md3-gray)', fontSize: 10 }} />
+                        <Radar name="Počet záznamů" dataKey="count" stroke="var(--md3-primary)" fill="var(--md3-primary)" fillOpacity={0.3} isAnimationActive={settings.chartAnimation} />
+                        <Tooltip content={<CustomTooltip type="count" />} />
+                      </RadarChart>
+                    );
+                  })()}
+                </ResponsiveContainer>
+              </div>
+            </section>
+
+            {/* Global Routes of Administration */}
+            <section className="md3-card p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <PieChartIcon size={16} className="text-md3-green" />
+                <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Způsoby administrace</h3>
+              </div>
+              <div className="h-48 w-full mb-6">
+                <ResponsiveContainer width="100%" height="100%">
+                  {(() => {
+                    const routeCounts: Record<string, number> = {};
+                    doses.forEach(d => {
+                      const r = d.route || 'Oral';
+                      routeCounts[r] = (routeCounts[r] || 0) + 1;
+                    });
+                    const routeData = Object.entries(routeCounts)
+                      .map(([name, value], i) => {
+                        const COLORS = ['#00d1ff', '#c864f4', '#10e47a', '#ffd60a', '#ff9f0a', '#ff375f'];
+                        return { name, value, color: COLORS[i % COLORS.length] };
+                      })
+                      .sort((a, b) => b.value - a.value);
+
+                    if (routeData.length === 0) {
+                      return <div className="flex items-center justify-center h-full text-md3-gray text-sm">Žádná data pro zobrazení</div>;
+                    }
+
+                    return (
+                      <PieChart>
+                        <Pie
+                          data={routeData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                          stroke="none"
+                          isAnimationActive={settings.chartAnimation}
+                        >
+                          {routeData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip type="count" />} />
+                      </PieChart>
+                    );
+                  })()}
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2">
+                {(() => {
+                  const routeCounts: Record<string, number> = {};
+                  doses.forEach(d => {
+                    const r = d.route || 'Oral';
+                    routeCounts[r] = (routeCounts[r] || 0) + 1;
+                  });
+                  const routeData = Object.entries(routeCounts)
+                    .map(([name, value], i) => {
+                      const COLORS = ['#00d1ff', '#c864f4', '#10e47a', '#ffd60a', '#ff9f0a', '#ff375f'];
+                      return { name, value, color: COLORS[i % COLORS.length] };
+                    })
+                    .sort((a, b) => b.value - a.value);
+
+                  return routeData.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-sm font-bold text-theme-text">{item.name}</span>
+                      </div>
+                      <span className="text-sm font-bold text-theme-text">{item.value}x</span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </section>
+
+            {/* Active Ingredients Density Globally */}
+            <section className="md3-card p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <FlaskConical size={16} className="text-md3-orange" />
+                <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Absolutní výtěžnost látek</h3>
+              </div>
+              <div className="space-y-4">
+                {(() => {
+                  let totalMass = 0;
+                  let totalActive = 0;
+
+                  doses.forEach(d => {
+                    const substance = substances.find(s => s.id === d.substanceId);
+                    if (substance) {
+                       // if we have mg, g, ug we might want to normalize... but typically we just summarize visually per unit?
+                       // Actually, doing a global pie chart of mass is hard if units mix (ug vs mg vs g).
+                       // We can just calculate percentage of active vs non-active for ONLY substances that define an active ingredient.
+                       if (substance.activeIngredientName) {
+                         const strain = d.strainId ? substance.strains?.find(s => s.name === d.strainId) : null;
+                         const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage ?? 0;
+                         if (activePct > 0) {
+                           totalMass += d.amount;
+                           totalActive += (d.amount * activePct) / 100;
+                         }
+                       }
+                    }
+                  });
+
+                  if (totalMass === 0) {
+                    return <div className="text-sm text-md3-gray">Nemáte u žádné aktuálně zapsané látky specifikovanou procentuální koncentraci účinné látky.</div>;
+                  }
+
+                  const overallPercentage = ((totalActive / totalMass) * 100).toFixed(1);
+
+                  return (
+                    <div className="space-y-6">
+                      <div className="flex flex-col items-center justify-center py-4 bg-theme-subtle rounded-2xl border border-theme-border text-center">
+                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Průměrná čistota (koncentrace)</div>
+                        <div className="text-3xl font-black text-theme-text">{overallPercentage}%</div>
+                        <div className="text-xs font-medium text-md3-gray mt-2 max-w-[80%]">Tento ukazatel počítá poměr účinné látky vůči celkové hmotě pro všechny dávky, které mají specifikovanou % účinnost.</div>
+                      </div>
+                      <div className="w-full h-4 bg-theme-subtle rounded-full overflow-hidden flex">
+                        <div className="h-full bg-md3-primary" style={{ width: `${Math.min(100, parseFloat(overallPercentage))}%` }} />
+                        <div className="h-full bg-theme-border" style={{ width: `${Math.max(0, 100 - parseFloat(overallPercentage))}%` }} />
+                      </div>
+                      <div className="flex justify-between text-xs font-bold text-md3-gray">
+                        <span>Účinná látka</span>
+                        <span>Nosič / Ostatní</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </section>
+
+            {/* Top Global Combinations */}
+            <section className="md3-card p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <GitMerge size={16} className="text-md3-primary" />
+                <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Nejčastější denní kombinace</h3>
+              </div>
+              <div className="space-y-3">
+                {(() => {
+                  const combosByDay: Record<string, Set<string>> = {};
+                  doses.forEach(d => {
+                    const day = new Date(d.timestamp).toISOString().split('T')[0];
+                    if (!combosByDay[day]) combosByDay[day] = new Set();
+                    combosByDay[day].add(d.substanceId);
+                  });
+
+                  const comboCounts: Record<string, number> = {};
+                  Object.values(combosByDay).forEach(set => {
+                    const arr = Array.from(set).sort();
+                    if (arr.length > 1) {
+                      const key = arr.join(' + ');
+                      comboCounts[key] = (comboCounts[key] || 0) + 1;
+                    }
+                  });
+
+                  const topCombos = Object.entries(comboCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5);
+
+                  if (topCombos.length === 0) {
+                    return <div className="text-sm text-md3-gray">Žádné zaznamenané kombinace více látek v jeden den.</div>;
+                  }
+
+                  return topCombos.map(([combo, count]) => {
+                    const parts = combo.split(' + ');
+                    return (
+                      <div key={combo} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border gap-3 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+                          {parts.map((p, ix) => {
+                            const sub = substances.find(s => s.id === p);
+                            return (
+                              <div key={p} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-theme-bg border border-theme-border max-w-full min-w-0">
+                                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sub?.color || '#fff' }} />
+                                <span className="text-sm font-bold text-theme-text truncate">{sub?.name || p}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="text-lg font-black text-theme-text whitespace-nowrap bg-theme-bg px-4 py-1.5 rounded-lg border border-theme-border shrink-0">{count}x</div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </section>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -1390,7 +1661,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             { id: 'combinations', label: 'Kombinace', icon: Activity },
             { id: 'reactions', label: 'Reakce', icon: Smile },
             { id: 'predictions', label: 'Predikce', icon: Sparkles },
-            ...(substance.activeIngredientName ? [{ id: 'active-ingredients', label: 'Účinná látka', icon: FlaskConical }] : []),
+            ...(substance.activeIngredientName || (substance.activeIngredients && substance.activeIngredients.length > 0) ? [{ id: 'active-ingredients', label: 'Účinné látky', icon: FlaskConical }] : []),
             { id: 'finance', label: 'Finance', icon: Wallet },
             { id: 'history', label: 'Historie', icon: History },
             { id: 'day-view', label: 'Den', icon: Calendar },
@@ -1430,103 +1701,105 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {totalAmount.toFixed(1)} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
-                  {substance.activeIngredientName && calculateActiveIngredient(sDoses, substance) > 0 && (
+                  {renderActiveIngredientsString(sDoses, substance) && (
                     <div className="text-xs font-bold text-md3-primary mt-1">
-                      {calculateActiveIngredient(sDoses, substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                      {renderActiveIngredientsString(sDoses, substance)}
                     </div>
                   )}
                 </div>
               </div>
 
-              <section className="md3-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Množství za den</h3>
-                </div>
-                <div className="h-56 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dailyTrend}>
-                      <defs>
-                        <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        dy={10}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        width={30}
-                      />
-                      <Tooltip content={<CustomTooltip type="amount" />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="amount" 
-                        name="Množství"
-                        stroke={substance.color} 
-                        strokeWidth={3}
-                        fillOpacity={1} 
-                        fill="url(#colorAmount)" 
-                        isAnimationActive={settings.chartAnimation}
-                        activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: substance.color } : false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <section className="md3-card p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp size={14} className="text-md3-primary" />
+                    <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Množství za den</h3>
+                  </div>
+                  <div className="h-40 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dailyTrend}>
+                        <defs>
+                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={substance.color} stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
+                          dy={5}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
+                          width={24}
+                        />
+                        <Tooltip content={<CustomTooltip type="amount" />} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="amount" 
+                          name="Množství"
+                          stroke={substance.color} 
+                          strokeWidth={3}
+                          fillOpacity={1} 
+                          fill="url(#colorAmount)" 
+                          isAnimationActive={settings.chartAnimation}
+                          activeDot={settings.chartPoints ? { r: 5, strokeWidth: 0, fill: substance.color } : false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </section>
 
-              <section className="md3-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kumulativní spotřeba</h3>
-                </div>
-                <div className="h-56 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dailyTrend}>
-                      <defs>
-                        <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={substance.color} stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        dy={10}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                        width={30}
-                      />
-                      <Tooltip content={<CustomTooltip type="amount" />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey="cumulativeAmount" 
-                        name="Celkem"
-                        stroke={substance.color} 
-                        fillOpacity={1} 
-                        fill="url(#colorCumulative)" 
-                        strokeWidth={3} 
-                        isAnimationActive={settings.chartAnimation}
-                        activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: substance.color } : false}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </section>
+                <section className="md3-card p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp size={14} className="text-md3-primary" />
+                    <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Kumulativní spotřeba</h3>
+                  </div>
+                  <div className="h-40 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dailyTrend}>
+                        <defs>
+                          <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={substance.color} stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor={substance.color} stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+                        <XAxis 
+                          dataKey="name" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
+                          dy={5}
+                        />
+                        <YAxis 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
+                          width={24}
+                        />
+                        <Tooltip content={<CustomTooltip type="amount" />} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="cumulativeAmount" 
+                          name="Celkem"
+                          stroke={substance.color} 
+                          fillOpacity={1} 
+                          fill="url(#colorCumulative)" 
+                          strokeWidth={3} 
+                          isAnimationActive={settings.chartAnimation}
+                          activeDot={settings.chartPoints ? { r: 5, strokeWidth: 0, fill: substance.color } : false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </section>
+              </div>
             </motion.div>
           )}
 
@@ -1757,10 +2030,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))}
                             </Pie>
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: 'rgba(28,28,30,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                              itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                            />
+                            <Tooltip content={<CustomTooltip type="count" />} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -1808,10 +2078,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))}
                             </Pie>
-                            <Tooltip 
-                              contentStyle={{ backgroundColor: 'rgba(28,28,30,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                              itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                            />
+                            <Tooltip content={<CustomTooltip type="count" />} />
                           </PieChart>
                         </ResponsiveContainer>
                       </div>
@@ -1836,22 +2103,36 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {sDoses.length > 0 ? (totalAmount / sDoses.length).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
-                  {substance.activeIngredientName && sDoses.length > 0 && calculateActiveIngredient(sDoses, substance) > 0 && (
-                    <div className="text-xs font-bold text-md3-primary mt-1">
-                      {(calculateActiveIngredient(sDoses, substance) / sDoses.length).toFixed(2)}{substance.unit} {substance.activeIngredientName}
-                    </div>
-                  )}
+                  {(function(){
+                    if (sDoses.length === 0) return null;
+                    const ingrs = calculateActiveIngredients(sDoses, substance);
+                    const entries = Object.entries(ingrs).filter(([, val]) => val > 0);
+                    if (entries.length === 0) return null;
+                    return (
+                      <div className="text-xs font-bold text-md3-primary mt-1">
+                        {entries.map(([n,v]) => `${(v / sDoses.length).toFixed(2)}${substance.unit} ${n}`).join(' + ')}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="md3-card p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Maximální dávka</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {sDoses.length > 0 ? Math.max(...sDoses.map(d => d.amount)).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
                   </div>
-                  {substance.activeIngredientName && sDoses.length > 0 && Math.max(...sDoses.map(d => calculateActiveIngredient([d], substance))) > 0 && (
-                    <div className="text-xs font-bold text-md3-primary mt-1">
-                      {Math.max(...sDoses.map(d => calculateActiveIngredient([d], substance))).toFixed(2)}{substance.unit} {substance.activeIngredientName}
-                    </div>
-                  )}
+                  {(function(){
+                    if (sDoses.length === 0) return null;
+                    const sumMap = sDoses.map(d => ({ d, total: Object.values(calculateActiveIngredients([d], substance)).reduce((a,b)=>a+b,0) }));
+                    const maxDoseObj = sumMap.sort((a,b) => b.total - a.total)[0]?.d;
+                    if (!maxDoseObj) return null;
+                    const str = renderActiveIngredientsString([maxDoseObj], substance);
+                    if (!str) return null;
+                    return (
+                      <div className="text-xs font-bold text-md3-primary mt-1">
+                        {str}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
@@ -2103,12 +2384,12 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     </div>
                     <div className="space-y-2">
                       {strainsData.map((strain, index) => (
-                        <div key={strain.name} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `hsl(${(index * 137.5) % 360}, 70%, 50%)` }} />
-                            <span className="text-sm font-bold text-theme-text">{strain.name}</span>
+                        <div key={strain.name} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border min-w-0 gap-2">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: `hsl(${(index * 137.5) % 360}, 70%, 50%)` }} />
+                            <span className="text-sm font-bold text-theme-text truncate">{strain.name}</span>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0">
                             <div className="text-sm font-bold text-theme-text">{strain.value.toFixed(1)} <span className="text-xs text-md3-gray">{substance.unit}</span></div>
                             <div className="text-xs text-md3-gray font-medium">{strain.count}x</div>
                           </div>
@@ -2206,92 +2487,159 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="md3-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Smile size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Reakce a hodnocení</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Detailní statistiky parametrů</h3>
                 </div>
                 {(() => {
-                  const ratedDoses = sDoses.filter(d => d.rating !== undefined);
-                  if (ratedDoses.length === 0) return <div className="text-sm text-md3-gray italic text-center p-4">Zatím žádná data o hodnoceních.</div>;
-                  
-                  const avgRating = ratedDoses.reduce((sum, d) => sum + (d.rating || 0), 0) / ratedDoses.length;
-                  
-                  // Rating distribution
-                  const distribution = [0, 0, 0, 0, 0];
-                  ratedDoses.forEach(d => {
-                    if (d.rating && d.rating >= 1 && d.rating <= 5) {
-                      distribution[d.rating - 1]++;
-                    }
-                  });
-                  
-                  // Purpose distribution
-                  const purposeCounts: Record<string, number> = {};
-                  const purposesPresent = sDoses.some(d => d.purpose !== undefined);
-                  if (purposesPresent) {
-                    sDoses.forEach(d => {
-                      if (d.purpose) {
-                        purposeCounts[d.purpose] = (purposeCounts[d.purpose] || 0) + 1;
-                      }
-                    });
+                  if (!substance.customFields || substance.customFields.length === 0) {
+                    return <div className="text-sm text-md3-gray italic text-center p-4">Tato látka nemá definované žádné vlastní atributy pro sledování statistik.</div>;
                   }
-                  
+
+                  let hasAnyData = false;
+
                   return (
-                    <div className="space-y-6">
-                      <div className="flex justify-center items-center flex-col p-4 bg-theme-subtle rounded-2xl border border-theme-border">
-                        <div className="text-4xl font-black text-theme-text drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] mb-1">{avgRating.toFixed(1)}</div>
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest">Průměrné hodnocení</div>
-                        <div className="flex gap-1 mt-2">
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className={`w-3 h-3 rounded-full ${i <= Math.round(avgRating) ? 'bg-md3-primary shadow-[0_0_8px_rgba(0,209,255,0.5)]' : 'bg-theme-border'}`} />
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-3">Distribuce hodnocení</h4>
-                        <div className="space-y-2">
-                          {[5, 4, 3, 2, 1].map(stars => {
-                            const count = distribution[stars - 1];
-                            const percentage = (count / ratedDoses.length) * 100;
-                            return (
-                              <div key={stars} className="flex items-center gap-3">
-                                <div className="w-8 text-right text-xs font-bold text-theme-text">{stars} <span className="text-[10px] text-md3-gray">★</span></div>
-                                <div className="flex-1 h-2 bg-theme-bg rounded-full overflow-hidden">
-                                  <div className="h-full bg-md3-primary rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                    <div className="space-y-8">
+                      {substance.customFields.map(field => {
+                        // Gather data for this field
+                        const values = sDoses.map(d => d.customFieldValues?.[field.id]).filter(v => v !== undefined && v !== '');
+                        
+                        if (values.length === 0) return null;
+                        hasAnyData = true;
+
+                        if (field.type === 'rating') {
+                          const avgRating = values.reduce((sum, v) => sum + (v as number), 0) / values.length;
+                          const distribution = [0, 0, 0, 0, 0];
+                          values.forEach(v => {
+                            const val = v as number;
+                            if (val >= 1 && val <= 5) distribution[val - 1]++;
+                          });
+
+                          return (
+                            <div key={field.id} className="space-y-4">
+                              <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-3">{field.name}</h4>
+                              <div className="flex justify-center items-center flex-col p-4 bg-theme-subtle rounded-2xl border border-theme-border">
+                                <div className="text-4xl font-black text-theme-text drop-shadow-[0_0_10px_rgba(255,255,255,0.2)] mb-1">{avgRating.toFixed(1)}</div>
+                                <div className="text-xs font-bold text-md3-gray uppercase tracking-widest">Průměrné hodnocení</div>
+                                <div className="flex gap-1 mt-2">
+                                  {[1, 2, 3, 4, 5].map(i => (
+                                    <div key={i} className={`w-3 h-3 rounded-full ${i <= Math.round(avgRating) ? 'bg-md3-primary glow-effects-enabled:shadow-[0_0_8px_var(--md3-primary-50)]' : 'bg-theme-border'}`} />
+                                  ))}
                                 </div>
-                                <div className="w-8 text-xs font-bold text-md3-gray">{count}x</div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      
-                      {purposesPresent && Object.keys(purposeCounts).length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-3 mt-4">Účel použití</h4>
-                          <div className="space-y-2">
-                            {Object.entries(purposeCounts).sort((a, b) => b[1] - a[1]).map(([purpose, count]) => {
-                              const percentage = (count / sDoses.length) * 100;
-                              const translatedPurpose = {
-                                'medical': 'Medikace',
-                                'recreational': 'Rekreace',
-                                'functional': 'Funkční',
-                                'spiritual': 'Spirituální',
-                                'other': 'Jiné'
-                              }[purpose] || purpose;
-                              
-                              return (
-                                <div key={purpose} className="flex flex-col gap-1">
-                                  <div className="flex justify-between text-xs font-bold">
-                                    <span className="text-theme-text">{translatedPurpose}</span>
-                                    <span className="text-md3-gray">{percentage.toFixed(0)}%</span>
-                                  </div>
-                                  <div className="h-1.5 w-full bg-theme-bg rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${percentage}%` }} />
-                                  </div>
+                              <div className="space-y-2 mt-4">
+                                {[5, 4, 3, 2, 1].map(val => {
+                                  const count = distribution[val - 1];
+                                  const percentage = (count / values.length) * 100;
+                                  return (
+                                    <div key={val} className="flex items-center gap-3">
+                                      <div className="w-8 text-right text-xs font-bold text-theme-text">{val} <span className="text-[10px] text-md3-gray">★</span></div>
+                                      <div className="flex-1 h-2 bg-theme-bg rounded-full overflow-hidden">
+                                        <div className="h-full bg-md3-primary rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                                      </div>
+                                      <div className="w-8 text-xs font-bold text-md3-gray">{count}x</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (field.type === 'boolean') {
+                          const trueCount = values.filter(v => v === true).length;
+                          const percentage = (trueCount / sDoses.length) * 100;
+
+                          if (trueCount === 0) return null;
+
+                          return (
+                            <div key={field.id} className="space-y-2">
+                              <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-3">{field.name}</h4>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex justify-between text-xs font-bold">
+                                  <span className="text-theme-text">Ano</span>
+                                  <span className="text-md3-gray">{trueCount}x ({percentage.toFixed(0)}%)</span>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                                <div className="h-1.5 w-full bg-theme-bg rounded-full overflow-hidden">
+                                  <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${percentage}%` }} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (field.type === 'select' || field.type === 'multiselect') {
+                          const counts: Record<string, number> = {};
+                          values.forEach(v => {
+                            if (Array.isArray(v)) {
+                              v.forEach(val => {
+                                const parsedVal = String(val);
+                                counts[parsedVal] = (counts[parsedVal] || 0) + 1;
+                              });
+                            } else {
+                              const val = String(v);
+                              counts[val] = (counts[val] || 0) + 1;
+                            }
+                          });
+
+                          return (
+                            <div key={field.id} className="space-y-2">
+                              <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-3">{field.name}</h4>
+                              <div className="space-y-2">
+                                {Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([opt, count], i) => {
+                                  const percentage = (count / values.length) * 100;
+                                  const colors = ['bg-cyan-primary', 'bg-emerald-500', 'bg-md3-orange', 'bg-rose-500', 'bg-violet-500'];
+                                  const color = colors[i % colors.length];
+
+                                  return (
+                                    <div key={opt} className="flex flex-col gap-1">
+                                      <div className="flex justify-between text-xs font-bold">
+                                        <span className="text-theme-text">{opt}</span>
+                                        <span className="text-md3-gray">{count}x ({percentage.toFixed(0)}%)</span>
+                                      </div>
+                                      <div className="h-1.5 w-full bg-theme-bg rounded-full overflow-hidden">
+                                        <div className={`h-full ${color} rounded-full`} style={{ width: `${percentage}%` }} />
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (field.type === 'number') {
+                          const numericValues = values.map(v => Number(v)).filter(v => !isNaN(v));
+                          if (numericValues.length === 0) return null;
+                          
+                          const avg = numericValues.reduce((a, b) => a + b, 0) / numericValues.length;
+                          const min = Math.min(...numericValues);
+                          const max = Math.max(...numericValues);
+
+                          return (
+                            <div key={field.id} className="space-y-2">
+                              <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-3">{field.name}</h4>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="p-3 bg-theme-subtle rounded-xl border border-theme-border text-center">
+                                  <div className="text-[10px] text-md3-gray uppercase font-bold mb-1">Průměr</div>
+                                  <div className="text-lg font-black text-theme-text">{avg.toFixed(1)}{field.unit && <span className="text-[10px] ml-1 text-md3-gray">{field.unit}</span>}</div>
+                                </div>
+                                <div className="p-3 bg-theme-subtle rounded-xl border border-theme-border text-center">
+                                  <div className="text-[10px] text-md3-gray uppercase font-bold mb-1">Min</div>
+                                  <div className="text-lg font-black text-theme-text">{min}{field.unit && <span className="text-[10px] ml-1 text-md3-gray">{field.unit}</span>}</div>
+                                </div>
+                                <div className="p-3 bg-theme-subtle rounded-xl border border-theme-border text-center">
+                                  <div className="text-[10px] text-md3-gray uppercase font-bold mb-1">Max</div>
+                                  <div className="text-lg font-black text-theme-text">{max}{field.unit && <span className="text-[10px] ml-1 text-md3-gray">{field.unit}</span>}</div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return null; // Don't render complex graphs for 'text'
+                      })}
+                      
+                      {!hasAnyData && (
+                        <div className="text-sm text-md3-gray italic text-center p-4">U záznamů nebyly vyplněny žádné vlastní atributy.</div>
                       )}
                     </div>
                   );
@@ -2336,114 +2684,179 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                   
                   let stashExhaustionDate = null;
                   let stashDaysLeft = null;
-                  if (substance.stash !== undefined && avgDailyConsumption > 0) {
-                    stashDaysLeft = substance.stash / avgDailyConsumption;
+                  if ((substance as any).stash !== undefined && avgDailyConsumption > 0) {
+                    stashDaysLeft = (substance as any).stash / avgDailyConsumption;
+                    stashExhaustionDate = new Date(Date.now() + (stashDaysLeft * 86400000));
+                  } else if (substance.packageSize !== undefined && avgDailyConsumption > 0) {
+                    stashDaysLeft = substance.packageSize / avgDailyConsumption;
                     stashExhaustionDate = new Date(Date.now() + (stashDaysLeft * 86400000));
                   }
                   
                   return (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between">
-                          <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Očekávaná další dávka</div>
-                          <div className="text-xl font-bold text-theme-text">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
+                          <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Další dávka</div>
+                          <div className="text-lg font-black text-theme-text leading-none mb-1">
                             {timeUntilNext > 0 ? (
-                              `za ${Math.floor(timeUntilNext / 3600000)}h ${Math.floor((timeUntilNext / 60000) % 60)}m`
+                              `${Math.floor(timeUntilNext / 3600000)}h ${Math.floor((timeUntilNext / 60000) % 60)}m`
                             ) : (
-                              <span className="text-md3-orange">Lhůta vypršela</span>
+                              <span className="text-md3-orange">Zpoždění</span>
                             )}
                           </div>
-                          <div className="text-xs font-medium text-md3-gray mt-1">
-                            Na základě průměrného intervalu {(avgIntervalMs / 3600000).toFixed(1)}h
+                          <div className="text-[9px] font-bold text-md3-gray mt-auto">
+                            Z průměru {(avgIntervalMs / 3600000).toFixed(1)}h
                           </div>
                         </div>
                         
-                        {substance.stash !== undefined ? (
-                          <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between">
-                            <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Odhad vyčerpání zásob</div>
-                            <div className="text-xl font-bold text-theme-text">
+                        {(substance as any).stash !== undefined ? (
+                          <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
+                            <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Vyčerpání balení</div>
+                            <div className="text-lg font-black text-theme-text leading-none mb-1">
                               {stashDaysLeft && stashDaysLeft < 365 ? (
                                 `Za ${stashDaysLeft.toFixed(0)} dní`
                               ) : (
                                 '> 1 rok'
                               )}
                             </div>
-                            {stashExhaustionDate && stashDaysLeft && stashDaysLeft < 365 && (
-                              <div className="text-xs font-medium text-md3-gray mt-1">
-                                {stashExhaustionDate.toLocaleDateString('cs-CZ')}
-                              </div>
-                            )}
+                            <div className="text-[9px] font-bold text-md3-gray mt-auto truncate">
+                              Velikost: {(substance as any).stash}{substance.unit}
+                            </div>
                           </div>
                         ) : (
-                          <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border flex items-center justify-center text-center">
-                            <div className="text-xs font-medium text-md3-gray italic">Pro predikci vyčerpání vyplňte zásobu u látky.</div>
+                          <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex items-center justify-center text-center shadow-sm">
+                            <div className="text-[9px] font-bold text-md3-gray italic uppercase">Zásoba nevyplněna</div>
                           </div>
                         )}
-                      </div>
-                      
-                      <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                         <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Týdenní projekce</div>
-                         <div className="text-lg font-bold text-theme-text">
-                            {(avgDailyConsumption * 7).toFixed(1)} {substance.unit}
-                         </div>
-                         {substance.price && substance.price > 0 && (
-                            <div className="text-sm font-bold text-md3-green mt-1">
-                               {(avgDailyConsumption * 7 * substance.price).toLocaleString('cs-CZ')} {settings.currency || 'Kč'} / týden
-                            </div>
-                         )}
+                        
+                        <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
+                           <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Týdenní projekce</div>
+                           <div className="text-lg font-black text-theme-text leading-none mb-1">
+                              {(avgDailyConsumption * 7).toFixed(1)} <span className="text-xs">{substance.unit}</span>
+                           </div>
+                           {substance.price && substance.price > 0 && (
+                              <div className="text-[9px] font-bold text-md3-green mt-auto truncate uppercase tracking-widest">
+                                 {(avgDailyConsumption * 7 * substance.price).toLocaleString('cs-CZ')} {settings.currency || 'Kč'} / týden
+                              </div>
+                           )}
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
+                           <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Intenzita účinku</div>
+                           <div className="text-lg font-black leading-none mb-1" style={{ color: calculateTolerance(substance.id, substances, doses, Date.now()) > 30 ? '#ff9f0a' : '#34c759' }}>
+                              {(100 - calculateTolerance(substance.id, substances, doses, Date.now())).toFixed(0)}%
+                           </div>
+                           <div className="text-[9px] font-bold text-md3-gray mt-auto truncate uppercase tracking-widest">
+                              Z aktuální tolerance
+                           </div>
+                        </div>
                       </div>
 
-                      <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                         <div className="flex items-center justify-between mb-4">
-                           <div className="text-xs font-bold text-md3-gray uppercase tracking-widest">Predikce poklesu tolerance (bez dalších dávek)</div>
-                         </div>
-                         <div className="h-40 w-full">
-                           <ResponsiveContainer width="100%" height="100%">
-                             {(() => {
-                               const tolData = [];
-                               for (let i = 0; i <= 14; i++) {
-                                 const futureTime = Date.now() + (i * 86400000);
-                                 const tol = calculateTolerance(substance.id, substances, doses, futureTime);
-                                 tolData.push({
-                                   day: i === 0 ? 'Dnes' : `+${i}d`,
-                                   tolerance: tol
-                                 });
-                               }
-                               return (
-                                 <LineChart data={tolData}>
-                                   {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-                                   <XAxis 
-                                     dataKey="day" 
-                                     axisLine={false} 
-                                     tickLine={false} 
-                                     tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                                     dy={10}
-                                   />
-                                   <YAxis 
-                                     axisLine={false} 
-                                     tickLine={false} 
-                                     tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                                     width={30}
-                                     domain={[0, 'dataMax']}
-                                   />
-                                   <Tooltip 
-                                     contentStyle={{ backgroundColor: 'rgba(28,28,30,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                     itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                                     formatter={(value: number) => [`${value.toFixed(1)}%`, 'Tolerance']}
-                                   />
-                                   <Line 
-                                     type="monotone" 
-                                     dataKey="tolerance" 
-                                     stroke={substance.color || '#00d1ff'} 
-                                     strokeWidth={3}
-                                     dot={false}
-                                     isAnimationActive={settings.chartAnimation}
-                                   />
-                                 </LineChart>
-                               );
-                             })()}
-                           </ResponsiveContainer>
-                         </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border shadow-sm">
+                           <div className="flex items-center justify-between mb-4">
+                             <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest">Model poklesu tolerance (Dní)</div>
+                           </div>
+                           <div className="h-32 w-full">
+                             <ResponsiveContainer width="100%" height="100%">
+                               {(() => {
+                                 const tolData = [];
+                                 for (let i = 0; i <= 14; i++) {
+                                   const futureTime = Date.now() + (i * 86400000);
+                                   const tol = calculateTolerance(substance.id, substances, doses, futureTime);
+                                   tolData.push({
+                                     day: i === 0 ? 'Dnes' : `+${i}d`,
+                                     tolerance: tol,
+                                     intensity: 100 - tol
+                                   });
+                                 }
+                                 return (
+                                   <AreaChart data={tolData}>
+                                     {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+                                     <defs>
+                                       <linearGradient id={`gradientTolerance`} x1="0" y1="0" x2="0" y2="1">
+                                         <stop offset="5%" stopColor={substance.color || '#ff453a'} stopOpacity={0.8}/>
+                                         <stop offset="95%" stopColor={substance.color || '#ff453a'} stopOpacity={0}/>
+                                       </linearGradient>
+                                     </defs>
+                                     <XAxis 
+                                       dataKey="day" 
+                                       axisLine={false} 
+                                       tickLine={false} 
+                                       tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
+                                       dy={5}
+                                     />
+                                     <Tooltip 
+                                       contentStyle={{ backgroundColor: 'rgba(28,28,30,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                       itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                                     />
+                                     <Area 
+                                       type="monotone" 
+                                       dataKey="tolerance" 
+                                       name="Tolerance" 
+                                       stroke={substance.color || '#ff453a'} 
+                                       fill={`url(#gradientTolerance)`}
+                                       strokeWidth={3} 
+                                       isAnimationActive={settings.chartAnimation}
+                                     />
+                                   </AreaChart>
+                                 );
+                               })()}
+                             </ResponsiveContainer>
+                           </div>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border shadow-sm">
+                           <div className="flex items-center justify-between mb-4">
+                             <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest">Návrat intenzity účinku</div>
+                           </div>
+                           <div className="h-32 w-full">
+                             <ResponsiveContainer width="100%" height="100%">
+                               {(() => {
+                                 const tolData = [];
+                                 for (let i = 0; i <= 14; i++) {
+                                   const futureTime = Date.now() + (i * 86400000);
+                                   const tol = calculateTolerance(substance.id, substances, doses, futureTime);
+                                   tolData.push({
+                                     day: i === 0 ? 'Dnes' : `+${i}d`,
+                                     intensity: 100 - tol
+                                   });
+                                 }
+                                 return (
+                                   <AreaChart data={tolData}>
+                                     {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+                                     <defs>
+                                       <linearGradient id={`gradientIntensity-${substance.id}`} x1="0" y1="0" x2="0" y2="1">
+                                         <stop offset="5%" stopColor="#30d158" stopOpacity={0.8}/>
+                                         <stop offset="95%" stopColor="#30d158" stopOpacity={0}/>
+                                       </linearGradient>
+                                     </defs>
+                                     <XAxis 
+                                       dataKey="day" 
+                                       axisLine={false} 
+                                       tickLine={false} 
+                                       tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
+                                       dy={5}
+                                     />
+                                     <Tooltip 
+                                       contentStyle={{ backgroundColor: 'rgba(28,28,30,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                       itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                                     />
+                                     <Area 
+                                       type="monotone" 
+                                       dataKey="intensity" 
+                                       name="Intenzita" 
+                                       stroke="#30d158" 
+                                       fill={`url(#gradientIntensity-${substance.id})`}
+                                       strokeWidth={3} 
+                                       isAnimationActive={settings.chartAnimation}
+                                     />
+                                   </AreaChart>
+                                 );
+                               })()}
+                             </ResponsiveContainer>
+                           </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -2452,7 +2865,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             </motion.div>
           )}
 
-          {detailTab === 'active-ingredients' && substance.activeIngredientName && (
+          {detailTab === 'active-ingredients' && (substance.activeIngredientName || (substance.activeIngredients && substance.activeIngredients.length > 0)) && (
             <motion.div
               key="active-ingredients"
               initial={{ opacity: 0, y: 10 }}
@@ -2463,11 +2876,12 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               <section className="md3-card p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <FlaskConical size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Analýza účinné látky: {substance.activeIngredientName}</h3>
+                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Analýza účinných látek</h3>
                 </div>
                 
                 {(() => {
-                  const totalActiveAmount = calculateActiveIngredient(sDoses, substance);
+                  const activeSums = calculateActiveIngredients(sDoses, substance);
+                  const totalActiveAmount = Object.values(activeSums).reduce((a,b)=>a+b,0);
                   const maxPossibleConcentration = Math.max(...(substance.strains?.map(s => s.activeIngredientPercentage || 0) || [0]), substance.activeIngredientPercentage || 0);
                   const minPossibleConcentration = Math.min(...(substance.strains?.filter(s => s.activeIngredientPercentage)?.map(s => s.activeIngredientPercentage || 0) || [substance.activeIngredientPercentage || 0]).filter(Boolean));
                   
@@ -2477,7 +2891,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                     const month = new Date(d.timestamp).toLocaleString('cs-CZ', { month: 'short', year: '2-digit' });
                     if (!monthlyData[month]) monthlyData[month] = { total: 0, active: 0 };
                     monthlyData[month].total += d.amount;
-                    monthlyData[month].active += calculateActiveIngredient([d], substance);
+                    monthlyData[month].active += Object.values(calculateActiveIngredients([d], substance)).reduce((a,b)=>a+b,0);
                   });
                   
                   const chartData = Object.entries(monthlyData).map(([month, data]) => ({
@@ -2777,12 +3191,12 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                       </div>
                       <div className="space-y-2">
                         {routeData.map((item, index) => (
-                          <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `hsl(${(index * 137.5) % 360}, 70%, 50%)` }} />
-                              <span className="text-sm font-bold text-theme-text">{item.name}</span>
+                          <div key={item.name} className="flex items-center justify-between p-3 rounded-xl bg-theme-subtle border border-theme-border min-w-0 gap-2">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: `hsl(${(index * 137.5) % 360}, 70%, 50%)` }} />
+                              <span className="text-sm font-bold text-theme-text truncate">{item.name}</span>
                             </div>
-                            <span className="text-sm font-bold text-theme-text">{settings.privacyMode ? '***' : item.value.toFixed(0)} {settings.currency || 'Kč'}</span>
+                            <span className="text-sm font-bold text-theme-text shrink-0">{settings.privacyMode ? '***' : item.value.toFixed(0)} {settings.currency || 'Kč'}</span>
                           </div>
                         ))}
                       </div>
@@ -2815,9 +3229,9 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                           <span className="text-xs font-bold text-md3-primary bg-md3-primary/10 px-2 py-1 rounded-lg">
                             Celkem: {group.totalAmount.toFixed(1)} {substance.unit}
                           </span>
-                          {substance.activeIngredientName && calculateActiveIngredient(group.doses, substance) > 0 && (
+                          {renderActiveIngredientsString(group.doses, substance) && (
                             <span className="text-[10px] font-bold text-md3-primary mt-1">
-                              {calculateActiveIngredient(group.doses, substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                              {renderActiveIngredientsString(group.doses, substance)}
                             </span>
                           )}
                         </div>
@@ -2834,21 +3248,41 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                   {dose.amount} {substance.unit}
                                   {dose.strainId && <span className="text-xs text-md3-primary ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
                                 </div>
-                                {substance.activeIngredientName && calculateActiveIngredient([dose], substance) > 0 && (
+                                {renderActiveIngredientsString([dose], substance) && (
                                   <div className="text-[10px] font-bold text-md3-primary mt-0.5">
-                                    {calculateActiveIngredient([dose], substance).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                    {renderActiveIngredientsString([dose], substance)}
                                   </div>
                                 )}
                                 <div className="flex items-center gap-2 mt-0.5">
                                   <div className="text-xs text-md3-gray font-bold uppercase tracking-wider">
                                     {formatTime(dose.timestamp, settings)}
                                   </div>
-                                  {dose.rating && (
-                                    <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest">
-                                      • Hodnocení: <span className="text-theme-text">{dose.rating}/5</span>
-                                    </div>
-                                  )}
                                 </div>
+                                {dose.customFieldValues && Object.keys(dose.customFieldValues).length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {Object.entries(dose.customFieldValues).map(([fieldId, value]) => {
+                                      const field = substance.customFields?.find(f => f.id === fieldId);
+                                      if (!field || value === false || value === '' || value === undefined) return null;
+                                      
+                                      let displayValue = value;
+                                      if (field.type === 'boolean') {
+                                        displayValue = field.name;
+                                      } else if (field.type === 'rating') {
+                                        displayValue = `${field.name}: ${value}/5`;
+                                      } else if (field.type === 'number') {
+                                        displayValue = `${field.name}: ${value}${field.unit || ''}`;
+                                      } else if (field.type === 'text' || field.type === 'select') {
+                                        displayValue = `${field.name}: ${value}`;
+                                      }
+
+                                      return (
+                                        <span key={fieldId} className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20">
+                                          {displayValue}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="text-right">

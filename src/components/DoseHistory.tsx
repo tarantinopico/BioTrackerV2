@@ -52,57 +52,56 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
   return (
     <div className="space-y-4 relative pb-10">
       {/* Decorative Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[30%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[15%] right-[-10%] w-[35%] h-[35%] bg-purple-500/10 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 mix-blend-screen dark:mix-blend-color-dodge">
+        <div className="absolute top-[30%] left-[-10%] w-[40%] h-[40%] bg-md3-primary/10 blur-[100px] rounded-full animate-blob transform-gpu will-change-transform" />
       </div>
 
-      <div className="flex items-center justify-between px-2 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-cyan-primary/10 shadow-[0_0_15px_rgba(0,209,255,0.1)]">
-            <Clock size={20} className="text-cyan-primary" />
+      <div className="flex items-center justify-between px-1 relative z-10">
+        <div className="flex items-center gap-2">
+          <div className="p-2.5 rounded-xl bg-md3-primary/10 border border-md3-primary/20">
+            <Clock size={16} className="text-md3-primary" />
           </div>
           <div>
-            <h2 className="text-xs font-bold text-md3-gray uppercase tracking-wider">Časová osa</h2>
-            <div className="text-2xl font-bold text-theme-text leading-tight tracking-tight">Historie dávek</div>
+            <h2 className="text-[9px] font-black text-md3-gray uppercase tracking-[0.2em]">Kinetika v čase</h2>
+            <div className="text-lg font-black text-theme-text leading-none tracking-tight mt-0.5">Historie</div>
           </div>
         </div>
         <button 
           onClick={onClearAll}
-          className="px-4 py-2 rounded-xl text-xs font-bold text-red-500 uppercase tracking-wider hover:bg-red-500/10 transition-all active:scale-95 border border-red-500/20"
+          className="px-3 py-1.5 rounded-[1rem] text-[9px] font-black text-red-500 uppercase tracking-[0.2em] hover:bg-red-500/10 transition-all active:scale-95 border border-red-500/20"
         >
-          Vymazat vše
+          Smazat
         </button>
       </div>
 
       {/* Search and Filter */}
       {doses.length > 0 && (
-        <div className="relative z-10 space-y-3">
+        <div className="relative z-10 space-y-2">
           <div className="relative">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-md3-gray" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-md3-gray" />
             <input 
               type="text" 
-              placeholder="Hledat látku, poznámku..." 
+              placeholder="Filtrovat..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-theme-subtle border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all text-theme-text"
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-theme-subtle border border-theme-border text-xs outline-none focus:border-md3-primary transition-all text-theme-text font-medium"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray hover:text-theme-text"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-md3-gray hover:text-theme-text"
               >
-                <X size={14} />
+                <X size={12} />
               </button>
             )}
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => setSelectedSubstanceId('all')}
               className={cn(
-                "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+                "px-3 py-1.5 rounded-[0.85rem] text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border",
                 selectedSubstanceId === 'all' 
-                  ? "bg-theme-border border-cyan-primary text-cyan-primary" 
+                  ? "bg-theme-border border-md3-primary text-md3-primary" 
                   : "bg-theme-subtle border-theme-border text-md3-gray hover:text-theme-text"
               )}
             >
@@ -123,9 +122,9 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                   key={subId}
                   onClick={() => setSelectedSubstanceId(subId)}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all border",
+                    "px-3 py-1.5 rounded-[0.85rem] text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border",
                     isActive 
-                      ? "bg-theme-border border-cyan-primary text-cyan-primary" 
+                      ? "bg-theme-border border-md3-primary text-md3-primary" 
                       : "bg-theme-subtle border-theme-border text-md3-gray hover:text-theme-text"
                   )}
                   style={isActive ? { borderColor: substance.color, color: substance.color } : {}}
@@ -139,12 +138,15 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
       )}
 
       {filteredDoses.length === 0 ? (
-        <div className="p-12 text-center bg-theme-subtle backdrop-blur-md rounded-[2rem] border border-theme-border border-dashed relative z-10 shadow-lg">
-          <div className="w-16 h-16 bg-theme-subtle rounded-2xl flex items-center justify-center mx-auto mb-4 border border-theme-border shadow-inner">
-            <Clock size={32} className="text-md3-gray" />
+        <div className="p-12 text-center bg-theme-subtle backdrop-blur-md rounded-[2rem] border border-theme-border shadow-lg relative z-10 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-theme-bg rounded-2xl flex items-center justify-center mb-4 border border-theme-border shadow-inner relative overflow-hidden">
+             <Clock size={28} className="text-md3-gray relative z-10" />
+             <div className="absolute inset-0 bg-gradient-to-br from-transparent to-md3-primary/10" />
           </div>
-          <span className="text-sm text-md3-gray font-bold uppercase tracking-wider">Žádné záznamy</span>
-          <p className="text-xs text-md3-gray font-medium mt-2">Zatím jste nic nezaznamenali</p>
+          <span className="text-sm text-theme-text font-bold uppercase tracking-wider">Historie zeje prázdnotou</span>
+          <p className="text-xs text-md3-gray font-medium mt-2 max-w-[200px] leading-relaxed">
+            Zatím tu nic neruší vaši rovnováhu. První krok začíná u vás.
+          </p>
         </div>
       ) : (
         <div className="space-y-8 relative z-10">
@@ -174,37 +176,27 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                     <div 
                       key={dose.id} 
                       className={cn(
-                        "bg-theme-subtle backdrop-blur-md border border-theme-border flex items-center justify-between group hover:bg-theme-subtle-hover transition-all shadow-sm",
-                        settings.compactMode ? "rounded-xl p-2" : "rounded-2xl p-4"
+                        "bg-theme-card/60 backdrop-blur-md border border-theme-border flex items-center justify-between group hover:bg-theme-subtle transition-all shadow-sm rounded-xl p-2.5",
                       )}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         {(() => {
                           const IconComponent = getIconComponent(substance.icon);
                           const strainColor = dose.strainId ? substance.strains?.find(s => s.name === dose.strainId)?.color : undefined;
                           const color = strainColor || substance.color || '#00d1ff';
                           return (
-                            <div className={cn(
-                              "bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-105 transition-transform shadow-inner",
-                              settings.compactMode ? "w-8 h-8 rounded-lg" : "w-12 h-12 rounded-xl"
-                            )}>
-                              <IconComponent size={settings.compactMode ? 16 : 24} style={{ color }} />
+                            <div className="bg-theme-subtle flex items-center justify-center border border-theme-border group-hover:scale-105 transition-transform shadow-inner w-8 h-8 rounded-lg shrink-0">
+                              <IconComponent size={14} style={{ color }} />
                             </div>
                           );
                         })()}
-                        <div>
-                          <div className={cn(
-                            "font-bold text-theme-text leading-tight tracking-tight",
-                            settings.compactMode ? "text-sm" : "text-base"
-                          )}>
+                        <div className="flex flex-col">
+                          <div className="font-black text-theme-text leading-none tracking-tight text-xs flex items-baseline flex-wrap gap-1">
                             {substance.name}
-                            {dose.strainId && <span className="text-xs text-md3-gray ml-2 font-bold uppercase tracking-wider opacity-80">({dose.strainId})</span>}
+                            {dose.strainId && <span className="text-[9px] text-md3-gray font-black uppercase tracking-widest opacity-80">({dose.strainId})</span>}
                           </div>
-                          <div className={cn(
-                            "text-md3-gray font-medium",
-                            settings.compactMode ? "text-[10px] mt-0.5" : "text-xs mt-1"
-                          )}>
-                            <span className="text-theme-text font-bold">{dose.amount.toFixed(1)}{substance.unit}</span> • <span className="text-md3-gray">{formatTime(dose.timestamp, settings)}</span>
+                          <div className="text-md3-gray font-black text-[9px] uppercase tracking-widest mt-1 leading-none">
+                            <span className="text-theme-text">{dose.amount.toFixed(1)}{substance.unit}</span> • <span>{formatTime(dose.timestamp, settings)}</span>
                             {dose.route && ` • ${dose.route}`}
                           </div>
                           {(() => {
@@ -212,10 +204,7 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                             const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage;
                             if (substance.activeIngredientName && activePct) {
                               return (
-                                <div className={cn(
-                                  "text-md3-primary font-bold",
-                                  settings.compactMode ? "text-[10px] mt-0.5" : "text-xs mt-1"
-                                )}>
+                                <div className="text-md3-primary font-black text-[8px] uppercase tracking-widest mt-0.5">
                                   {((dose.amount * activePct) / 100).toFixed(2)}{substance.unit} {substance.activeIngredientName}
                                 </div>
                               );
@@ -223,13 +212,35 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                             return null;
                           })()}
                           {!settings.compactMode && dose.note && (
-                            <div className="mt-2 text-xs text-md3-gray italic leading-tight border-l-2 border-theme-border pl-3 py-0.5">
+                            <div className="mt-1.5 text-[10px] font-medium text-md3-gray italic leading-tight border-l border-theme-border pl-2 py-0.5">
                               {dose.note}
                             </div>
                           )}
-                          {!settings.compactMode && dose.rating && (
-                            <div className="mt-1 text-[10px] font-bold text-md3-gray uppercase tracking-widest">
-                              Hodnocení: <span className="text-theme-text">{dose.rating}/5</span>
+                          {!settings.compactMode && dose.customFieldValues && Object.keys(dose.customFieldValues).length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {Object.entries(dose.customFieldValues).map(([fieldId, value]) => {
+                                const field = substance.customFields?.find(f => f.id === fieldId);
+                                if (!field || value === false || value === '' || value === undefined) return null;
+                                
+                                let displayValue = value;
+                                if (field.type === 'boolean') {
+                                  displayValue = field.name;
+                                } else if (field.type === 'rating') {
+                                  displayValue = `${field.name}: ${value}/5`;
+                                } else if (field.type === 'number') {
+                                  displayValue = `${field.name}: ${value}${field.unit || ''}`;
+                                } else if (field.type === 'multiselect') {
+                                  displayValue = `${field.name}: ${Array.isArray(value) ? value.join(', ') : value}`;
+                                } else if (field.type === 'text' || field.type === 'select') {
+                                  displayValue = `${field.name}: ${value}`;
+                                }
+
+                                return (
+                                  <span key={fieldId} className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20">
+                                    {displayValue}
+                                  </span>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -239,8 +250,8 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                         <button 
                           onClick={() => setEditingDose(dose)}
                           className={cn(
-                            "rounded-xl hover:bg-cyan-primary/10 text-md3-gray hover:text-cyan-primary transition-all opacity-0 group-hover:opacity-100 active:scale-90",
-                            settings.compactMode ? "p-1.5" : "p-2"
+                            "rounded-xl hover:bg-cyan-primary/10 text-md3-gray hover:text-cyan-primary transition-all active:scale-90 bg-theme-subtle border border-theme-border shadow-sm",
+                            settings.compactMode ? "p-1.5" : "p-2.5"
                           )}
                         >
                           <Edit2 size={settings.compactMode ? 14 : 16} />
@@ -248,8 +259,8 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                         <button 
                           onClick={() => onDeleteDose(dose.id)}
                           className={cn(
-                            "rounded-xl hover:bg-red-500/10 text-md3-gray hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 active:scale-90",
-                            settings.compactMode ? "p-1.5" : "p-2"
+                            "rounded-xl hover:bg-red-500/10 text-md3-gray hover:text-red-500 transition-all active:scale-90 bg-theme-subtle border border-theme-border shadow-sm",
+                            settings.compactMode ? "p-1.5" : "p-2.5"
                           )}
                         >
                           <Trash2 size={settings.compactMode ? 14 : 16} />

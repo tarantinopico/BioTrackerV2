@@ -118,7 +118,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
             className={cn(
               "px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap active:scale-95",
               selectedCategory === cat 
-                ? "bg-cyan-primary border-transparent text-black shadow-[0_0_15px_rgba(0,209,255,0.4)] scale-105" 
+                ? "bg-md3-primary border-transparent text-theme-bg shadow-[0_0_15px_var(--md3-primary-30)] scale-105 glow-effects-enabled:shadow-[0_0_15px_var(--md3-primary-30)]" 
                 : "bg-theme-subtle backdrop-blur-xl border-theme-border text-md3-gray hover:text-theme-text hover:bg-theme-subtle-hover"
             )}
           >
@@ -131,8 +131,8 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
       <section className="bg-theme-subtle backdrop-blur-md rounded-[2rem] p-6 border border-theme-border relative z-10 shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-cyan-primary/10 shadow-[0_0_15px_rgba(0,209,255,0.1)]">
-              <Database className="w-6 h-6 text-cyan-primary" />
+            <div className="p-3 rounded-2xl bg-md3-primary/10 shadow-[0_0_15px_var(--md3-primary-10)]">
+              <Database className="w-6 h-6 text-md3-primary" />
             </div>
             <div>
               <h2 className="text-xs font-bold text-md3-gray uppercase tracking-wider">Databáze</h2>
@@ -141,9 +141,9 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
           </div>
           <button 
             onClick={() => onEditSubstance('new')}
-            className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)] active:scale-90 transition-all hover:scale-105"
+            className="w-12 h-12 rounded-2xl bg-md3-primary flex items-center justify-center shadow-lg active:scale-90 transition-all hover:scale-105 hover:shadow-xl glow-effects-enabled:shadow-[0_0_20px_var(--md3-primary-20)]"
           >
-            <Plus className="w-6 h-6 text-black" strokeWidth={3} />
+            <Plus className="w-6 h-6 text-theme-bg" strokeWidth={3} />
           </button>
         </div>
 
@@ -162,8 +162,15 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
         
         <div className="space-y-3">
           {filteredSubstances.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-theme-border rounded-2xl bg-theme-subtle">
-              <span className="text-sm text-md3-gray font-bold uppercase tracking-wider">Žádné látky</span>
+            <div className="py-12 text-center bg-theme-subtle backdrop-blur-md rounded-[2rem] border border-theme-border shadow-lg relative z-10 flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-theme-bg rounded-2xl flex items-center justify-center mb-4 border border-theme-border shadow-inner relative overflow-hidden">
+                 <FlaskConical size={28} className="text-md3-gray relative z-10" />
+                 <div className="absolute inset-0 bg-gradient-to-br from-transparent to-md3-primary/10" />
+              </div>
+              <span className="text-sm text-theme-text font-bold uppercase tracking-wider">Laboratoř je prázdná</span>
+              <p className="text-xs text-md3-gray font-medium mt-2 max-w-[200px] leading-relaxed">
+                Přidejte svou první látku nebo využijte knihovnu šablon.
+              </p>
             </div>
           ) : (
             filteredSubstances.map(substance => {
@@ -172,59 +179,59 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
               <div 
                 key={substance.id} 
                 onClick={() => onEditSubstance(substance.id)}
-                className="bg-theme-subtle border border-theme-border rounded-2xl p-4 flex items-center gap-4 cursor-pointer hover:bg-theme-subtle-hover transition-all group relative overflow-hidden shadow-sm"
+                className="bg-theme-subtle border border-theme-border rounded-xl p-2.5 flex items-center gap-3 cursor-pointer hover:bg-theme-subtle-hover transition-all group relative overflow-hidden shadow-sm"
               >
-                <div className="absolute top-0 left-0 w-1.5 h-full shadow-[2px_0_10px_rgba(0,0,0,0.2)]" style={{ backgroundColor: substance.color || '#00d1ff' }} />
+                <div className="absolute top-0 left-0 w-1 h-full shadow-[2px_0_10px_rgba(0,0,0,0.2)]" style={{ backgroundColor: substance.color || '#00d1ff' }} />
                 
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-theme-subtle border border-theme-border shadow-inner">
-                  <IconComponent size={24} style={{ color: substance.color || '#00d1ff' }} />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-theme-subtle border border-theme-border shadow-inner shrink-0">
+                  <IconComponent size={14} style={{ color: substance.color || '#00d1ff' }} />
                 </div>
                 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-theme-text truncate text-base tracking-tight">{substance.name}</h3>
+                <div className="flex-1 min-w-0 py-0.5">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h3 className="font-black text-theme-text truncate text-xs tracking-tight">{substance.name}</h3>
                     <span className={cn(
-                      "text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-theme-subtle text-md3-gray border border-theme-border"
+                      "text-[8px] uppercase font-black tracking-widest px-1.5 py-0.5 rounded border border-theme-border text-md3-gray bg-theme-bg"
                     )}>
                       {substance.category}
                     </span>
                     {substance.stash !== undefined && (
-                      <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-md border border-theme-border text-md3-gray ml-auto">
+                      <span className="text-[8px] uppercase font-black tracking-widest px-1.5 py-0.5 rounded border border-theme-border text-md3-gray ml-auto bg-theme-bg">
                         Zásoba: <span style={{ color: substance.color }}>{substance.stash.toFixed(1)}{substance.unit}</span>
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-md3-gray font-medium uppercase tracking-wider mb-1">
-                    T₁/₂: <span className="text-theme-text font-bold">{substance.halfLife}h</span> • Tmax: <span className="text-theme-text font-bold">{substance.tmax}h</span>
+                  <div className="text-[9px] text-md3-gray font-black uppercase tracking-[0.2em] mb-1">
+                    T₁/₂: <span className="text-theme-text">{substance.halfLife}h</span> • Tmax: <span className="text-theme-text">{substance.tmax}h</span>
                   </div>
                   {substance.tags && substance.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {substance.tags.map(tag => (
-                        <span key={tag} className="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-theme-subtle border border-theme-border text-md3-gray">
+                        <span key={tag} className="text-[8px] uppercase font-black tracking-widest px-1 py-0.5 rounded bg-theme-bg border border-theme-border text-md3-gray">
                           {tag}
                         </span>
                       ))}
                     </div>
                   )}
                   {substance.description && (
-                    <div className="text-[10px] text-md3-gray mt-1.5 line-clamp-1">
+                    <div className="text-[9px] text-md3-gray mt-1 line-clamp-1 italic font-medium">
                       {substance.description}
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleFavorite(substance.id);
                     }}
                     className={cn(
-                      "p-2 rounded-xl transition-all active:scale-90",
+                      "p-1.5 rounded-lg transition-all active:scale-90",
                       substance.isFavorite ? "text-amber-400 bg-amber-400/10 shadow-[0_0_15px_rgba(251,191,36,0.2)]" : "text-md3-gray hover:text-amber-400 hover:bg-amber-400/5"
                     )}
                   >
-                    <Star size={16} fill={substance.isFavorite ? "currentColor" : "none"} />
+                    <Star size={14} fill={substance.isFavorite ? "currentColor" : "none"} />
                   </button>
                   {substance.packageSize !== undefined && (
                     <button 
@@ -232,10 +239,10 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
                         e.stopPropagation();
                         onRestockSubstance(substance.id);
                       }}
-                      className="p-2 rounded-xl hover:bg-cyan-500/10 text-md3-gray hover:text-cyan-primary transition-all active:scale-90"
+                      className="p-1.5 rounded-lg hover:bg-md3-primary/10 text-md3-gray hover:text-md3-primary transition-all active:scale-90"
                       title={`Doplnit zásobu (+${substance.packageSize}${substance.unit})`}
                     >
-                      <Package size={16} />
+                      <Package size={14} />
                     </button>
                   )}
                   <button 
@@ -247,7 +254,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
                   >
                     <Trash2 size={16} />
                   </button>
-                  <ChevronRight size={18} className="text-md3-gray group-hover:text-cyan-primary transition-all group-hover:translate-x-1" />
+                  <ChevronRight size={18} className="text-md3-gray group-hover:text-md3-primary transition-all group-hover:translate-x-1" />
                 </div>
               </div>
               );

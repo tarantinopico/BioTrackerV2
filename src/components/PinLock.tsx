@@ -91,12 +91,12 @@ export default function PinLock({ correctPin, onUnlock, isSettingPin, onSetPin, 
           ))}
         </div>
 
-        <div className="grid grid-cols-3 gap-4 w-full max-w-[260px]">
+        <div className="grid grid-cols-3 gap-6 w-full max-w-[280px]">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
             <button
               key={num}
               onClick={() => handleNumberClick(num.toString())}
-              className="w-full aspect-square rounded-full flex items-center justify-center text-2xl font-bold text-theme-text bg-theme-card hover:bg-theme-subtle-hover active:scale-95 transition-all shadow-sm"
+              className="w-full aspect-square rounded-full flex items-center justify-center text-3xl font-black text-theme-text bg-theme-subtle hover:bg-theme-subtle-hover active:scale-90 transition-all border border-theme-border shadow-sm touch-manipulation"
             >
               {num}
             </button>
@@ -105,7 +105,7 @@ export default function PinLock({ correctPin, onUnlock, isSettingPin, onSetPin, 
             {isSettingPin && onCancel && (
               <button 
                 onClick={onCancel}
-                className="text-sm font-bold text-md3-gray hover:text-theme-text transition-colors"
+                className="text-sm font-bold text-md3-gray hover:text-theme-text transition-colors p-4"
               >
                 Zrušit
               </button>
@@ -113,15 +113,15 @@ export default function PinLock({ correctPin, onUnlock, isSettingPin, onSetPin, 
           </div>
           <button
             onClick={() => handleNumberClick('0')}
-            className="w-full aspect-square rounded-full flex items-center justify-center text-2xl font-bold text-theme-text bg-theme-card hover:bg-theme-subtle-hover active:scale-95 transition-all shadow-sm"
+            className="w-full aspect-square rounded-full flex items-center justify-center text-3xl font-black text-theme-text bg-theme-subtle hover:bg-theme-subtle-hover active:scale-90 transition-all border border-theme-border shadow-sm touch-manipulation"
           >
             0
           </button>
           <button
             onClick={handleDelete}
-            className="w-full aspect-square rounded-full flex items-center justify-center text-theme-text bg-theme-card hover:bg-theme-subtle-hover active:scale-95 transition-all shadow-sm"
+            className="w-full aspect-square rounded-full flex items-center justify-center text-theme-text bg-theme-subtle hover:bg-theme-subtle-hover active:scale-90 transition-all border border-theme-border shadow-sm touch-manipulation"
           >
-            <Delete size={24} />
+            <Delete size={28} />
           </button>
         </div>
       </motion.div>

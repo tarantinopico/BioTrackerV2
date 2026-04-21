@@ -586,68 +586,43 @@ export default function App() {
   return (
     <MotionConfig transition={{ duration: settings.animations === false ? 0 : undefined }}>
       <div className={cn(
-        "max-w-md mx-auto min-h-screen flex flex-col relative font-sans selection:bg-md3-primary/30 pb-28 transition-colors duration-500",
+        "max-w-md mx-auto min-h-[100dvh] h-[100dvh] flex flex-col relative font-sans selection:bg-md3-primary/30 overflow-hidden transition-colors duration-300",
         settings.glassEffects !== false ? "glass-effects-enabled" : "",
         settings.glowEffects !== false ? "glow-effects-enabled" : ""
       )}>
         {/* Ambient Background */}
         {settings.ambientBackground !== false && (
-          <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1]">
-            <div className={cn(
-              "absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full filter blur-[100px] opacity-20",
-              "bg-md3-primary",
-              settings.animations !== false && "animate-blob"
-            )} />
-            <div className={cn(
-              "absolute top-[20%] right-[-10%] w-[60%] h-[60%] rounded-full filter blur-[120px] opacity-20",
-              "bg-purple-500",
-              settings.animations !== false && "animate-blob animation-delay-2000"
-            )} />
-            <div className={cn(
-              "absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full filter blur-[150px] opacity-20",
-              "bg-blue-500",
-              settings.animations !== false && "animate-blob animation-delay-4000"
-            )} />
+          <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1] will-change-transform transform-gpu">
+            <div className="absolute inset-0 blur-[100px] opacity-[0.25] mix-blend-screen dark:mix-blend-color-dodge">
+              <div className={cn(
+                "absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full",
+                "bg-md3-primary",
+                settings.animations !== false && "animate-blob"
+              )} />
+              <div className={cn(
+                "absolute top-[20%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-80",
+                "bg-cyan-primary",
+                settings.animations !== false && "animate-blob animation-delay-2000"
+              )} />
+              <div className={cn(
+                "absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full opacity-60",
+                "bg-md3-primary-container",
+                settings.animations !== false && "animate-blob animation-delay-4000"
+              )} />
+            </div>
           </div>
         )}
 
-        {/* Header */}
-      <header className="px-4 pt-10 pb-3 flex justify-between items-end sticky top-0 z-50 bg-md3-bg/80 backdrop-blur-xl border-b border-md3-border">
-        <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", systemLoad.color.replace('bg-', 'bg-'))} />
-            <span className="text-xs font-bold text-md3-gray uppercase tracking-widest">{systemLoad.label}</span>
-          </div>
-          <h1 className={cn(
-            "text-2xl font-bold tracking-tight",
-            settings.ambientBackground !== false 
-              ? "bg-gradient-to-r from-md3-text to-md3-gray bg-clip-text text-transparent" 
-              : "text-md3-text"
-          )}>
-            BioTracker
-          </h1>
-        </div>
-        <button 
-          onClick={() => setView('settings')}
-          className={cn(
-            "p-1.5 rounded-full md3-button transition-colors",
-            view === 'settings' ? "bg-md3-primary text-theme-bg" : "bg-md3-secondary text-md3-gray hover:text-md3-text"
-          )}
-        >
-          <SettingsIcon size={20} />
-        </button>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 px-4 pt-4">
-        <AnimatePresence mode="wait">
+        {/* Removed Header - Directly jumping to Main Content for a clean layout */}
+        <main className={cn("flex-1 overflow-y-auto no-scrollbar pb-[90px]", view === 'dashboard' ? 'px-2 pt-2' : 'px-4 pt-6')}>
+          <AnimatePresence mode="wait">
           <motion.div
             key={view}
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="space-y-6"
+            className={cn("h-full", view !== 'dashboard' && "space-y-4")}
           >
             {view === 'dashboard' && (
               <Dashboard 
@@ -722,32 +697,45 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation - Material 3 Style */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-md3-card/90 backdrop-blur-md border-t border-md3-border px-2 pt-2 pb-4 flex justify-around items-center z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-theme-bg/95 backdrop-blur-3xl border-t border-theme-border flex justify-around items-center z-50 pb-safe will-change-transform transform-gpu px-1 shadow-[0_-5px_20px_-10px_rgba(0,0,0,0.5)]" style={{ height: '64px' }}>
         {[
           { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
-          { id: 'logger', icon: PlusCircle, label: 'Záznam' },
+          { id: 'logger', icon: PlusCircle, label: 'Zapsat' },
+          { id: 'substances', icon: Database, label: 'Látky' },
           { id: 'history', icon: History, label: 'Historie' },
           { id: 'analytics', icon: BarChart2, label: 'Analýza' },
-          { id: 'substances', icon: FlaskConical, label: 'Látky' },
+          { id: 'settings', icon: SettingsIcon, label: 'Nastavení' },
         ].map((item) => {
           const isActive = view === item.id;
           return (
             <button
               key={item.id}
-              onClick={() => setView(item.id as ViewType)}
+              onClick={() => {
+                if (navigator.vibrate) navigator.vibrate(10); // Subtle haptic feedback
+                setView(item.id as ViewType);
+              }}
               className={cn(
-                "flex flex-col items-center gap-1 w-16 md3-button py-1",
+                "flex flex-col items-center justify-center flex-1 h-full active:scale-95 transition-transform",
                 isActive ? 'text-md3-text' : 'text-md3-gray'
               )}
             >
               <div className={cn(
-                "px-4 py-1 rounded-full transition-all duration-300",
+                "w-12 h-8 rounded-xl transition-all duration-300 relative flex items-center justify-center mb-1",
                 isActive ? "bg-md3-primary/20 text-md3-primary" : "bg-transparent text-md3-gray",
-                isActive && settings.glassEffects !== false && "drop-shadow-[0_0_8px_var(--md3-primary)]"
               )}>
-                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                {isActive && (
+                  <motion.div 
+                    layoutId="activeTabBadge" 
+                    className="absolute inset-0 bg-md3-primary/20 rounded-xl" 
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                {item.id === 'settings' && settings.privacyMode && !isActive && (
+                    <div className="absolute top-1 right-2 w-2 h-2 bg-md3-primary rounded-full border-2 border-theme-bg shadow-sm" />
+                )}
+                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
               </div>
-              <span className={cn("text-xs font-medium", isActive ? "font-bold" : "")}>{item.label}</span>
+              <span className={cn("text-[9px] font-black uppercase tracking-wider transition-all scale-90", isActive ? "text-md3-primary" : "opacity-70")}>{item.label}</span>
             </button>
           );
         })}

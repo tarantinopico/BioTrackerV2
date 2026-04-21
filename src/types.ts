@@ -31,9 +31,24 @@ export type MetabolismCurveType =
 
 export type Valence = 'positive' | 'negative' | 'neutral';
 
+export type CustomFieldType = 'boolean' | 'select' | 'multiselect' | 'number' | 'rating' | 'text';
+
+export interface CustomFieldDef {
+  id: string;
+  name: string;
+  type: CustomFieldType;
+  options?: string[];
+  unit?: string;
+}
+
 export interface CurvePoint {
   time: number;
   level: number;
+}
+
+export interface ActiveIngredient {
+  name: string;
+  percentage: number;
 }
 
 export interface Strain {
@@ -41,6 +56,7 @@ export interface Strain {
   price: number;
   color?: string;
   activeIngredientPercentage?: number;
+  activeIngredients?: ActiveIngredient[];
 }
 
 export interface Effect {
@@ -83,6 +99,7 @@ export interface Substance {
   comedownSymptoms: string[];
   activeIngredientName?: string;
   activeIngredientPercentage?: number;
+  activeIngredients?: ActiveIngredient[];
   strains: Strain[];
   effects: Effect[];
   interactions: string[];
@@ -113,6 +130,7 @@ export interface Substance {
   stash?: number;
   defaultRoute?: string;
   tags?: string[];
+  customFields?: CustomFieldDef[];
 }
 
 export interface Dose {
@@ -126,14 +144,7 @@ export interface Dose {
   strainId?: string | null;
   bioavailabilityMultiplier: number;
   tmaxMultiplier: number;
-  mood?: number; // 1-5
-  sleepQuality?: number; // 1-5
-  hydration?: number; // 1-5
-  purpose?: 'medical' | 'recreational' | 'functional' | 'spiritual' | 'other';
-  environment?: 'home' | 'social' | 'work' | 'nature' | 'other';
-  heartRate?: number;
-  bloodPressure?: string;
-  rating?: number; // 1-5
+  customFieldValues?: Record<string, any>;
 }
 
 export interface UserSettings {
