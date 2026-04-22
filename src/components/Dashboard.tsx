@@ -571,10 +571,12 @@ export default function Dashboard({
                   const lastDoseDate = lastDose ? new Date(lastDose.timestamp) : null;
                   let lastUsedText = '';
                   if (lastDoseDate) {
-                     const diffHrs = Math.floor((now - lastDoseDate.getTime()) / (1000 * 60 * 60));
-                     if (diffHrs === 0) lastUsedText = '< 1h';
-                     else if (diffHrs < 24) lastUsedText = `${diffHrs}h`;
-                     else lastUsedText = `${lastDoseDate.getDate()}.${lastDoseDate.getMonth() + 1}.`;
+                     const diffMs = now - lastDoseDate.getTime();
+                     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                     const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                     if (diffHrs === 0) lastUsedText = `${diffMins}m`;
+                     else if (diffHrs < 24) lastUsedText = `${diffHrs}h ${diffMins}m`;
+                     else lastUsedText = `${lastDoseDate.getDate()}.${lastDoseDate.getMonth() + 1}. v ${lastDoseDate.getHours()}:${lastDoseDate.getMinutes().toString().padStart(2, '0')}`;
                   }
 
                   return (

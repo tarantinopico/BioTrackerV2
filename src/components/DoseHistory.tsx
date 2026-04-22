@@ -1,9 +1,10 @@
 import { Clock, Trash2, Calendar, Edit2, X, Check, Search, Filter } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Dose, Substance, UserSettings } from '../types';
-import { cn, formatTime } from '../lib/utils';
+import { cn, formatTime, formatAmount } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { getIconComponent } from './Substances';
+import { calculateActiveIngredients } from './Analytics';
 
 interface HistoryProps {
   doses: Dose[];
@@ -196,16 +197,20 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                             {dose.strainId && <span className="text-[9px] text-md3-gray font-black uppercase tracking-widest opacity-80">({dose.strainId})</span>}
                           </div>
                           <div className="text-md3-gray font-black text-[9px] uppercase tracking-widest mt-1 leading-none">
-                            <span className="text-theme-text">{dose.amount.toFixed(1)}{substance.unit}</span> • <span>{formatTime(dose.timestamp, settings)}</span>
+                            <span className="text-theme-text">{formatAmount(dose.amount, substance.unit, 1)}</span> • <span>{formatTime(dose.timestamp, settings)}</span>
                             {dose.route && ` • ${dose.route}`}
                           </div>
                           {(() => {
-                            const strain = dose.strainId ? substance.strains?.find(s => s.name === dose.strainId) : null;
-                            const activePct = strain?.activeIngredientPercentage ?? substance.activeIngredientPercentage;
-                            if (substance.activeIngredientName && activePct) {
+                            const activeSums = calculateActiveIngredients([dose], substance);
+                            const activeNames = Object.keys(activeSums);
+                            if (activeNames.length > 0) {
                               return (
-                                <div className="text-md3-primary font-black text-[8px] uppercase tracking-widest mt-0.5">
-                                  {((dose.amount * activePct) / 100).toFixed(2)}{substance.unit} {substance.activeIngredientName}
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {activeNames.map((name, i) => (
+                                    <div key={i} className="text-md3-primary font-black text-[8px] uppercase tracking-widest bg-md3-primary/10 px-1 py-0.5 rounded">
+                                      {formatAmount(activeSums[name], substance.unit, 2)} {name}
+                                    </div>
+                                  ))}
                                 </div>
                               );
                             }

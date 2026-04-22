@@ -19,3 +19,10 @@ export function formatTime(date: Date | string | number, settings: UserSettings)
     hour12: !settings.timeFormat24h
   });
 }
+
+export function formatAmount(amount: number, unit: string, decimals: number = 2): string {
+  if (unit.toLowerCase() === 'g' && amount > 0 && amount < 1) {
+    return `${(amount * 1000).toFixed(0)} mg`;
+  }
+  return `${parseFloat(amount.toFixed(decimals))} ${unit}`;
+}

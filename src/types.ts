@@ -208,6 +208,12 @@ export interface UserSettings {
   // Data
   autoBackup?: 'none' | 'daily' | 'weekly' | 'monthly';
 
+  // Analytics
+  smartPredictions?: boolean;
+  predictiveAnalytics?: boolean;
+  insightEngine?: boolean;
+  predictionAlgorithm?: 'basic' | 'exponential' | 'ml_simulated';
+
   // Security
   pinCode?: string | null;
   requirePin?: boolean;

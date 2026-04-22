@@ -719,6 +719,60 @@ export default function Settings({
           {/* DATA TAB */}
           {activeTab === 'data' && (
             <div className="space-y-6">
+              {/* Analytics Settings */}
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <BarChart3 size={16} className="text-md3-primary" /> Pokročilá Analytika & AI
+                </h3>
+                <div className="space-y-3">
+                  {[
+                    { id: 'smartPredictions', label: 'Chytré Predikce', icon: Sparkles },
+                    { id: 'insightEngine', label: 'Insight Engine (Algoritmy)', icon: Cpu },
+                    { id: 'predictiveAnalytics', label: 'Prediktivní Kalkulace Ceny', icon: LineChart },
+                  ].map(item => (
+                    <button 
+                      key={item.id} 
+                      onClick={() => updateSetting(item.id as keyof UserSettings, !(settings as any)[item.id])}
+                      className={cn(
+                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                        (settings as any)[item.id] 
+                          ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                          : "bg-theme-subtle border-theme-border text-md3-gray"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon size={18} />
+                        <span className="font-bold text-sm">{item.label}</span>
+                      </div>
+                      <div className={cn(
+                        "w-10 h-6 rounded-full p-1 transition-all",
+                        (settings as any)[item.id] ? "bg-md3-primary" : "bg-theme-border"
+                      )}>
+                        <div className={cn(
+                          "w-4 h-4 rounded-full bg-white transition-all",
+                          (settings as any)[item.id] ? "translate-x-4" : "translate-x-0"
+                        )} />
+                      </div>
+                    </button>
+                  ))}
+                  <div className="space-y-2 mt-4 pt-4 border-t border-theme-border">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Predikční Algoritmus</label>
+                    <div className="relative">
+                      <select 
+                        value={settings.predictionAlgorithm || 'basic'} 
+                        onChange={e => updateSetting('predictionAlgorithm', e.target.value)}
+                        className="w-full md3-input appearance-none bg-theme-bg"
+                      >
+                        <option value="basic">Základní Aritmetický</option>
+                        <option value="exponential">Exponenciální Vyrovnávání</option>
+                        <option value="ml_simulated">Strojové Učení (Simulované)</option>
+                      </select>
+                      <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="md3-card p-5 space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
                   <Database size={16} className="text-md3-primary" /> Správa dat

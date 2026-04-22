@@ -15,7 +15,7 @@ import {
   Utensils
 } from 'lucide-react';
 import { Substance, Dose, UserSettings } from '../types';
-import { cn } from '../lib/utils';
+import { cn, formatAmount } from '../lib/utils';
 import { ROUTE_MULTIPLIERS, STOMACH_MULTIPLIERS } from '../constants';
 import { getMetabolismMultiplier } from '../services/pharmacology';
 import { motion, AnimatePresence } from 'motion/react';
@@ -309,14 +309,14 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         list.push({
           type: 'limit',
           title: 'Překročen denní limit',
-          message: `Dnešní dávka (${totalToday.toFixed(1)} ${selectedSubstance.unit}) překračuje nastavený limit ${selectedSubstance.dailyLimit} ${selectedSubstance.unit}.`,
+          message: `Dnešní dávka (${formatAmount(totalToday, selectedSubstance.unit, 1)}) překračuje nastavený limit ${formatAmount(selectedSubstance.dailyLimit, selectedSubstance.unit, 1)}.`,
           severity: 'high'
         });
       } else if (totalToday > selectedSubstance.dailyLimit * 0.8) {
         list.push({
           type: 'limit',
           title: 'Blížíte se dennímu limitu',
-          message: `Dnešní dávka (${totalToday.toFixed(1)} ${selectedSubstance.unit}) se blíží limitu ${selectedSubstance.dailyLimit} ${selectedSubstance.unit}.`,
+          message: `Dnešní dávka (${formatAmount(totalToday, selectedSubstance.unit, 1)}) se blíží limitu ${formatAmount(selectedSubstance.dailyLimit, selectedSubstance.unit, 1)}.`,
           severity: 'medium'
         });
       }
@@ -328,14 +328,14 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         list.push({
           type: 'limit',
           title: 'Nedostatek v zásobě',
-          message: `Požadované množství (${amount} ${selectedSubstance.unit}) překračuje aktuální zásobu (${selectedSubstance.stash.toFixed(1)} ${selectedSubstance.unit}).`,
+          message: `Požadované množství (${formatAmount(amount, selectedSubstance.unit, 1)}) překračuje aktuální zásobu (${formatAmount(selectedSubstance.stash, selectedSubstance.unit, 1)}).`,
           severity: 'high'
         });
       } else if (selectedSubstance.packageSize && selectedSubstance.stash <= selectedSubstance.packageSize * 0.1) {
         list.push({
           type: 'limit',
           title: 'Nízká zásoba',
-          message: `Vaše zásoba (${selectedSubstance.stash.toFixed(1)} ${selectedSubstance.unit}) klesla pod 10% velikosti balení.`,
+          message: `Vaše zásoba (${formatAmount(selectedSubstance.stash, selectedSubstance.unit, 1)}) klesla pod 10% velikosti balení.`,
           severity: 'medium'
         });
       }
@@ -438,7 +438,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         
         {selectedSubstance?.stash !== undefined && (
           <div className="absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest text-md3-gray bg-theme-subtle px-3 py-1.5 rounded-lg border border-theme-border shadow-sm">
-            Zásoba: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{selectedSubstance.stash.toFixed(1)}{selectedSubstance.unit}</span>
+            Zásoba: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{formatAmount(selectedSubstance.stash, selectedSubstance.unit, 1)}</span>
           </div>
         )}
 
@@ -474,11 +474,30 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           </button>
         </div>
 
-        {selectedSubstance?.activeIngredientName && (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage) && (
-          <div className="text-[10px] font-black uppercase tracking-widest text-md3-gray mt-2 bg-theme-subtle px-3 py-1 rounded-full border border-theme-border/50">
-            Účinná látka: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{((amount * (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage || 0)) / 100).toFixed(2)}{selectedSubstance.unit}</span> {selectedSubstance.activeIngredientName}
-          </div>
-        )}
+        {/* Optional Active Ingredients Display */}
+        {(() => {
+          const actives = currentStrain?.activeIngredients || selectedSubstance?.activeIngredients || [];
+          if (actives.length > 0) {
+            return (
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-w-full">
+                {actives.map((ai, idx) => (
+                  <div key={idx} className="text-[9px] font-black uppercase tracking-widest text-md3-gray bg-theme-subtle px-2 py-0.5 rounded-md border border-theme-border/50">
+                    <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>
+                      {formatAmount(((amount * ai.percentage) / 100), selectedSubstance?.unit || 'g', 2)}
+                    </span> {ai.name}
+                  </div>
+                ))}
+              </div>
+            );
+          } else if (selectedSubstance?.activeIngredientName && (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage)) {
+            return (
+              <div className="text-[9px] font-black uppercase tracking-widest text-md3-gray mt-2 bg-theme-subtle px-2 py-0.5 rounded-md border border-theme-border/50">
+                 ÚČ. LÁTKA: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{formatAmount(((amount * (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage || 0)) / 100), selectedSubstance?.unit || 'g', 2)}</span> {selectedSubstance.activeIngredientName}
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {/* Quick Amount Presets */}
         <div className="flex gap-2 mt-6 relative z-10 overflow-x-auto no-scrollbar w-full pb-1 justify-center">

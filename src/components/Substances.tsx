@@ -2,10 +2,11 @@ import {
   FlaskConical, Plus, Trash2, Database, Package, Activity, ChevronRight, Search, X, Star,
   Pill, Syringe, Leaf, Coffee, Cigarette, Wine, Beer, Droplet, TestTube, Beaker, Flame, Wind, Brain, Heart
 } from 'lucide-react';
-import { Substance, SubstanceCategory } from '../types';
-import { cn } from '../lib/utils';
+import { Substance, SubstanceCategory, Dose, UserSettings } from '../types';
+import { cn, formatAmount } from '../lib/utils';
 import { DEFAULT_SUBSTANCES } from '../constants';
 import { useState, useMemo } from 'react';
+import SubstanceInfo from './SubstanceInfo';
 
 const ICONS: Record<string, any> = {
   'pill': Pill,
@@ -32,6 +33,8 @@ export const getIconComponent = (iconName: string | undefined) => {
 
 interface SubstancesProps {
   substances: Substance[];
+  doses: Dose[];
+  settings: UserSettings;
   onEditSubstance: (id: string | 'new', template?: Substance) => void;
   onDeleteSubstance: (id: string) => void;
   onAddPreset: (preset: Substance) => void;
@@ -39,9 +42,10 @@ interface SubstancesProps {
   onRestockSubstance: (id: string) => void;
 }
 
-export default function Substances({ substances, onEditSubstance, onDeleteSubstance, onAddPreset, onToggleFavorite, onRestockSubstance }: SubstancesProps) {
+export default function Substances({ substances, doses, settings, onEditSubstance, onDeleteSubstance, onAddPreset, onToggleFavorite, onRestockSubstance }: SubstancesProps) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<SubstanceCategory | 'all'>('all');
+  const [selectedSubstanceId, setSelectedSubstanceId] = useState<string | null>(null);
 
   const categories: (SubstanceCategory | 'all')[] = [
     'all', 'stimulant', 'depressant', 'psychedelic', 'dissociative', 'empathogen', 'opioid', 'cannabinoid', 'nootropic', 'supplement', 'vitamin', 'steroid', 'peptide', 'herb', 'deliriant', 'medication', 'antidepressant', 'antipsychotic', 'anxiolytic', 'sedative', 'entactogen', 'other'
@@ -78,6 +82,26 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
     'medication': 'Lék',
     'other': 'Jiné'
   };
+
+  if (selectedSubstanceId) {
+    const substance = substances.find(s => s.id === selectedSubstanceId);
+    if (!substance) {
+      setSelectedSubstanceId(null);
+      return null;
+    }
+    return (
+      <SubstanceInfo 
+        substance={substance}
+        doses={doses}
+        settings={settings}
+        onBack={() => setSelectedSubstanceId(null)}
+        onEdit={() => {
+          setSelectedSubstanceId(null);
+          onEditSubstance(substance.id);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 relative">
@@ -178,7 +202,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
               return (
               <div 
                 key={substance.id} 
-                onClick={() => onEditSubstance(substance.id)}
+                onClick={() => setSelectedSubstanceId(substance.id)}
                 className="bg-theme-subtle border border-theme-border rounded-xl p-2.5 flex items-center gap-3 cursor-pointer hover:bg-theme-subtle-hover transition-all group relative overflow-hidden shadow-sm"
               >
                 <div className="absolute top-0 left-0 w-1 h-full shadow-[2px_0_10px_rgba(0,0,0,0.2)]" style={{ backgroundColor: substance.color || '#00d1ff' }} />
@@ -197,7 +221,7 @@ export default function Substances({ substances, onEditSubstance, onDeleteSubsta
                     </span>
                     {substance.stash !== undefined && (
                       <span className="text-[8px] uppercase font-black tracking-widest px-1.5 py-0.5 rounded border border-theme-border text-md3-gray ml-auto bg-theme-bg">
-                        Zásoba: <span style={{ color: substance.color }}>{substance.stash.toFixed(1)}{substance.unit}</span>
+                        Zásoba: <span style={{ color: substance.color }}>{formatAmount(substance.stash, substance.unit, 1)}</span>
                       </span>
                     )}
                   </div>

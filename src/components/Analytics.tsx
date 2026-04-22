@@ -30,7 +30,9 @@ import {
   Sparkles,
   FlaskConical,
   Lightbulb,
-  Radar as Target
+  Radar as Target,
+  Database,
+  Cpu
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -58,7 +60,7 @@ import {
   Radar
 } from 'recharts';
 import { Substance, Dose, UserSettings, Strain } from '../types';
-import { cn, formatTime } from '../lib/utils';
+import { cn, formatTime, formatAmount } from '../lib/utils';
 import { calculateTolerance } from '../services/pharmacology';
 
 import { getIconComponent } from './Substances';
@@ -130,10 +132,10 @@ const renderActiveIngredientsString = (dosesList: Dose[], substance: Substance):
   const ingredients = calculateActiveIngredients(dosesList, substance);
   const entries = Object.entries(ingredients).filter(([, val]) => val > 0);
   if (entries.length === 0) return '';
-  return entries.map(([name, val]) => `${val.toFixed(2)}${substance.unit} ${name}`).join(' + ');
+  return entries.map(([name, val]) => `${formatAmount(val, substance.unit, 2)} ${name}`).join(' + ');
 };
 
-const calculatePredictions = (doses: Dose[], substances: Substance[], period: number) => {
+const calculatePredictions = (doses: Dose[], substances: Substance[], period: number, settings: UserSettings) => {
   const calculateCost = (dosesList: Dose[]) => {
     return dosesList.reduce((sum, d) => {
       const substance = substances.find(s => s.id === d.substanceId);
@@ -144,14 +146,16 @@ const calculatePredictions = (doses: Dose[], substances: Substance[], period: nu
   };
 
   const totalCost = calculateCost(doses);
-  const daily = doses.length > 0 ? totalCost / period : 0;
+  const now = Date.now();
+  
+  // Base daily logic
+  let daily = doses.length > 0 ? totalCost / period : 0;
   
   // Calculate active days
   const activeDays = new Set(doses.map(d => new Date(d.timestamp).toISOString().split('T')[0])).size;
   const activeDayAverage = activeDays > 0 ? totalCost / activeDays : 0;
 
-  // Calculate recent trend (last 7 days vs previous 7 days)
-  const now = Date.now();
+  // Recent Trends
   const sevenDaysAgo = now - 7 * 86400000;
   const fourteenDaysAgo = now - 14 * 86400000;
   
@@ -161,8 +165,25 @@ const calculatePredictions = (doses: Dose[], substances: Substance[], period: nu
   const recentCost = calculateCost(recentDoses);
   const previousCost = calculateCost(previousDoses);
   
-  const recentDaily = recentCost / 7;
+  // Implement smartest math logic if settings enabled
+  let recentDaily = recentCost / 7;
   const previousDaily = previousCost / 7;
+
+  // ML Simulated or Exponential smoothing
+  if (settings.predictionAlgorithm === 'exponential') {
+     const alpha = 0.3; // Smoothing factor
+     daily = (alpha * recentDaily) + ((1 - alpha) * daily);
+  } else if (settings.predictionAlgorithm === 'ml_simulated') {
+     // A slightly heavier weight on recent behavior + weekend peaks
+     const weekendDoses = doses.filter(d => {
+       const day = new Date(d.timestamp).getDay();
+       return day === 0 || day === 6;
+     });
+     const weekendRatio = doses.length > 0 ? weekendDoses.length / doses.length : 0;
+     // Give it a tiny simulated "learning" skew
+     recentDaily = recentDaily * (1 + (weekendRatio * 0.1));
+     daily = (recentDaily * 0.6) + (previousDaily * 0.4); 
+  }
   
   const trendPercentage = previousDaily > 0 ? ((recentDaily - previousDaily) / previousDaily) * 100 : 0;
 
@@ -187,7 +208,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const [selectedSubstanceId, setSelectedSubstanceId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>(30);
   const [searchQuery, setSearchQuery] = useState('');
-  const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients'>('trends');
+  const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients' | 'custom-fields'>('trends');
   const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
 
@@ -426,8 +447,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   }, [doses, substances]);
 
   const predictions = useMemo(() => 
-    calculatePredictions(filteredDoses, substances, period),
-    [filteredDoses, substances, period]
+    calculatePredictions(filteredDoses, substances, period, settings),
+    [filteredDoses, substances, period, settings]
   );
 
   const predictionData = useMemo(() => [
@@ -1159,7 +1180,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                 )}
                               </div>
                             </div>
-                            <span className="text-base font-bold text-theme-text">{dayTotal.toFixed(1)} {substance.unit}</span>
+                            <span className="text-base font-bold text-theme-text">{formatAmount(dayTotal, substance.unit, 1)}</span>
                           </div>
 
                           <div className="space-y-2 pl-4 border-l-2 border-theme-border ml-4">
@@ -1175,7 +1196,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="text-sm font-bold text-theme-text">{dose.amount} {substance.unit}</div>
+                                  <div className="text-sm font-bold text-theme-text">{formatAmount(dose.amount, substance.unit, 1)}</div>
                                   {renderActiveIngredientsString([dose], substance) && (
                                     <div className="text-[10px] font-bold text-md3-primary">
                                       {renderActiveIngredientsString([dose], substance)}
@@ -1586,7 +1607,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
     const totalAmount = sDoses.reduce((sum, d) => sum + d.amount, 0);
     const cost = calculateCost(sDoses);
     const tolerance = calculateTolerance(substanceId, substances, doses);
-    const substancePredictions = calculatePredictions(sDoses, substances, period);
+    const substancePredictions = calculatePredictions(sDoses, substances, period, settings);
     const IconComponent = getIconComponent(substance.icon);
     
     const strainsData = (() => {
@@ -1662,6 +1683,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             { id: 'reactions', label: 'Reakce', icon: Smile },
             { id: 'predictions', label: 'Predikce', icon: Sparkles },
             ...(substance.activeIngredientName || (substance.activeIngredients && substance.activeIngredients.length > 0) ? [{ id: 'active-ingredients', label: 'Účinné látky', icon: FlaskConical }] : []),
+            ...(substance.customFields && substance.customFields.length > 0 ? [{ id: 'custom-fields', label: 'Vlastní pole', icon: Database }] : []),
             { id: 'finance', label: 'Finance', icon: Wallet },
             { id: 'history', label: 'Historie', icon: History },
             { id: 'day-view', label: 'Den', icon: Calendar },
@@ -1699,7 +1721,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 <div className="md3-card p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celkem</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
-                    {totalAmount.toFixed(1)} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
+                    {formatAmount(totalAmount, substance.unit, 1)}
                   </div>
                   {renderActiveIngredientsString(sDoses, substance) && (
                     <div className="text-xs font-bold text-md3-primary mt-1">
@@ -2657,9 +2679,21 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
               className="space-y-4 relative z-10"
             >
               <section className="md3-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <Sparkles size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce a modely</h3>
+                <div className="flex items-center gap-2 mb-6 justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-md3-primary" />
+                    <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce a modely</h3>
+                  </div>
+                  {settings.predictionAlgorithm === 'ml_simulated' && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20 flex items-center gap-1">
+                      <Cpu size={10} /> ML Insight Engine
+                    </span>
+                  )}
+                  {settings.predictionAlgorithm === 'exponential' && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-md3-primary/10 text-md3-primary border border-md3-primary/20">
+                      Exponenciální Model
+                    </span>
+                  )}
                 </div>
                 {(() => {
                   if (sDoses.length < 3) return <div className="text-sm text-md3-gray italic text-center p-4">K výpočtu predikcí jsou potřeba alespoň 3 záznamy.</div>;
@@ -2881,42 +2915,53 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 
                 {(() => {
                   const activeSums = calculateActiveIngredients(sDoses, substance);
-                  const totalActiveAmount = Object.values(activeSums).reduce((a,b)=>a+b,0);
-                  const maxPossibleConcentration = Math.max(...(substance.strains?.map(s => s.activeIngredientPercentage || 0) || [0]), substance.activeIngredientPercentage || 0);
-                  const minPossibleConcentration = Math.min(...(substance.strains?.filter(s => s.activeIngredientPercentage)?.map(s => s.activeIngredientPercentage || 0) || [substance.activeIngredientPercentage || 0]).filter(Boolean));
+                  const activeNames = Object.keys(activeSums);
                   
                   // Monthly aggregates for active vs total
-                  const monthlyData: Record<string, { total: number, active: number }> = {};
+                  const monthlyData: Record<string, { total: number } & Record<string, number>> = {};
                   sDoses.forEach(d => {
                     const month = new Date(d.timestamp).toLocaleString('cs-CZ', { month: 'short', year: '2-digit' });
-                    if (!monthlyData[month]) monthlyData[month] = { total: 0, active: 0 };
+                    if (!monthlyData[month]) {
+                      monthlyData[month] = { total: 0 };
+                      activeNames.forEach(name => monthlyData[month][name] = 0);
+                    }
                     monthlyData[month].total += d.amount;
-                    monthlyData[month].active += Object.values(calculateActiveIngredients([d], substance)).reduce((a,b)=>a+b,0);
+                    
+                    const dActives = calculateActiveIngredients([d], substance);
+                    Object.entries(dActives).forEach(([k, v]) => {
+                      monthlyData[month][k] = (monthlyData[month][k] || 0) + v;
+                    });
                   });
                   
-                  const chartData = Object.entries(monthlyData).map(([month, data]) => ({
-                    month,
-                    total: parseFloat(data.total.toFixed(2)),
-                    active: parseFloat(data.active.toFixed(2))
-                  }));
+                  const chartData = Object.entries(monthlyData).map(([month, data]) => {
+                    const item: any = { month, total: parseFloat(data.total.toFixed(2)) };
+                    activeNames.forEach(name => {
+                       item[name] = parseFloat((data[name] || 0).toFixed(2));
+                    });
+                    return item;
+                  });
+                  
+                  // A palette for active ingredients if there are multiple
+                  const colors = [substance.color || '#0a84ff', '#ff3b30', '#34c759', '#ff9f0a', '#af52de', '#ff2d55'];
                   
                   return (
                     <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-theme-subtle p-4 rounded-2xl border border-theme-border">
-                          <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Spotřebováno účinné látky</div>
-                          <div className="text-2xl font-black text-theme-text">{totalActiveAmount.toFixed(2)} <span className="text-sm font-bold text-md3-primary">{substance.unit}</span></div>
-                        </div>
-                        <div className="bg-theme-subtle p-4 rounded-2xl border border-theme-border">
-                          <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Průměrná koncentrace</div>
-                          <div className="text-2xl font-black text-theme-text">
-                            {totalAmount > 0 ? ((totalActiveAmount / totalAmount) * 100).toFixed(1) : 0}%
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                         {activeNames.map((name, idx) => (
+                           <div key={name} className="bg-theme-subtle p-4 rounded-2xl border border-theme-border shadow-sm flex flex-col justify-between">
+                             <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1 truncate">{name}</div>
+                             <div className="text-xl font-black text-theme-text mb-1">
+                               {formatAmount(activeSums[name], substance.unit, 2)}
+                             </div>
+                             <div className="text-[10px] font-bold text-md3-gray">
+                               Prům. podíl: {totalAmount > 0 ? ((activeSums[name] / totalAmount) * 100).toFixed(1) : 0}%
+                             </div>
+                           </div>
+                         ))}
                       </div>
                       
-                      <div className="h-64 w-full">
-                        <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-4">Poměr čisté dávky vs hrubého objemu (po měsících)</h4>
+                      <div className="h-64 w-full md3-card p-4">
+                        <h4 className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-4">Spotřeba látek v čase (Měsíčně)</h4>
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={chartData}>
                             {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
@@ -2939,35 +2984,193 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                               orientation="right"
                               axisLine={false} 
                               tickLine={false} 
-                              tick={{ fill: '#0a84ff', fontSize: 10, fontWeight: 600 }}
+                              tick={{ fill: substance.color || '#0a84ff', fontSize: 10, fontWeight: 600 }}
                               width={30}
                             />
                             <Tooltip 
                               contentStyle={{ backgroundColor: 'rgba(28,28,30,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
                               itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
                             />
-                            <Bar yAxisId="left" dataKey="total" name={`Hrubé (${substance.unit})`} fill="rgba(150,150,150,0.3)" radius={[4, 4, 0, 0]} />
-                            <Bar yAxisId="right" dataKey="active" name={`Účinná (${substance.unit})`} fill={substance.color || '#0a84ff'} radius={[4, 4, 0, 0]} />
+                            <Bar yAxisId="left" dataKey="total" name={`Celkem objem (${substance.unit})`} fill="rgba(150,150,150,0.15)" radius={[4, 4, 0, 0]} />
+                            {activeNames.map((name, idx) => (
+                               <Bar key={name} yAxisId="right" dataKey={name} name={`${name} (${substance.unit})`} fill={colors[idx % colors.length]} radius={[4, 4, 0, 0]} stackId="actives" />
+                            ))}
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
-                      
-                      {(maxPossibleConcentration > 0 || minPossibleConcentration > 0) && (
-                        <div className="flex gap-2 flex-wrap">
-                          {minPossibleConcentration < maxPossibleConcentration && (
-                            <div className="text-xs font-bold px-3 py-1.5 rounded-lg bg-theme-bg border border-theme-border">
-                              Minimální použitá: <span className="text-theme-text">{minPossibleConcentration}%</span>
-                            </div>
-                          )}
-                          <div className="text-xs font-bold px-3 py-1.5 rounded-lg bg-theme-bg border border-theme-border">
-                            Maximální použitá: <span className="text-theme-text">{maxPossibleConcentration}%</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
               </section>
+            </motion.div>
+          )}
+
+          {detailTab === 'custom-fields' && substance.customFields && substance.customFields.length > 0 && (
+            <motion.div
+              key="custom-fields"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4 relative z-10"
+            >
+              {substance.customFields.map((field) => {
+                const values = sDoses.map(d => d.customFieldValues?.[field.id]).filter(v => v !== undefined && v !== null && v !== '');
+                
+                if (values.length === 0) {
+                  return (
+                    <section key={field.id} className="md3-card p-6 opacity-60">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database size={16} className="text-md3-gray" />
+                        <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">{field.name}</h3>
+                      </div>
+                      <div className="text-xs text-md3-gray italic border-t border-theme-border/50 pt-4 mt-2">Zatím nejsou k dispozici žádná data k analýze.</div>
+                    </section>
+                  );
+                }
+
+                return (
+                  <section key={field.id} className="md3-card p-6">
+                    <div className="flex flex-col mb-6">
+                      <div className="flex items-center gap-2">
+                        <Database size={16} className="text-md3-primary" />
+                        <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">{field.name}</h3>
+                      </div>
+                      <div className="text-[10px] text-md3-gray font-bold uppercase tracking-widest mt-1">
+                        Typ pole: {field.type === 'boolean' ? 'Zaškrtávací' : field.type === 'rating' ? 'Hodnocení' : field.type === 'number' ? 'Číslo' : field.type === 'select' ? 'Výběr' : 'Text'}
+                        {field.unit && ` • Jednotka: ${field.unit}`}
+                      </div>
+                    </div>
+
+                    {field.type === 'boolean' && (() => {
+                       const trues = values.filter(v => v === true).length;
+                       const falses = values.length - trues;
+                       const pct = (trues / values.length) * 100;
+                       return (
+                         <div className="space-y-4">
+                           <div className="flex justify-between items-center mb-1">
+                             <span className="text-xs font-bold text-md3-gray uppercase tracking-widest">Aktivní ve {pct.toFixed(0)}% záznamů</span>
+                             <span className="text-xs font-bold text-theme-text">{trues} / {values.length}</span>
+                           </div>
+                           <div className="w-full h-3 bg-theme-bg rounded-full overflow-hidden shadow-inner">
+                             <div className="h-full bg-md3-primary" style={{ width: `${pct}%` }} />
+                           </div>
+                         </div>
+                       );
+                    })()}
+
+                    {field.type === 'rating' && (() => {
+                       const numValues = values.map(v => Number(v)).filter(v => !isNaN(v));
+                       const avg = numValues.reduce((a,b)=>a+b, 0) / numValues.length;
+                       
+                       const counts: Record<number, number> = {1:0, 2:0, 3:0, 4:0, 5:0};
+                       numValues.forEach(v => { counts[Math.round(v)] = (counts[Math.round(v)] || 0) + 1; });
+                       
+                       return (
+                         <div className="space-y-4">
+                           <div className="flex items-end gap-2 mb-4">
+                             <div className="text-3xl font-black text-theme-text leading-none">{avg.toFixed(1)}</div>
+                             <div className="text-xs font-bold text-md3-gray uppercase tracking-widest pb-1">z 5 (Průměr)</div>
+                           </div>
+                           <div className="space-y-2">
+                             {[5, 4, 3, 2, 1].map(star => {
+                               const count = counts[star] || 0;
+                               const pct = numValues.length > 0 ? (count / numValues.length) * 100 : 0;
+                               return (
+                                 <div key={star} className="flex items-center gap-3">
+                                   <div className="text-xs font-bold text-md3-gray w-4">{star}★</div>
+                                   <div className="flex-1 h-2 bg-theme-bg rounded-full overflow-hidden shadow-inner">
+                                     <div className="h-full bg-md3-orange" style={{ width: `${pct}%` }} />
+                                   </div>
+                                   <div className="text-[10px] font-bold text-theme-text w-6 text-right">{count}x</div>
+                                 </div>
+                               );
+                             })}
+                           </div>
+                         </div>
+                       );
+                    })()}
+
+                    {field.type === 'number' && (() => {
+                       const numValues = values.map(v => Number(v)).filter(v => !isNaN(v));
+                       const avg = numValues.reduce((a,b)=>a+b, 0) / numValues.length;
+                       const min = Math.min(...numValues);
+                       const max = Math.max(...numValues);
+                       
+                       // Create chart data matching the trend graph pattern
+                       const chartData = sDoses.filter(d => d.customFieldValues?.[field.id] !== undefined).map(d => ({
+                         time: new Date(d.timestamp).toLocaleDateString('cs-CZ'),
+                         value: Number(d.customFieldValues![field.id])
+                       })).reverse();
+
+                       return (
+                         <div className="space-y-6">
+                           <div className="grid grid-cols-3 gap-3">
+                             <div className="bg-theme-subtle p-3 rounded-2xl border border-theme-border shadow-sm text-center">
+                               <div className="text-[9px] font-black text-md3-gray uppercase tracking-widest mb-1">Průměr</div>
+                               <div className="text-lg font-black text-theme-text">{avg.toFixed(2)}<span className="text-[10px] ml-1 text-md3-gray">{field.unit}</span></div>
+                             </div>
+                             <div className="bg-theme-subtle p-3 rounded-2xl border border-theme-border shadow-sm text-center">
+                               <div className="text-[9px] font-black text-md3-gray uppercase tracking-widest mb-1">Min</div>
+                               <div className="text-lg font-black text-theme-text">{min}<span className="text-[10px] ml-1 text-md3-gray">{field.unit}</span></div>
+                             </div>
+                             <div className="bg-theme-subtle p-3 rounded-2xl border border-theme-border shadow-sm text-center">
+                               <div className="text-[9px] font-black text-md3-gray uppercase tracking-widest mb-1">Max</div>
+                               <div className="text-lg font-black text-theme-text">{max}<span className="text-[10px] ml-1 text-md3-gray">{field.unit}</span></div>
+                             </div>
+                           </div>
+                           
+                           {chartData.length > 1 && (
+                             <div className="h-40 w-full mt-4">
+                               <ResponsiveContainer width="100%" height="100%">
+                                 <LineChart data={chartData}>
+                                   {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
+                                   <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#8e8e93', fontSize: 9 }} dy={10} />
+                                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#8e8e93', fontSize: 9 }} width={30} />
+                                   <Tooltip contentStyle={{ backgroundColor: 'rgba(28,28,30,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }} itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }} />
+                                   <Line type="monotone" dataKey="value" name={field.name} stroke={substance.color || '#00d1ff'} strokeWidth={3} dot={{ r: 3, fill: substance.color || '#00d1ff' }} />
+                                 </LineChart>
+                               </ResponsiveContainer>
+                             </div>
+                           )}
+                         </div>
+                       );
+                    })()}
+
+                    {(field.type === 'select' || field.type === 'text') && (() => {
+                       const counts: Record<string, number> = {};
+                       // For select, we just count frequency. 
+                       values.forEach(v => {
+                         const str = String(v).trim();
+                         if (str) {
+                           counts[str] = (counts[str] || 0) + 1;
+                         }
+                       });
+                       const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, 10);
+                       
+                       return (
+                         <div className="space-y-3 mt-4">
+                           {sorted.map(([val, count], idx) => {
+                             const pct = (count / values.length) * 100;
+                             return (
+                               <div key={idx} className="flex flex-col gap-1">
+                                 <div className="flex justify-between items-center text-xs">
+                                   <span className="font-bold text-theme-text truncate pr-4">{val}</span>
+                                   <span className="font-bold text-md3-gray shrink-0">{pct.toFixed(0)}% ({count}x)</span>
+                                 </div>
+                                 <div className="w-full h-1.5 bg-theme-bg rounded-full overflow-hidden shadow-inner">
+                                   <div className="h-full bg-md3-primary" style={{ width: `${pct}%` }} />
+                                 </div>
+                               </div>
+                             );
+                           })}
+                           {sorted.length === 0 && <div className="text-xs text-md3-gray italic">Žádné hodnoty</div>}
+                         </div>
+                       );
+                    })()}
+
+                  </section>
+                );
+              })}
             </motion.div>
           )}
 
@@ -3227,7 +3430,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         <h4 className="text-sm font-bold text-theme-text">{group.date}</h4>
                         <div className="flex flex-col items-end">
                           <span className="text-xs font-bold text-md3-primary bg-md3-primary/10 px-2 py-1 rounded-lg">
-                            Celkem: {group.totalAmount.toFixed(1)} {substance.unit}
+                            Celkem: {formatAmount(group.totalAmount, substance.unit, 1)}
                           </span>
                           {renderActiveIngredientsString(group.doses, substance) && (
                             <span className="text-[10px] font-bold text-md3-primary mt-1">
@@ -3245,7 +3448,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                               </div>
                               <div>
                                 <div className="text-sm font-bold text-theme-text tracking-tight">
-                                  {dose.amount} {substance.unit}
+                                  {formatAmount(dose.amount, substance.unit, 1)}
                                   {dose.strainId && <span className="text-xs text-md3-primary ml-2 font-bold uppercase tracking-widest">({dose.strainId})</span>}
                                 </div>
                                 {renderActiveIngredientsString([dose], substance) && (
@@ -3382,11 +3585,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                         </div>
                         <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center">
                           <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Celkem za den</div>
-                          <div className="text-xl font-bold text-theme-text">{dayTotal.toFixed(1)} <span className="text-xs text-md3-gray">{substance.unit}</span></div>
+                          <div className="text-xl font-bold text-theme-text">{formatAmount(dayTotal, substance.unit, 1)}</div>
                         </div>
                         <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center">
                           <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Průměr/dávka</div>
-                          <div className="text-xl font-bold text-theme-text">{(dayTotal / dayDoses.length).toFixed(1)} <span className="text-xs text-md3-gray">{substance.unit}</span></div>
+                          <div className="text-xl font-bold text-theme-text">{formatAmount(dayTotal / dayDoses.length, substance.unit, 1)}</div>
                         </div>
                         <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center flex flex-col justify-center">
                           <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Rozpětí</div>
@@ -3440,7 +3643,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-sm font-bold text-theme-text">{dose.amount} {substance.unit}</div>
+                              <div className="text-sm font-bold text-theme-text">{formatAmount(dose.amount, substance.unit, 1)}</div>
                               {dose.strainId && <div className="text-xs text-md3-primary font-bold">{dose.strainId}</div>}
                             </div>
                           </div>

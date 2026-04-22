@@ -670,6 +670,8 @@ export default function App() {
             {view === 'substances' && (
               <Substances 
                 substances={substances} 
+                doses={doses}
+                settings={settings}
                 onEditSubstance={(id, template) => {
                   setEditingSubstanceId(id);
                   if (template) setEditingTemplate(template);

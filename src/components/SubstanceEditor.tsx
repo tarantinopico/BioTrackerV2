@@ -587,37 +587,79 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                 </div>
 
                 <div className="p-4 rounded-2xl bg-theme-card border border-theme-border space-y-4">
-                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest flex items-center gap-2">
-                    <Sparkles size={14} className="text-md3-primary" />
-                    Účinná látka (Volitelné)
+                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Sparkles size={14} className="text-md3-primary" />Účinné látky (Volitelné)</span>
                   </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Název</label>
-                      <input 
-                        type="text" 
-                        value={formData.activeIngredientName || ''} 
-                        onChange={e => setFormData(prev => ({ ...prev, activeIngredientName: e.target.value }))}
-                        placeholder="Např. Mitragynin"
-                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-black uppercase tracking-[0.2em] text-md3-gray ml-1">Koncentrace (%)</label>
-                      <input 
-                        type="number" 
-                        value={formData.activeIngredientPercentage || ''} 
-                        onChange={e => setFormData(prev => ({ ...prev, activeIngredientPercentage: parseFloat(e.target.value) }))}
-                        placeholder="Např. 1.5"
-                        step="0.01"
-                        min="0"
-                        max="100"
-                        className="w-full p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
-                      />
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-md3-gray leading-relaxed">
-                    Pokud vyplníte tyto údaje, aplikace bude automaticky počítat a zobrazovat množství čisté účinné látky v každé dávce (např. 2% Mitragyninu v 5g Kratomu = 0.1g Mitragyninu).
+                  
+                  {/* Keep legacy fields if they exist and no array is set yet, but preferably migrate them */}
+                  {(() => {
+                    const actives = formData.activeIngredients || [];
+                    if (actives.length === 0 && formData.activeIngredientName) {
+                      // Migrate legacy on the fly for display
+                      actives.push({ name: formData.activeIngredientName, percentage: formData.activeIngredientPercentage || 0 });
+                    }
+                    
+                    return (
+                      <div className="space-y-3">
+                        {actives.map((ai, idx) => (
+                          <div key={idx} className="flex gap-2 items-center">
+                            <input 
+                              type="text" 
+                              value={ai.name} 
+                              onChange={e => {
+                                const newActives = [...actives];
+                                newActives[idx] = { ...ai, name: e.target.value };
+                                setFormData(prev => ({ ...prev, activeIngredients: newActives, activeIngredientName: newActives[0]?.name, activeIngredientPercentage: newActives[0]?.percentage }));
+                              }}
+                              placeholder="Název látky (např. Mitragynin)"
+                              className="flex-1 p-3 rounded-xl bg-theme-subtle border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                            />
+                            <div className="relative w-28">
+                              <input 
+                                type="number" 
+                                value={ai.percentage || ''} 
+                                onChange={e => {
+                                  const newActives = [...actives];
+                                  newActives[idx] = { ...ai, percentage: parseFloat(e.target.value) || 0 };
+                                  setFormData(prev => ({ ...prev, activeIngredients: newActives, activeIngredientName: newActives[0]?.name, activeIngredientPercentage: newActives[0]?.percentage }));
+                                }}
+                                placeholder="%"
+                                step="0.01"
+                                min="0"
+                                max="100"
+                                className="w-full p-3 pr-8 rounded-xl bg-theme-subtle border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-md3-gray">%</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newActives = actives.filter((_, i) => i !== idx);
+                                setFormData(prev => ({ ...prev, activeIngredients: newActives, activeIngredientName: newActives[0]?.name || '', activeIngredientPercentage: newActives[0]?.percentage || undefined }));
+                              }}
+                              className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors shrink-0"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        ))}
+                        
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newActives = [...actives, { name: '', percentage: 0 }];
+                            setFormData(prev => ({ ...prev, activeIngredients: newActives }));
+                          }}
+                          className="w-full py-2.5 rounded-xl border border-dashed border-theme-border text-md3-gray hover:text-theme-text hover:border-theme-text transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                        >
+                          <Plus size={14} /> Přidat Další Látku
+                        </button>
+                      </div>
+                    );
+                  })()}
+                  
+                  <p className="text-[10px] text-md3-gray leading-relaxed mt-2">
+                    Aplikace automaticky počítá množství čistých látek v dávce a zobrazí je v analytice (např. Mitragynin + 7-OH apod.).
                   </p>
                 </div>
                 
@@ -740,25 +782,83 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                             />
                             <span className="text-xs font-mono text-md3-gray uppercase pr-2">{strain.color || formData.color || '#00d1ff'}</span>
                           </div>
-                          {formData.activeIngredientName && (
-                            <div className="flex items-center gap-2">
-                              <label className="text-xs font-bold text-md3-gray uppercase">Koncentrace {formData.activeIngredientName} (%)</label>
-                              <input 
-                                type="number" 
-                                value={strain.activeIngredientPercentage ?? formData.activeIngredientPercentage ?? ''} 
-                                onChange={e => {
-                                  const next = [...(formData.strains || [])];
-                                  next[i].activeIngredientPercentage = e.target.value ? parseFloat(e.target.value) : undefined;
-                                  setFormData(prev => ({ ...prev, strains: next }));
-                                }}
-                                className="w-24 p-2 rounded-xl bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all" 
-                                placeholder="Výchozí" 
-                                step="0.01"
-                                min="0"
-                                max="100"
-                              />
-                            </div>
-                          )}
+                          {/* Active Ingredients Override Level per Strain */}
+                          {(() => {
+                            const mainActives = formData.activeIngredients || [];
+                            if (mainActives.length === 0 && !formData.activeIngredientName) return null;
+                            
+                            // Initialize strain actives if not present
+                            let strainActives = strain.activeIngredients || [];
+                            if (strainActives.length === 0 && (strain.activeIngredientPercentage || formData.activeIngredientPercentage)) {
+                               // Start with a fallback
+                               strainActives = [{ name: formData.activeIngredientName || '', percentage: strain.activeIngredientPercentage ?? formData.activeIngredientPercentage ?? 0 }];
+                            }
+                            
+                            // Let's just create an easy override interface
+                            return (
+                              <div className="w-full flex flex-col gap-2 mt-2 bg-theme-bg p-3 rounded-xl border border-theme-border/50">
+                                <span className="text-[10px] font-black uppercase text-md3-gray tracking-widest">Aktivní látky (Specifika pro tento druh)</span>
+                                {mainActives.length === 0 && formData.activeIngredientName && (
+                                   <div className="flex items-center gap-2">
+                                     <label className="text-xs font-bold text-md3-gray uppercase">{formData.activeIngredientName} (%)</label>
+                                     <input 
+                                       type="number" 
+                                       value={strain.activeIngredientPercentage ?? formData.activeIngredientPercentage ?? ''} 
+                                       onChange={e => {
+                                         const next = [...(formData.strains || [])];
+                                         next[i].activeIngredientPercentage = e.target.value ? parseFloat(e.target.value) : undefined;
+                                         setFormData(prev => ({ ...prev, strains: next }));
+                                       }}
+                                       className="w-24 p-2 rounded-lg bg-theme-secondary border border-theme-border text-sm outline-none focus:border-cyan-primary transition-all" 
+                                       placeholder="Výchozí" 
+                                       step="0.01" min="0" max="100"
+                                     />
+                                   </div>
+                                )}
+                                {mainActives.map((ma, mIdx) => {
+                                  // Find if strain overrides this
+                                  const sOverride = strainActives.find(sa => sa.name === ma.name);
+                                  const displayValue = sOverride ? sOverride.percentage : ma.percentage;
+                                  
+                                  return (
+                                    <div key={mIdx} className="flex items-center gap-3">
+                                      <label className="text-xs font-bold text-theme-text w-1/3 truncate">{ma.name}</label>
+                                      <div className="relative w-24">
+                                        <input 
+                                          type="number" 
+                                          value={displayValue || ''} 
+                                          onChange={e => {
+                                            const val = e.target.value;
+                                            const nextStrains = [...(formData.strains || [])];
+                                            let newStrainActives = [...(nextStrains[i].activeIngredients || [])];
+                                            
+                                            // Ensure base exists
+                                            if (newStrainActives.length === 0) {
+                                              newStrainActives = mainActives.map(m => ({...m}));
+                                            }
+                                            
+                                            const fIdx = newStrainActives.findIndex(sa => sa.name === ma.name);
+                                            if (fIdx >= 0) {
+                                              newStrainActives[fIdx].percentage = parseFloat(val) || 0;
+                                            } else {
+                                              newStrainActives.push({ name: ma.name, percentage: parseFloat(val) || 0 });
+                                            }
+                                            
+                                            nextStrains[i].activeIngredients = newStrainActives;
+                                            setFormData(prev => ({ ...prev, strains: nextStrains }));
+                                          }}
+                                          className="w-full p-2 pr-6 rounded-lg bg-theme-secondary border border-theme-border text-xs outline-none focus:border-cyan-primary transition-all" 
+                                          placeholder={ma.percentage.toString()} 
+                                          step="0.01" min="0" max="100"
+                                        />
+                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-md3-gray">%</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     ))
