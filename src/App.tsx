@@ -42,7 +42,8 @@ import {
   ChevronLeft,
   Maximize2,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Lightbulb
 } from 'lucide-react';
 import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import { cn } from './lib/utils';
@@ -75,12 +76,13 @@ import Dashboard from './components/Dashboard';
 import Logger from './components/Logger';
 import Substances from './components/Substances';
 import Analytics from './components/Analytics';
+import Predictions from './components/Predictions';
 import SubstanceEditor from './components/SubstanceEditor';
 import Settings from './components/Settings';
 import ConfirmationModal from './components/ConfirmationModal';
 import PinLock from './components/PinLock';
 
-export type ViewType = 'dashboard' | 'logger' | 'history' | 'analytics' | 'substances' | 'settings';
+export type ViewType = 'dashboard' | 'logger' | 'history' | 'analytics' | 'predictions' | 'substances' | 'settings';
 
 export default function App() {
   const [view, setView] = useState<ViewType>('dashboard');
@@ -667,6 +669,13 @@ export default function App() {
                 onToggleTheme={() => {}} // Theme is locked to dark for iOS overhaul
               />
             )}
+            {view === 'predictions' && (
+              <Predictions 
+                substances={substances} 
+                doses={doses} 
+                settings={settings}
+              />
+            )}
             {view === 'substances' && (
               <Substances 
                 substances={substances} 
@@ -706,6 +715,7 @@ export default function App() {
           { id: 'substances', icon: Database, label: 'Látky' },
           { id: 'history', icon: History, label: 'Historie' },
           { id: 'analytics', icon: BarChart2, label: 'Analýza' },
+          { id: 'predictions', icon: Lightbulb, label: 'Predikce' },
           { id: 'settings', icon: SettingsIcon, label: 'Nastavení' },
         ].map((item) => {
           const isActive = view === item.id;

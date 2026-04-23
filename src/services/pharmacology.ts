@@ -168,10 +168,9 @@ export function calculateDoseLevel(
     }
   }
 
-  const typicalDose = getTypicalDose(substance.id);
-  const normalizedLevel = (level * effectiveDose / typicalDose) * 100 * toleranceFactor;
+  const absoluteLevel = level * effectiveDose * toleranceFactor;
 
-  return Math.min(normalizedLevel, 100);
+  return absoluteLevel;
 }
 
 export function calculateSubstanceLevelAtTime(
@@ -199,7 +198,24 @@ export function calculateSubstanceLevelAtTime(
     totalLevel += level;
   });
 
-  return Math.min(totalLevel, 100);
+  return totalLevel;
+}
+
+export function calculatePeakSubstanceLevel(
+  substanceId: string,
+  doses: Dose[],
+  substances: Substance[],
+  settings: UserSettings,
+  windowStart: number,
+  windowEnd: number
+): number {
+  let peak = 0;
+  // Step through the window in 15-minute increments
+  for (let t = windowStart; t <= windowEnd; t += 15 * 60000) {
+    const level = calculateSubstanceLevelAtTime(substanceId, t, substances, doses, settings);
+    if (level > peak) peak = level;
+  }
+  return peak > 0 ? peak : 1; 
 }
 
 export function calculateCleanTime(substances: Substance[], doses: Dose[], settings: UserSettings): number {

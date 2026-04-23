@@ -42,7 +42,8 @@ import {
   Sun,
   Sunrise,
   Sunset,
-  MoonStar
+  MoonStar,
+  Cpu
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -62,6 +63,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Substance, Dose, UserSettings, Shortcut, Effect } from '../types';
 import { 
   calculateSubstanceLevelAtTime, 
+  calculatePeakSubstanceLevel,
   calculateCleanTime, 
   calculateTolerance,
   calculateEffectIntensityAtTime 
@@ -182,10 +184,18 @@ export default function Dashboard({
   const [isQuickLogOpen, setIsQuickLogOpen] = useState(false);
   
   const activeSubstanceDetails = useMemo(() => {
+    const windowHours = settings.chartWindow || 24;
+    const roundedNow = Math.floor(now / 60000) * 60000;
+    const startTime = roundedNow - (windowHours * 3600000) / 2;
+    const endTime = roundedNow + (windowHours * 3600000) / 2;
+
     const activeIds = Array.from(new Set(activeDoses.map(d => d.substanceId)));
     return activeIds.map(id => {
       const substance = substances.find(s => s.id === id);
-      const level = calculateSubstanceLevelAtTime(id, now, substances, doses, settings);
+      const rawLevel = calculateSubstanceLevelAtTime(id, now, substances, doses, settings);
+      const peak = calculatePeakSubstanceLevel(id, doses, substances, settings, startTime, endTime);
+      const level = (rawLevel / peak) * 100;
+      
       const tolerance = calculateTolerance(id, substances, doses);
       
       const substanceDoses = doses.filter(d => d.substanceId === id).sort((a, b) => b.timestamp - a.timestamp);
@@ -237,8 +247,12 @@ export default function Dashboard({
     const effectTypes = Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || [])));
     
     const tolerances: Record<string, number> = {};
+    const peaks: Record<string, number> = {};
     activeSubstanceIds.forEach(id => {
       tolerances[id] = calculateTolerance(id, substances, doses, roundedNow);
+      if (chartType === 'kinetic') {
+         peaks[id] = calculatePeakSubstanceLevel(id, doses, substances, settings, startTime, endTime);
+      }
     });
 
     for (let i = 0; i <= points; i++) {
@@ -250,8 +264,8 @@ export default function Dashboard({
       
       if (chartType === 'kinetic') {
         activeSubstanceIds.forEach(id => {
-          const level = calculateSubstanceLevelAtTime(id, time, substances, doses, settings, tolerances[id]);
-          point[id] = level;
+          const rawLevel = calculateSubstanceLevelAtTime(id, time, substances, doses, settings, tolerances[id]);
+          point[id] = (rawLevel / peaks[id]) * 100;
         });
       } else {
         effectTypes.forEach(type => {
@@ -519,7 +533,65 @@ export default function Dashboard({
         </div>
       </section>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 mt-3">
+        {/* Insight Engine Mini */}
+        {settings.insightEngine && (() => {
+          if (doses.length < 5) return null;
+          const sortedDosesDesc = [...doses].sort((a, b) => b.timestamp - a.timestamp);
+          const recentDoses = sortedDosesDesc.slice(0, Math.min(10, doses.length));
+          
+          let insightMessage = "Všechny vitální funkce systému i vzorce užívání se zdají stabilní.";
+          let alertColor = "text-md3-gray";
+          let alertBg = "bg-theme-subtle";
+          let borderColor = "border-theme-border";
+          let IconCmp = Cpu;
+          
+          if (recentDoses.length >= 5) {
+             const span = recentDoses[0].timestamp - recentDoses[recentDoses.length - 1].timestamp;
+             if (span > 0) {
+                const hourRate = recentDoses.length / (span / 3600000);
+                if (hourRate > 1) { 
+                   insightMessage = "Rozpoznána zvýšená zátěž! Intervaly mezi dávkami jsou extrémně krátké.";
+                   alertColor = "text-red-500";
+                   alertBg = "bg-red-500/10";
+                   borderColor = "border-red-500/30";
+                   IconCmp = AlertCircle;
+                } else if (hourRate > 0.4) {
+                   insightMessage = "Zvýšená frekvence užívání. Dejte tělu čas na zpracování.";
+                   alertColor = "text-amber-500";
+                   alertBg = "bg-amber-500/10";
+                   borderColor = "border-amber-500/30";
+                   IconCmp = Activity;
+                }
+             }
+          }
+
+          const cleanHours = Math.floor((currentTime.getTime() - (sortedDosesDesc[0]?.timestamp || 0)) / 3600000);
+
+          if (activeSubstanceDetails.length === 0 && cleanHours > 48) {
+              insightMessage = `Tělo přes ${cleanHours}h na perfektní vyčištění. Neurotransmitery obnoveny.`;
+              alertColor = "text-emerald-500";
+              alertBg = "bg-emerald-500/10";
+              borderColor = "border-emerald-500/30";
+              IconCmp = Sparkles;
+          } else if (activeSubstanceDetails.length === 0 && cleanHours > 24) {
+              insightMessage = "Systém odpočívá. 24h cyklus dokončen, doporučena hydratace.";
+              alertColor = "text-cyan-primary";
+              alertBg = "bg-cyan-primary/10";
+              borderColor = "border-cyan-primary/30";
+              IconCmp = Brain;
+          }
+          
+          return (
+             <div className={cn("rounded-[1rem] p-3 flex gap-3 items-center w-full min-h-[48px] shadow-sm border", alertBg, borderColor)}>
+               <IconCmp size={16} className={alertColor} />
+               <div className="text-[10px] sm:text-xs font-bold text-theme-text leading-tight w-full flex justify-between items-center">
+                 <span>{insightMessage}</span>
+               </div>
+             </div>
+          );
+        })()}
+        
         {/* Active Substance Monitor & Recent */}
         {settings.dashboardWidgets?.activeEffects !== false && (
           <section className="bg-theme-card/80 backdrop-blur-md rounded-[1.5rem] border border-theme-border p-3.5 shadow-sm w-full">

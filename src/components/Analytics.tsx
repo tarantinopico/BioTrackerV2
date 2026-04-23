@@ -32,7 +32,8 @@ import {
   Lightbulb,
   Radar as Target,
   Database,
-  Cpu
+  Cpu,
+  Brain
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -57,11 +58,16 @@ import {
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Radar
+  Radar,
+  ReferenceLine
 } from 'recharts';
 import { Substance, Dose, UserSettings, Strain } from '../types';
 import { cn, formatTime, formatAmount } from '../lib/utils';
-import { calculateTolerance } from '../services/pharmacology';
+import { 
+  calculateTolerance, 
+  calculateSubstanceLevelAtTime, 
+  calculatePeakSubstanceLevel 
+} from '../services/pharmacology';
 
 import { getIconComponent } from './Substances';
 
@@ -209,7 +215,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const [period, setPeriod] = useState<Period>(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients' | 'custom-fields'>('trends');
-  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights'>('overview');
+  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights' | 'patterns'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Stabilize 'now' to prevent excessive re-renders. Updates every 5 minutes.
@@ -702,6 +708,19 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         >
           <Lightbulb size={14} />
           Pokročilé
+        </button>
+        <button
+          onClick={() => setOverviewTab('patterns')}
+          className={cn(
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            overviewTab === 'patterns' 
+              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+              : "text-md3-gray hover:text-theme-text",
+            settings.insightEngine ? "text-cyan-primary" : ""
+          )}
+        >
+          <Brain size={14} className={settings.insightEngine ? "text-cyan-primary" : ""} />
+          Vzorce & AI
         </button>
       </div>
 
@@ -1589,6 +1608,152 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             </section>
           </motion.div>
         )}
+        
+        {overviewTab === 'patterns' && (
+          <motion.div
+            key="patterns"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-4 relative z-10 pb-24"
+          >
+            {/* Conditional Insight Engine message */}
+            {!settings.insightEngine && (
+              <div className="md3-card p-4 border-dashed border-2 border-theme-border/50 bg-theme-bg flex flex-col items-center justify-center text-center">
+                <Brain size={24} className="text-md3-gray mb-2 opacity-50" />
+                <h3 className="text-sm font-bold text-theme-text mb-1 tracking-widest uppercase">Insight Engine deaktivován</h3>
+                <p className="text-xs text-md3-gray">Zapněte Pokročilé analytiky a Insight Engine v Nastavení (Správa Dat) pro odemknutí automatického hledání vzorců chování.</p>
+              </div>
+            )}
+
+            {settings.insightEngine && (() => {
+              // ML Engine patterns logic
+              // 1. Weekend vs Weekday
+              let weekendCount = 0;
+              let weekdayCount = 0;
+              let morningDoses = 0; // 5:00 - 11:59
+              let eveningDoses = 0; // 18:00 - 23:59
+              
+              doses.forEach(d => {
+                const date = new Date(d.timestamp);
+                const day = date.getDay();
+                const hour = date.getHours();
+                
+                if (day === 0 || day === 6) weekendCount++;
+                else weekdayCount++;
+
+                if (hour >= 5 && hour < 12) morningDoses++;
+                if (hour >= 18 || hour < 4) eveningDoses++;
+              });
+
+              const totalDoses = doses.length || 1;
+              const weekendPct = ((weekendCount / totalDoses) * 100).toFixed(0);
+              const isWeekendHeavy = (weekendCount / totalDoses) > 0.4; // 2 out of 7 days is 28%. >40% means highly weekend focused.
+
+              const morningPct = ((morningDoses / totalDoses) * 100).toFixed(0);
+              const eveningPct = ((eveningDoses / totalDoses) * 100).toFixed(0);
+
+              // Predict next general dose
+              const sortedDosesDesc = [...doses].sort((a, b) => b.timestamp - a.timestamp);
+              let freqInsights = '';
+              let riskLevel = 'Nízké';
+              let riskColor = 'text-emerald-500';
+
+              if (sortedDosesDesc.length > 10) {
+                 const recent10 = sortedDosesDesc.slice(0, 10);
+                 const older10 = sortedDosesDesc.slice(10, 20);
+                 if (older10.length === 10) {
+                    const recentSpan = recent10[0].timestamp - recent10[9].timestamp;
+                    const olderSpan = older10[0].timestamp - older10[9].timestamp;
+                    if (recentSpan > 0 && olderSpan > 0) {
+                       const ratio = olderSpan / recentSpan;
+                       if (ratio > 1.5) {
+                          freqInsights = 'Extrémní akcelerace vzorců. Intervaly se dramaticky zkracují.';
+                          riskLevel = 'Vysoké';
+                          riskColor = 'text-red-500';
+                       } else if (ratio > 1.2) {
+                          freqInsights = 'Mírné zvýšení frekvence užívání.';
+                          riskLevel = 'Střední';
+                          riskColor = 'text-amber-500';
+                       } else if (ratio < 0.8) {
+                          freqInsights = 'Zpomalení vzorců. Užíváte méně často než dříve.';
+                       } else {
+                          freqInsights = 'Stabilní frekvence užívání bez eskalace.';
+                       }
+                    }
+                 }
+              }
+
+              return (
+                 <div className="space-y-4">
+                    {/* Insights Header */}
+                    <div className="p-4 bg-cyan-primary/10 border border-cyan-primary/30 rounded-2xl flex items-center gap-3">
+                       <Cpu size={24} className="text-cyan-primary shrink-0" />
+                       <div>
+                          <h3 className="text-sm font-bold text-cyan-primary tracking-widest uppercase">ML Insight Engine Aktivní</h3>
+                          <p className="text-xs text-md3-gray font-medium">Algoritmus zanalyzoval {doses.length} záznamů a identifikoval následující vzorce chování.</p>
+                       </div>
+                    </div>
+
+                    {/* Vzorce chování */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {/* Víkendový profil */}
+                       <div className="md3-card p-5">
+                          <div className="flex items-center gap-2 mb-3">
+                             <Calendar size={16} className="text-md3-primary" />
+                             <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Týdenní Distribuce</span>
+                          </div>
+                          <div className="flex items-end gap-2 mb-2">
+                             <div className="text-3xl font-black text-theme-text">{weekendPct}%</div>
+                             <div className="text-sm font-medium text-md3-gray mb-1">víkendový podíl</div>
+                          </div>
+                          <div className="text-xs font-bold p-2 bg-theme-bg rounded border border-theme-border text-md3-gray">
+                             Závěr AI: <span className="text-theme-text">{isWeekendHeavy ? 'Silně rekreační/víkendové užívání.' : 'Rovnoměrné užívání bez silné víkendové špičky.'}</span>
+                          </div>
+                       </div>
+
+                       {/* Denní doba */}
+                       <div className="md3-card p-5">
+                          <div className="flex items-center gap-2 mb-3">
+                             <Clock size={16} className="text-md3-primary" />
+                             <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Cirkadiánní Profil</span>
+                          </div>
+                          <div className="flex gap-4 mb-2">
+                             <div>
+                                <div className="text-2xl font-black text-theme-text">{morningPct}%</div>
+                                <div className="text-[10px] uppercase font-bold text-md3-gray">Ráno</div>
+                             </div>
+                             <div>
+                                <div className="text-2xl font-black text-theme-text">{eveningPct}%</div>
+                                <div className="text-[10px] uppercase font-bold text-md3-gray">Večer / Noc</div>
+                             </div>
+                          </div>
+                          <div className="text-xs font-bold p-2 bg-theme-bg rounded border border-theme-border text-md3-gray">
+                             Závěr AI: <span className="text-theme-text">{morningDoses > eveningDoses ? 'Převládá ranní aktivace a start dne.' : 'Převládá večerní odpočinek nebo noční aktivita.'}</span>
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* Eskalace a Riziko */}
+                    {freqInsights && (
+                       <div className="md3-card p-5">
+                          <div className="flex items-center gap-2 mb-3">
+                             <Activity size={16} className={riskColor} />
+                             <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Rozpoznáno: Eskalace vzorce</span>
+                          </div>
+                          <div className="text-sm font-bold text-theme-text mb-2">
+                             {freqInsights}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs font-bold bg-theme-bg border border-theme-border p-2 rounded w-fit">
+                             Identifikované riziko: <span className={riskColor}>{riskLevel}</span>
+                          </div>
+                       </div>
+                    )}
+                 </div>
+              );
+            })()}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
@@ -1681,7 +1846,6 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             { id: 'strains', label: 'Druhy', icon: Layers },
             { id: 'combinations', label: 'Kombinace', icon: Activity },
             { id: 'reactions', label: 'Reakce', icon: Smile },
-            { id: 'predictions', label: 'Predikce', icon: Sparkles },
             ...(substance.activeIngredientName || (substance.activeIngredients && substance.activeIngredients.length > 0) ? [{ id: 'active-ingredients', label: 'Účinné látky', icon: FlaskConical }] : []),
             ...(substance.customFields && substance.customFields.length > 0 ? [{ id: 'custom-fields', label: 'Vlastní pole', icon: Database }] : []),
             { id: 'finance', label: 'Finance', icon: Wallet },
@@ -2663,235 +2827,6 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                       {!hasAnyData && (
                         <div className="text-sm text-md3-gray italic text-center p-4">U záznamů nebyly vyplněny žádné vlastní atributy.</div>
                       )}
-                    </div>
-                  );
-                })()}
-              </section>
-            </motion.div>
-          )}
-
-          {detailTab === 'predictions' && (
-            <motion.div
-              key="predictions"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-4 relative z-10"
-            >
-              <section className="md3-card p-6">
-                <div className="flex items-center gap-2 mb-6 justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-md3-primary" />
-                    <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce a modely</h3>
-                  </div>
-                  {settings.predictionAlgorithm === 'ml_simulated' && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20 flex items-center gap-1">
-                      <Cpu size={10} /> ML Insight Engine
-                    </span>
-                  )}
-                  {settings.predictionAlgorithm === 'exponential' && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-md3-primary/10 text-md3-primary border border-md3-primary/20">
-                      Exponenciální Model
-                    </span>
-                  )}
-                </div>
-                {(() => {
-                  if (sDoses.length < 3) return <div className="text-sm text-md3-gray italic text-center p-4">K výpočtu predikcí jsou potřeba alespoň 3 záznamy.</div>;
-                  
-                  // Calculate average interval between doses
-                  let totalInterval = 0;
-                  for (let i = 0; i < sDoses.length - 1; i++) {
-                    totalInterval += Math.abs(sDoses[i].timestamp - sDoses[i+1].timestamp);
-                  }
-                  const avgIntervalMs = totalInterval / (sDoses.length - 1);
-                  
-                  // Calculate next expected dose
-                  const sortedDosesDesc = [...sDoses].sort((a, b) => b.timestamp - a.timestamp);
-                  const lastDose = sortedDosesDesc[0];
-                  const nextDoseMs = lastDose.timestamp + avgIntervalMs;
-                  const timeUntilNext = nextDoseMs - Date.now();
-                  
-                  // Calculate stash exhaustion
-                  const avgAmountPerDose = totalAmount / sDoses.length;
-                  const firstDoseTimestamp = Math.min(...sDoses.map(d => d.timestamp));
-                  const avgDailyConsumption = totalAmount / (period === 'all' ? Math.max(1, (Date.now() - firstDoseTimestamp) / 86400000) : period);
-                  
-                  let stashExhaustionDate = null;
-                  let stashDaysLeft = null;
-                  if ((substance as any).stash !== undefined && avgDailyConsumption > 0) {
-                    stashDaysLeft = (substance as any).stash / avgDailyConsumption;
-                    stashExhaustionDate = new Date(Date.now() + (stashDaysLeft * 86400000));
-                  } else if (substance.packageSize !== undefined && avgDailyConsumption > 0) {
-                    stashDaysLeft = substance.packageSize / avgDailyConsumption;
-                    stashExhaustionDate = new Date(Date.now() + (stashDaysLeft * 86400000));
-                  }
-                  
-                  return (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
-                          <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Další dávka</div>
-                          <div className="text-lg font-black text-theme-text leading-none mb-1">
-                            {timeUntilNext > 0 ? (
-                              `${Math.floor(timeUntilNext / 3600000)}h ${Math.floor((timeUntilNext / 60000) % 60)}m`
-                            ) : (
-                              <span className="text-md3-orange">Zpoždění</span>
-                            )}
-                          </div>
-                          <div className="text-[9px] font-bold text-md3-gray mt-auto">
-                            Z průměru {(avgIntervalMs / 3600000).toFixed(1)}h
-                          </div>
-                        </div>
-                        
-                        {(substance as any).stash !== undefined ? (
-                          <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
-                            <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Vyčerpání balení</div>
-                            <div className="text-lg font-black text-theme-text leading-none mb-1">
-                              {stashDaysLeft && stashDaysLeft < 365 ? (
-                                `Za ${stashDaysLeft.toFixed(0)} dní`
-                              ) : (
-                                '> 1 rok'
-                              )}
-                            </div>
-                            <div className="text-[9px] font-bold text-md3-gray mt-auto truncate">
-                              Velikost: {(substance as any).stash}{substance.unit}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex items-center justify-center text-center shadow-sm">
-                            <div className="text-[9px] font-bold text-md3-gray italic uppercase">Zásoba nevyplněna</div>
-                          </div>
-                        )}
-                        
-                        <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
-                           <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Týdenní projekce</div>
-                           <div className="text-lg font-black text-theme-text leading-none mb-1">
-                              {(avgDailyConsumption * 7).toFixed(1)} <span className="text-xs">{substance.unit}</span>
-                           </div>
-                           {substance.price && substance.price > 0 && (
-                              <div className="text-[9px] font-bold text-md3-green mt-auto truncate uppercase tracking-widest">
-                                 {(avgDailyConsumption * 7 * substance.price).toLocaleString('cs-CZ')} {settings.currency || 'Kč'} / týden
-                              </div>
-                           )}
-                        </div>
-
-                        <div className="p-3 rounded-2xl bg-theme-subtle border border-theme-border flex flex-col justify-between shadow-sm">
-                           <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1.5 line-clamp-1">Intenzita účinku</div>
-                           <div className="text-lg font-black leading-none mb-1" style={{ color: calculateTolerance(substance.id, substances, doses, Date.now()) > 30 ? '#ff9f0a' : '#34c759' }}>
-                              {(100 - calculateTolerance(substance.id, substances, doses, Date.now())).toFixed(0)}%
-                           </div>
-                           <div className="text-[9px] font-bold text-md3-gray mt-auto truncate uppercase tracking-widest">
-                              Z aktuální tolerance
-                           </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border shadow-sm">
-                           <div className="flex items-center justify-between mb-4">
-                             <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest">Model poklesu tolerance (Dní)</div>
-                           </div>
-                           <div className="h-32 w-full">
-                             <ResponsiveContainer width="100%" height="100%">
-                               {(() => {
-                                 const tolData = [];
-                                 for (let i = 0; i <= 14; i++) {
-                                   const futureTime = Date.now() + (i * 86400000);
-                                   const tol = calculateTolerance(substance.id, substances, doses, futureTime);
-                                   tolData.push({
-                                     day: i === 0 ? 'Dnes' : `+${i}d`,
-                                     tolerance: tol,
-                                     intensity: 100 - tol
-                                   });
-                                 }
-                                 return (
-                                   <AreaChart data={tolData}>
-                                     {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-                                     <defs>
-                                       <linearGradient id={`gradientTolerance`} x1="0" y1="0" x2="0" y2="1">
-                                         <stop offset="5%" stopColor={substance.color || '#ff453a'} stopOpacity={0.8}/>
-                                         <stop offset="95%" stopColor={substance.color || '#ff453a'} stopOpacity={0}/>
-                                       </linearGradient>
-                                     </defs>
-                                     <XAxis 
-                                       dataKey="day" 
-                                       axisLine={false} 
-                                       tickLine={false} 
-                                       tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
-                                       dy={5}
-                                     />
-                                     <Tooltip 
-                                       contentStyle={{ backgroundColor: 'rgba(28,28,30,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                       itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                                     />
-                                     <Area 
-                                       type="monotone" 
-                                       dataKey="tolerance" 
-                                       name="Tolerance" 
-                                       stroke={substance.color || '#ff453a'} 
-                                       fill={`url(#gradientTolerance)`}
-                                       strokeWidth={3} 
-                                       isAnimationActive={settings.chartAnimation}
-                                     />
-                                   </AreaChart>
-                                 );
-                               })()}
-                             </ResponsiveContainer>
-                           </div>
-                        </div>
-
-                        <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border shadow-sm">
-                           <div className="flex items-center justify-between mb-4">
-                             <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest">Návrat intenzity účinku</div>
-                           </div>
-                           <div className="h-32 w-full">
-                             <ResponsiveContainer width="100%" height="100%">
-                               {(() => {
-                                 const tolData = [];
-                                 for (let i = 0; i <= 14; i++) {
-                                   const futureTime = Date.now() + (i * 86400000);
-                                   const tol = calculateTolerance(substance.id, substances, doses, futureTime);
-                                   tolData.push({
-                                     day: i === 0 ? 'Dnes' : `+${i}d`,
-                                     intensity: 100 - tol
-                                   });
-                                 }
-                                 return (
-                                   <AreaChart data={tolData}>
-                                     {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-                                     <defs>
-                                       <linearGradient id={`gradientIntensity-${substance.id}`} x1="0" y1="0" x2="0" y2="1">
-                                         <stop offset="5%" stopColor="#30d158" stopOpacity={0.8}/>
-                                         <stop offset="95%" stopColor="#30d158" stopOpacity={0}/>
-                                       </linearGradient>
-                                     </defs>
-                                     <XAxis 
-                                       dataKey="day" 
-                                       axisLine={false} 
-                                       tickLine={false} 
-                                       tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }}
-                                       dy={5}
-                                     />
-                                     <Tooltip 
-                                       contentStyle={{ backgroundColor: 'rgba(28,28,30,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                       itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
-                                     />
-                                     <Area 
-                                       type="monotone" 
-                                       dataKey="intensity" 
-                                       name="Intenzita" 
-                                       stroke="#30d158" 
-                                       fill={`url(#gradientIntensity-${substance.id})`}
-                                       strokeWidth={3} 
-                                       isAnimationActive={settings.chartAnimation}
-                                     />
-                                   </AreaChart>
-                                 );
-                               })()}
-                             </ResponsiveContainer>
-                           </div>
-                        </div>
-                      </div>
                     </div>
                   );
                 })()}
