@@ -1759,11 +1759,11 @@ Odpovídej POUZE striktně JSON objektem.`
                        <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
                           <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Objektivní Skóre Rizika</div>
                           <div className="flex items-end gap-2">
-                             <div className={cn("text-4xl font-black leading-none", aiGlobalData.riskScore > 75 ? "text-red-500" : aiGlobalData.riskScore > 40 ? "text-orange-500" : "text-emerald-500")}>{aiGlobalData.riskScore}</div>
+                             <div className={cn("text-4xl font-black leading-none", (aiGlobalData.riskScore || 0) > 75 ? "text-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "text-orange-500" : "text-emerald-500")}>{aiGlobalData.riskScore ?? '?'}</div>
                              <div className="text-sm font-bold text-md3-gray mb-1">/ 100</div>
                           </div>
                           <div className="mt-2 w-full h-1.5 bg-theme-border rounded-full overflow-hidden">
-                             <div className={cn("h-full rounded-full transition-all", aiGlobalData.riskScore > 75 ? "bg-red-500" : aiGlobalData.riskScore > 40 ? "bg-orange-500" : "bg-emerald-500")} style={{width: `${aiGlobalData.riskScore}%`}} />
+                             <div className={cn("h-full rounded-full transition-all", (aiGlobalData.riskScore || 0) > 75 ? "bg-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "bg-orange-500" : "bg-emerald-500")} style={{width: `${aiGlobalData.riskScore || 0}%`}} />
                           </div>
                        </div>
                        
@@ -1773,7 +1773,7 @@ Odpovídej POUZE striktně JSON objektem.`
                              {aiGlobalData.generalTrend === 'Improving' ? <span className="text-emerald-500 flex items-center gap-1"><ArrowDownRight size={20}/> Zlepšující</span> : aiGlobalData.generalTrend === 'Worsening' ? <span className="text-red-500 flex items-center gap-1"><ArrowUpRight size={20}/> Zhoršující</span> : <span className="text-orange-500 flex items-center gap-1"><RefreshCw size={20}/> Stabilní</span>}
                           </div>
                           <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto">AI Doporučení</div>
-                          <div className="text-xs font-bold text-theme-text leading-tight">{aiGlobalData.suggestedAction}</div>
+                          <div className="text-xs font-bold text-theme-text leading-tight">{aiGlobalData.suggestedAction || 'Zatím nedefinováno'}</div>
                        </div>
                     </div>
 
@@ -1782,7 +1782,7 @@ Odpovídej POUZE striktně JSON objektem.`
                         <Zap size={14} /> Detekované Spouštěče (Korelace)
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {aiGlobalData.keyTriggers.map((t, i) => (
+                        {(aiGlobalData.keyTriggers || []).map((t, i) => (
                            <span key={i} className="px-3 py-1.5 bg-black/20 dark:bg-white/10 rounded-lg text-xs font-bold text-theme-text">{t}</span>
                         ))}
                       </div>

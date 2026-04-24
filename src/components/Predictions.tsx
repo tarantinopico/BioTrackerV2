@@ -792,15 +792,15 @@ Odpovídej POUZE platným formátem JSON.`
                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                               <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Skóre Jistoty</div>
-                                 <div className="text-2xl font-black text-theme-text">{aiData.confidenceScore}<span className="text-sm text-md3-gray">%</span></div>
+                                 <div className="text-2xl font-black text-theme-text">{aiData.confidenceScore ?? '?'}<span className="text-sm text-md3-gray">%</span></div>
                               </div>
                               <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Predikce (Za)</div>
-                                 <div className="text-2xl font-black text-purple-500">{aiData.predictedNextDoseHours.toFixed(1)}<span className="text-sm text-md3-gray">h</span></div>
+                                 <div className="text-2xl font-black text-purple-500">{(aiData.predictedNextDoseHours || 0).toFixed(1)}<span className="text-sm text-md3-gray">h</span></div>
                               </div>
                               <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Navrhovaná Dávka</div>
-                                 <div className="text-2xl font-black text-cyan-500">{aiData.suggestedOptimalDose} <span className="text-sm text-md3-gray">{selectedSubstance.unit}</span></div>
+                                 <div className="text-2xl font-black text-cyan-500">{aiData.suggestedOptimalDose ?? '?'} <span className="text-sm text-md3-gray">{selectedSubstance.unit}</span></div>
                               </div>
                               <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Vývoj (Trajektorie)</div>
@@ -819,7 +819,7 @@ Odpovídej POUZE platným formátem JSON.`
                              <div className="h-32 w-full mt-4">
                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2">Simulace 7D Spotřeby (AI Generováno)</div>
                                 <ResponsiveContainer width="100%" height="100%">
-                                  <BarChart data={aiData.projectedUsageNext7Days.map((val, idx) => ({ day: `D+${idx+1}`, val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                                  <BarChart data={(aiData.projectedUsageNext7Days || []).map((val, idx) => ({ day: `D+${idx+1}`, val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
                                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
                                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#8e8e93', fontSize: 10, fontWeight: 800}} />
                                      <Tooltip cursor={{fill: 'var(--md3-border)', opacity: 0.5}} contentStyle={{backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '8px', fontSize: '10px'}} labelStyle={{display: 'none'}} formatter={(val: number) => [`${val} ${selectedSubstance.unit}`, 'Odhad AI']} />
