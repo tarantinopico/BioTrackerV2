@@ -28,7 +28,8 @@ import {
   Cpu,
   LineChart,
   ShieldAlert,
-  Check
+  Check,
+  Brain
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -765,10 +766,50 @@ export default function Settings({
                       >
                         <option value="basic">Základní Aritmetický</option>
                         <option value="exponential">Exponenciální Vyrovnávání</option>
-                        <option value="ml_simulated">Strojové Učení (Simulované)</option>
+                        <option value="ml_simulated">Strojové Učení (Pravidla)</option>
+                        <option value="ai_groq">Umělá Inteligence (Groq Cloud)</option>
                       </select>
                       <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
                     </div>
+
+                    {settings.predictionAlgorithm === 'ai_groq' && (
+                      <div className="space-y-4 p-4 mt-2 bg-theme-bg rounded-xl border border-theme-border">
+                        <div className="flex items-center gap-2 mb-2 text-md3-primary">
+                          <Brain size={16} />
+                          <span className="text-xs font-black uppercase tracking-widest">Nastavení AI Asistenta</span>
+                        </div>
+                        
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Groq API Klíč (získate na console.groq.com)</label>
+                           <input
+                             type="password"
+                             value={settings.groqApiKey || ''}
+                             onChange={(e) => updateSetting('groqApiKey', e.target.value)}
+                             className="w-full md3-input"
+                             placeholder="gsk_..."
+                           />
+                        </div>
+
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Model (doporučeno llama-3.3-70b-versatile)</label>
+                           <div className="relative">
+                              <select
+                                value={settings.aiModel || 'llama-3.3-70b-versatile'}
+                                onChange={(e) => updateSetting('aiModel', e.target.value)}
+                                className="w-full md3-input appearance-none"
+                              >
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Nejchytřejší)</option>
+                                <option value="llama-3.1-8b-instant">Llama 3.1 8B (Nejrychlejší)</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Kreativní)</option>
+                              </select>
+                              <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
+                           </div>
+                        </div>
+                        <div className="text-[10px] text-md3-gray">
+                          API klíč je uložen pouze lokálně ve vašem zařízení. Nikomu se neposílá kromě požadavku přímo na Groq server pro zhodnocení predikcí.
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

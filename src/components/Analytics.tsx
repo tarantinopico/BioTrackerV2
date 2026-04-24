@@ -1798,7 +1798,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 totalGapHours += gap;
                 intervalData.push({
                    index: i,
-                   date: formatTime(sortedDocs[i].timestamp, { day: 'numeric', month: 'short' }),
+                   date: new Date(sortedDocs[i].timestamp).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'short' }),
                    gapHours: Number(gap.toFixed(1))
                 });
               }

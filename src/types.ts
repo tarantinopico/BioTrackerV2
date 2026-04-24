@@ -212,7 +212,11 @@ export interface UserSettings {
   smartPredictions?: boolean;
   predictiveAnalytics?: boolean;
   insightEngine?: boolean;
-  predictionAlgorithm?: 'basic' | 'exponential' | 'ml_simulated';
+  predictionAlgorithm?: 'basic' | 'exponential' | 'ml_simulated' | 'ai_groq';
+  
+  // AI Integrations
+  groqApiKey?: string;
+  aiModel?: string;
 
   // Security
   pinCode?: string | null;

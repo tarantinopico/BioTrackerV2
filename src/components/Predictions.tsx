@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Substance, Dose, UserSettings } from '../types';
 import { 
   LineChart, 
@@ -54,6 +54,9 @@ export default function Predictions({ substances, doses, settings }: Predictions
   
   const [timeframe, setTimeframe] = useState<'intraday' | '48h' | '7d' | '14d' | '3m' | 'density'>('intraday');
   const [useAllData, setUseAllData] = useState(false);
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const activeSubstances = useMemo(() => {
     const activeIds = Array.from(new Set(doses.map(d => d.substanceId)));
@@ -62,6 +65,60 @@ export default function Predictions({ substances, doses, settings }: Predictions
 
   const selectedSubstance = substances.find(s => s.id === selectedSubstanceId);
   const sDoses = useMemo(() => doses.filter(d => d.substanceId === selectedSubstanceId).sort((a,b) => a.timestamp - b.timestamp), [doses, selectedSubstanceId]);
+
+  useEffect(() => {
+    if (settings.predictionAlgorithm !== 'ai_groq' || !settings.groqApiKey || !selectedSubstance || sDoses.length < 5) {
+      setAiInsight(null);
+      setAiError(null);
+      return;
+    }
+
+    const fetchAiPrediction = async () => {
+      setIsAiLoading(true);
+      setAiError(null);
+      try {
+        const doseHistory = sDoses.slice(-50).map(d => `${new Date(d.timestamp).toISOString()}: ${d.amount} ${selectedSubstance.unit}`).join('\n');
+        
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${settings.groqApiKey}`
+          },
+          body: JSON.stringify({
+            model: settings.aiModel || 'llama-3.3-70b-versatile',
+            messages: [
+              {
+                role: 'system',
+                content: `Jsi specializovaný analytik dat o užívání látek. Uživatel ti poskytne historii užívání látky "${selectedSubstance.name}". Tvým úkolem je analyzovat historii, odhadnout KDY uživatel pravděpodobně užije další dávku a poskytnout krátké shrnutí vzorců chování. Odpovídej vždy v češtině, stručně, s důrazem na přesnost. Nehodnoť morálně. Poskytni rovnou analýzu a odhad.`
+              },
+              {
+                role: 'user',
+                content: `Zde je mých posledních max 50 dávek:\n${doseHistory}\n\nKdy bude podle tebe má další dávka a jaký vzorec z toho vyvozuješ? Aktualní čas je ${new Date().toISOString()}.`
+              }
+            ],
+            temperature: 0.4,
+            max_tokens: 500
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        setAiInsight(data.choices[0].message.content);
+      } catch (err) {
+        setAiError('Nepodařilo se spojit s Groq API. Zkontrolujte API klíč.');
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+
+    // Debounce the call so it doesn't run on every single dose add instantly, or when swapping too fast
+    const timeout = setTimeout(fetchAiPrediction, 1000);
+    return () => clearTimeout(timeout);
+  }, [sDoses, selectedSubstance, settings.predictionAlgorithm, settings.groqApiKey, settings.aiModel]);
 
   const predictionMetrics = useMemo(() => {
     if (!selectedSubstance || sDoses.length < 3) return null;
@@ -185,7 +242,8 @@ export default function Predictions({ substances, doses, settings }: Predictions
     let morningDoses = 0, eveningDoses = 0;
     
     // Streak calculations
-    const uniqueDays = Array.from(new Set(sDoses.map(d => new Date(d.timestamp).setHours(0,0,0,0)))).sort();
+    const uniqueDays = Array.from(new Set(sDoses.map(d => new Date(d.timestamp).setHours(0,0,0,0)))) as number[];
+    uniqueDays.sort();
     let maxStreak = 0;
     let currentStreak = 0;
     let tempStreak = 1;
@@ -671,13 +729,35 @@ export default function Predictions({ substances, doses, settings }: Predictions
                       <Clock size={20} className={predictionMetrics.predictionStatusColor} />
                    </div>
                    <div className="flex-1">
-                      <div className="text-[10px] uppercase font-black text-md3-gray tracking-widest mb-1">Predikce nejbližší dávky</div>
+                      <div className="text-[10px] uppercase font-black text-md3-gray tracking-widest mb-1">Lokální Model (Rychlá Predikce)</div>
                       <div className={cn("text-lg font-black mb-1 leading-tight", predictionMetrics.predictionStatusColor)}>
                          {predictionMetrics.predictedNextDoseTime} <span className="opacity-70 text-sm ml-1">({formatAmount(predictionMetrics.predictedNextAmount, selectedSubstance.unit, 1)})</span>
                       </div>
                       <div className="text-xs font-bold text-md3-gray leading-snug">{predictionMetrics.predictionReason}</div>
                    </div>
                 </div>
+
+                {settings.predictionAlgorithm === 'ai_groq' && (
+                  <div className="md3-card p-4 flex gap-4 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 border-purple-500/20 shadow-inner">
+                     <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
+                        <Brain size={20} className="text-purple-500" />
+                     </div>
+                     <div className="flex-1">
+                        <div className="text-[10px] uppercase font-black text-purple-500 tracking-widest mb-2 flex items-center gap-2">
+                           AI Predikce (Groq Cloud) {isAiLoading && <Activity size={10} className="animate-pulse" />}
+                        </div>
+                        {isAiLoading ? (
+                           <div className="text-sm font-bold text-md3-gray animate-pulse">Llama/Mixtral model analyzuje vzorce...</div>
+                        ) : aiError ? (
+                           <div className="text-xs font-bold text-red-500">{aiError}</div>
+                        ) : aiInsight ? (
+                           <div className="text-sm font-medium text-theme-text leading-relaxed whitespace-pre-wrap">{aiInsight}</div>
+                        ) : (
+                           <div className="text-sm font-bold text-md3-gray italic">Nejprve přidejte více dat o dávkování nebo nastavte platný API klíč.</div>
+                        )}
+                     </div>
+                  </div>
+                )}
 
                 {/* Main Prediction Terminal */}
                 <div className="md3-card overflow-hidden">
