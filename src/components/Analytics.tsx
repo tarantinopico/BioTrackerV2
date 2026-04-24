@@ -270,33 +270,47 @@ export default function Analytics({ substances, doses, settings, onToggleTheme, 
     const fetchGlobalAiAnalysis = async () => {
       setIsAiGlobalLoading(true);
       setAiGlobalError(null);
-      try {
-        // Prepare context
-        const subMap: Record<string, string> = {};
-        substances.forEach(s => subMap[s.id] = s.name);
+      // Prepare context
+      const subMap: Record<string, string> = {};
+      substances.forEach(s => subMap[s.id] = s.name);
+      
+      const limitCount = settings.aiContextLimit || 100;
+      // Use user defined limit
+      const doseHistory = filteredDoses.slice(-limitCount).map(d => {
+        let fieldTxt = '';
+        if (d.customFieldValues) {
+          fieldTxt = Object.entries(d.customFieldValues).map(([k, v]) => `[${k}: ${v}]`).join(' ');
+        }
+        return `${new Date(d.timestamp).toISOString()}: ${subMap[d.substanceId] || 'Neznámá látka'} - ${d.amount} (Note: ${d.note || 'none'}) ${fieldTxt}`;
+      }).join('\n');
         
-        const limitCount = settings.aiContextLimit || 100;
-        // Use user defined limit
-        const doseHistory = filteredDoses.slice(-limitCount).map(d => `${new Date(d.timestamp).toISOString()}: ${subMap[d.substanceId] || 'Neznámá látka'} - ${d.amount}`).join('\n');
-        
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${settings.groqApiKey}`
-          },
-          body: JSON.stringify({
-            model: settings.aiModel || 'llama-3.3-70b-versatile',
-            response_format: { type: "json_object" },
-            messages: [
-              {
-                role: 'system',
-                content: (settings.aiSystemPrompt || `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.`) + 
-                         `\nBER V ÚVAHU NASTAVENÍ: habitAnalysisSensitivity=${settings.habitAnalysisSensitivity ?? 1.0} (čím vyšší, tím víc detekuj skryté návyky a souvislosti).`
-              },
-              {
-                role: 'user',
-                content: (settings.aiGlobalPrompt || `Tvá analýza musí identifikovat vzorce v dlouhodobém (agregovaném) užívání ze všech látek klienta.
+      let attempt = 0;
+      const maxRetries = settings.aiMaxRetries ?? 2;
+      let lastError = null;
+
+      while (attempt <= maxRetries) {
+        try {
+          const baseUrl = (settings.aiBaseUrl || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
+          const fetchUrl = `${baseUrl}/chat/completions`;
+          
+          const response = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${settings.groqApiKey}`
+            },
+            body: JSON.stringify({
+              model: settings.aiModelGlobal || settings.aiModel || 'llama-3.3-70b-versatile',
+              response_format: { type: "json_object" },
+              messages: [
+                {
+                  role: 'system',
+                  content: (settings.aiSystemPrompt || `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.`) + 
+                           `\nBER V ÚVAHU NASTAVENÍ: habitAnalysisSensitivity=${settings.habitAnalysisSensitivity ?? 1.0} (čím vyšší, tím víc detekuj skryté návyky a souvislosti).`
+                },
+                {
+                  role: 'user',
+                  content: (settings.aiGlobalPrompt || `Tvá analýza musí identifikovat vzorce v dlouhodobém (agregovaném) užívání ze všech látek klienta.
 Schéma odpovědi:
 {
   "generalTrend": "Improving" | "Worsening" | "Stable",
@@ -315,37 +329,49 @@ Schéma odpovědi:
   "primaryReason": (string, předpokládaný důvod užívání na základě dat, do 5 slov)
 }
 Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${limitCount} logů):\n${doseHistory}`
-              }
-            ],
-            temperature: settings.aiTemperature ?? 0.1,
-            max_tokens: settings.aiMaxTokens ?? 600
-          })
-        });
+                }
+              ],
+              temperature: settings.aiTemperature ?? 0.1,
+              max_tokens: settings.aiMaxTokens ?? 600
+            })
+          });
 
-        if (!response.ok) throw new Error('API request failed');
+          if (!response.ok) {
+            const errBody = await response.text();
+            throw new Error(`API HTTP Error: ${response.status} - ${errBody}`);
+          }
 
-        const data = await response.json();
-        let content = data.choices?.[0]?.message?.content || '{}';
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) content = match[0];
-        
-        const parsed = JSON.parse(content);
-        
-        // Aplikuj násobič rizikového skóre
-        const riskMult = settings.riskScoreMultiplier ?? 1.0;
-        if (parsed.riskScore !== undefined) {
-          parsed.riskScore = Math.min(Math.round(parsed.riskScore * riskMult), 100);
+          const data = await response.json();
+          let content = data.choices?.[0]?.message?.content || '{}';
+          const match = content.match(/\{[\s\S]*\}/);
+          if (match) content = match[0];
+          
+          const parsed = JSON.parse(content);
+          
+          // Aplikuj násobič rizikového skóre
+          const riskMult = settings.riskScoreMultiplier ?? 1.0;
+          if (parsed.riskScore !== undefined) {
+            parsed.riskScore = Math.min(Math.round(parsed.riskScore * riskMult), 100);
+          }
+          if (parsed.projectedRiskNextMonth !== undefined) {
+            parsed.projectedRiskNextMonth = Math.min(Math.round(parsed.projectedRiskNextMonth * riskMult), 100);
+          }
+
+          setAiGlobalData(parsed as AiGlobalAnalysis);
+          return; // Success, exit loop
+        } catch (err: any) {
+          lastError = err;
+          attempt++;
+          if (attempt > maxRetries) {
+            setAiGlobalError(`Pokus ${attempt} selhal. AI neodpověděla správným JSON nebo selhávalo API. Detail: ${err.message || String(err)}`);
+          } else {
+            console.warn(`AI Analysis attempt ${attempt} failed:`, err);
+            // Wait before retry
+            await new Promise(res => setTimeout(res, 500 * attempt));
+          }
         }
-        if (parsed.projectedRiskNextMonth !== undefined) {
-          parsed.projectedRiskNextMonth = Math.min(Math.round(parsed.projectedRiskNextMonth * riskMult), 100);
-        }
-
-        setAiGlobalData(parsed as AiGlobalAnalysis);
-      } catch (err) {
-        setAiGlobalError('Nepodařilo se zpracovat komplexní AI analýzu. Zkuste to déle.');
-      } finally {
-        setIsAiGlobalLoading(false);
       }
+      setIsAiGlobalLoading(false);
     };
 
     fetchGlobalAiAnalysis();
@@ -365,67 +391,92 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
 
     setIsTaperLoading(true);
     setTaperError(null);
-    try {
-      const subDoses = doses.filter(d => d.substanceId === taperSubstanceId).slice(-50);
-      const doseHistory = subDoses.map(d => `${new Date(d.timestamp).toISOString()}: ${d.amount} ${sub.unit}`).join('\\n');
+    let attempt = 0;
+    const maxRetries = settings.aiMaxRetries ?? 2;
+    let lastError = null;
 
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${settings.groqApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: settings.aiModel || 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'system',
-              content: `Jsi lékařský asistent a farmakolog. Specializuješ se na bezpečné a postupné snižování dávek (tapering). Odpovídáš striktně JSON formátem.`
-            },
-            {
-              role: 'user',
-              content: `Látka: ${sub.name}\\nCíl/Prompt uživatele: ${taperPrompt || 'Vytvoř bezpečný plán postupného vysazení látky.'}\\n\\nHistorie užívání:\\n${doseHistory || 'Žádné dřívější dávky'}\\n\\nVytvoř detailní denní plán vysazování. Odpověz POUZE validním JSON.\\nSchéma:\\n{\\n "aiAdvice": "...",\\n "plan": [{ "day": 1, "recommendedAmount": číslo }, { "day": 2, "recommendedAmount": číslo }]\\n}`
-            }
-          ],
-          temperature: settings.aiTemperature ?? 0.2,
-          max_tokens: settings.aiMaxTokens ?? 1000
-        })
-      });
-
-      if (!response.ok) throw new Error('API fetch error');
-      const data = await response.json();
-      let content = data.choices?.[0]?.message?.content || '{}';
-      
-      const match = content.match(/\\{[\\s\\S]*\\}/);
-      if (match) content = match[0];
-      
-      const parsed = JSON.parse(content);
-      
-      // Transform day sequence to actual dates
-      const startMs = Date.now() + 86400000; // Start tomorrow
-      const mappedPlan = (parsed.plan || []).map((p: any) => ({
-        day: p.day,
-        recommendedAmount: p.recommendedAmount,
-        date: new Date(startMs + (p.day - 1) * 86400000).toISOString().split('T')[0]
-      }));
-
-      const newPlan = {
-        substanceId: taperSubstanceId,
-        prompt: taperPrompt,
-        startDate: new Date(startMs).toISOString(),
-        plan: mappedPlan,
-        aiAdvice: parsed.aiAdvice || ''
-      };
-
-      if (onUpdateSettings) {
-        onUpdateSettings({ ...settings, activeTaperingPlan: newPlan });
+    const subDoses = doses.filter(d => d.substanceId === taperSubstanceId).slice(-50);
+    const doseHistory = subDoses.map(d => {
+      let fieldTxt = '';
+      if (d.customFieldValues) {
+        fieldTxt = Object.entries(d.customFieldValues).map(([k, v]) => `[${k}: ${v}]`).join(' ');
       }
+      return `${new Date(d.timestamp).toISOString()}: ${d.amount} ${sub.unit} (Note: ${d.note || 'none'}) ${fieldTxt}`;
+    }).join('\\n');
 
-    } catch (err) {
-      setTaperError('Nepodařilo se vygenerovat plán. Zkuste to zadat jinak nebo zkontrolujte API.');
-    } finally {
-      setIsTaperLoading(false);
+    while (attempt <= maxRetries) {
+      try {
+        const baseUrl = (settings.aiBaseUrl || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
+        const fetchUrl = `${baseUrl}/chat/completions`;
+        
+        const response = await fetch(fetchUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${settings.groqApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: settings.aiModelTapering || settings.aiModel || 'llama-3.3-70b-versatile',
+            response_format: { type: "json_object" },
+            messages: [
+              {
+                role: 'system',
+                content: settings.aiTaperingSystemPrompt || `Jsi lékařský asistent a farmakolog. Specializuješ se na bezpečné a postupné snižování dávek (tapering). Odpovídáš striktně JSON formátem.`
+              },
+              {
+                role: 'user',
+                content: `Látka: ${sub.name}\\nCíl/Prompt uživatele: ${taperPrompt || 'Vytvoř bezpečný plán postupného vysazení látky.'}\\n\\nHistorie užívání:\\n${doseHistory || 'Žádné dřívější dávky'}\\n\\nVytvoř detailní denní plán vysazování. Odpověz POUZE validním JSON.\\nSchéma:\\n{\\n "aiAdvice": "...",\\n "plan": [{ "day": 1, "recommendedAmount": číslo }, { "day": 2, "recommendedAmount": číslo }]\\n}`
+              }
+            ],
+            temperature: settings.aiTemperature ?? 0.2,
+            max_tokens: settings.aiMaxTokens ?? 1000
+          })
+        });
+
+        if (!response.ok) {
+          const errBody = await response.text();
+          throw new Error(`API HTTP Error: ${response.status} - ${errBody}`);
+        }
+        const data = await response.json();
+        let content = data.choices?.[0]?.message?.content || '{}';
+        
+        const match = content.match(/\{[\s\S]*\}/);
+        if (match) content = match[0];
+        
+        const parsed = JSON.parse(content);
+        
+        // Transform day sequence to actual dates
+        const startMs = Date.now() + 86400000; // Start tomorrow
+        const mappedPlan = (parsed.plan || []).map((p: any) => ({
+          day: p.day,
+          recommendedAmount: p.recommendedAmount,
+          date: new Date(startMs + (p.day - 1) * 86400000).toISOString().split('T')[0]
+        }));
+
+        const newPlan = {
+          substanceId: taperSubstanceId,
+          prompt: taperPrompt,
+          startDate: new Date(startMs).toISOString(),
+          plan: mappedPlan,
+          aiAdvice: parsed.aiAdvice || ''
+        };
+
+        if (onUpdateSettings) {
+          onUpdateSettings({ ...settings, activeTaperingPlan: newPlan });
+        }
+        return; // Success, break loop
+      } catch (err: any) {
+        lastError = err;
+        attempt++;
+        if (attempt > maxRetries) {
+          setTaperError(`Detail chyby: ${err.message || String(err)}. Zkontrolujte model nebo prompt.`);
+        } else {
+          console.warn(`Taper attempt ${attempt} failed:`, err);
+          await new Promise(res => setTimeout(res, 500 * attempt));
+        }
+      }
     }
+    setIsTaperLoading(false);
   };
 
   const calculateCost = (dosesList: Dose[]) => {

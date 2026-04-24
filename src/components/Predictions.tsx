@@ -88,27 +88,41 @@ export default function Predictions({ substances, doses, settings }: Predictions
     const fetchAiPrediction = async () => {
       setIsAiLoading(true);
       setAiError(null);
-      try {
-        const limitCount = settings.aiContextLimit || 50;
-        const doseHistory = sDoses.slice(-limitCount).map(d => `${new Date(d.timestamp).toISOString()}: ${d.amount} ${selectedSubstance.unit}`).join('\n');
-        
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${settings.groqApiKey}`
-          },
-          body: JSON.stringify({
-            model: settings.aiModel || 'llama-3.3-70b-versatile',
-            response_format: { type: "json_object" },
-            messages: [
-              {
-                role: 'system',
-                content: settings.aiSystemPrompt || `Jsi analytický systém pro užívání látek. Odpovídáš POUZE striktním JSON objektem.`
-              },
-              {
-                role: 'user',
-                content: (settings.aiPredictionPrompt || `Analyzuj historii dávek pro látku "${selectedSubstance.name}" a predikuj budoucí vývoj.
+      let attempt = 0;
+      const maxRetries = settings.aiMaxRetries ?? 2;
+      let lastError = null;
+
+      while (attempt <= maxRetries) {
+        try {
+          const limitCount = settings.aiContextLimit || 50;
+          const doseHistory = sDoses.slice(-limitCount).map(d => {
+            let fieldTxt = '';
+            if (d.customFieldValues) {
+              fieldTxt = Object.entries(d.customFieldValues).map(([k, v]) => `[${k}: ${v}]`).join(' ');
+            }
+            return `${new Date(d.timestamp).toISOString()}: ${d.amount} ${selectedSubstance.unit} (Note: ${d.note || 'none'}) ${fieldTxt}`;
+          }).join('\n');
+          
+          const baseUrl = (settings.aiBaseUrl || 'https://api.groq.com/openai/v1').replace(/\/$/, '');
+          const fetchUrl = `${baseUrl}/chat/completions`;
+
+          const response = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${settings.groqApiKey}`
+            },
+            body: JSON.stringify({
+              model: settings.aiModel || 'llama-3.3-70b-versatile',
+              response_format: { type: "json_object" },
+              messages: [
+                {
+                  role: 'system',
+                  content: settings.aiSystemPrompt || `Jsi analytický systém pro užívání látek. Odpovídáš POUZE striktním JSON objektem.`
+                },
+                {
+                  role: 'user',
+                  content: (settings.aiPredictionPrompt || `Analyzuj historii dávek pro látku "${selectedSubstance.name}" a predikuj budoucí vývoj.
 
 Schéma JSON odpovědi:
 {
@@ -122,39 +136,49 @@ Schéma JSON odpovědi:
   "intradayProbability": (pole přesně 24 čísel udávající procentuální pravděpodobnost užití v každou hodinu 0-23. Součet pole nemusí být 100, ale každé číslo reprezentuje pravděpodobnost v danou hodinu (0-100).)
 }
 Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max ${limitCount} dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
-              }
-            ],
-            temperature: settings.aiTemperature ?? 0.1,
-            max_tokens: settings.aiMaxTokens ?? 600
-          })
-        });
+                }
+              ],
+              temperature: settings.aiTemperature ?? 0.1,
+              max_tokens: settings.aiMaxTokens ?? 600
+            })
+          });
 
-        if (!response.ok) {
-          throw new Error('API request failed');
-        }
+          if (!response.ok) {
+            const errBody = await response.text();
+            throw new Error(`API HTTP Error: ${response.status} - ${errBody}`);
+          }
 
-        const data = await response.json();
-        let content = data.choices?.[0]?.message?.content || '{}';
-        
-        // Bezpečné parsování v případě, že LLM vrátí markdown bloky
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) {
-          content = match[0];
-        }
-        
-        const parsed = JSON.parse(content);
-        
-        // Aplikuj násobič rizikového skóre a peak intensity
-        const peakMult = settings.peakIntensityMultiplier ?? 1.0;
-        if (parsed.currentEstimatedBloodLevelPct !== undefined) {
-          parsed.currentEstimatedBloodLevelPct = Math.min(Math.round(parsed.currentEstimatedBloodLevelPct * peakMult), 100);
-        }
+          const data = await response.json();
+          let content = data.choices?.[0]?.message?.content || '{}';
+          
+          // Bezpečné parsování v případě, že LLM vrátí markdown bloky
+          const match = content.match(/\{[\s\S]*\}/);
+          if (match) {
+            content = match[0];
+          }
+          
+          const parsed = JSON.parse(content);
+          
+          // Aplikuj násobič rizikového skóre a peak intensity
+          const peakMult = settings.peakIntensityMultiplier ?? 1.0;
+          if (parsed.currentEstimatedBloodLevelPct !== undefined) {
+            parsed.currentEstimatedBloodLevelPct = Math.min(Math.round(parsed.currentEstimatedBloodLevelPct * peakMult), 100);
+          }
 
-        setAiData(parsed as AiAnalysis);
-      } catch (err) {
-        setAiError('Chyba komunikace s Groq API nebo chybný formát JSON. Zkontrolujte API klíč.');
-      } finally {
-        setIsAiLoading(false);
+          setAiData(parsed as AiAnalysis);
+          setIsAiLoading(false);
+          return; // Uspěli jsme, vyskočíme ze smyčky
+        } catch (err: any) {
+          lastError = err;
+          attempt++;
+          if (attempt > maxRetries) {
+            setAiError(`API chyba (pokus ${attempt}): ${err.message || String(err)}`);
+            setIsAiLoading(false);
+          } else {
+            console.warn(`Predictions AI attempt ${attempt} failed:`, err);
+            await new Promise(res => setTimeout(res, 500 * attempt));
+          }
+        }
       }
     };
 

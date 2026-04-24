@@ -87,6 +87,8 @@ Schéma JSON odpovědi:
 }
 Odpovídej POUZE platným formátem JSON.`;
 
+const DEFAULT_TAPERING_PROMPT = `Jsi lékařský asistent a farmakolog. Specializuješ se na bezpečné a postupné snižování dávek (tapering). Odpovídáš striktně JSON formátem.`;
+
 export default function Settings({ 
   settings, 
   customEffects, 
@@ -806,7 +808,18 @@ export default function Settings({
                         </div>
 
                         <div className="space-y-1">
-                           <label className="text-xs font-bold text-md3-gray">Model (doporučeno llama-3.3-70b-versatile)</label>
+                           <label className="text-xs font-bold text-md3-gray">Vlastní Base URL (volitelné)</label>
+                           <input
+                             type="url"
+                             value={settings.aiBaseUrl || ''}
+                             onChange={(e) => updateSetting('aiBaseUrl', e.target.value)}
+                             className="w-full md3-input"
+                             placeholder="Např. https://api.groq.com/openai/v1"
+                           />
+                        </div>
+
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Model pro Predikce</label>
                            <div className="relative">
                               <select
                                 value={settings.aiModel || 'llama-3.3-70b-versatile'}
@@ -816,6 +829,41 @@ export default function Settings({
                                 <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Nejchytřejší)</option>
                                 <option value="llama-3.1-8b-instant">Llama 3.1 8B (Nejrychlejší)</option>
                                 <option value="mixtral-8x7b-32768">Mixtral 8x7B (Kreativní)</option>
+                                <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 (Analytický)</option>
+                              </select>
+                              <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
+                           </div>
+                        </div>
+
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Model pro Globální Analýzu</label>
+                           <div className="relative">
+                              <select
+                                value={settings.aiModelGlobal || 'llama-3.3-70b-versatile'}
+                                onChange={(e) => updateSetting('aiModelGlobal', e.target.value)}
+                                className="w-full md3-input appearance-none"
+                              >
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Nejchytřejší)</option>
+                                <option value="llama-3.1-8b-instant">Llama 3.1 8B (Nejrychlejší)</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Kreativní)</option>
+                                <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 (Analytický)</option>
+                              </select>
+                              <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
+                           </div>
+                        </div>
+
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Model pro Tapering Plány</label>
+                           <div className="relative">
+                              <select
+                                value={settings.aiModelTapering || 'llama-3.3-70b-versatile'}
+                                onChange={(e) => updateSetting('aiModelTapering', e.target.value)}
+                                className="w-full md3-input appearance-none"
+                              >
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Nejchytřejší)</option>
+                                <option value="llama-3.1-8b-instant">Llama 3.1 8B (Nejrychlejší)</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7B (Kreativní)</option>
+                                <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 (Analytický)</option>
                               </select>
                               <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
                            </div>
@@ -876,11 +924,12 @@ export default function Settings({
                 <div className="space-y-4 mt-6">
                   <div className="flex items-center justify-between border-b border-theme-border pb-2">
                      <h4 className="text-xs font-bold text-red-400 uppercase tracking-widest">Pravidla Umělé Inteligence (Prompty)</h4>
-                     <button
+                        <button
                         onClick={() => {
                            updateSetting('aiSystemPrompt', DEFAULT_SYSTEM_PROMPT);
                            updateSetting('aiGlobalPrompt', DEFAULT_GLOBAL_PROMPT);
                            updateSetting('aiPredictionPrompt', DEFAULT_PREDICTION_PROMPT);
+                           updateSetting('aiTaperingSystemPrompt', DEFAULT_TAPERING_PROMPT);
                         }}
                         className="text-[10px] bg-red-500/20 text-red-500 px-2 py-1 rounded"
                      >
@@ -894,6 +943,16 @@ export default function Settings({
                       value={settings.aiSystemPrompt ?? DEFAULT_SYSTEM_PROMPT}
                       onChange={e => updateSetting('aiSystemPrompt', e.target.value)}
                       placeholder="Volitelně přepište roli AI..."
+                      className="w-full md3-input h-24 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">Systémový Prompt pro Tapering</label>
+                    <textarea 
+                      value={settings.aiTaperingSystemPrompt ?? DEFAULT_TAPERING_PROMPT}
+                      onChange={e => updateSetting('aiTaperingSystemPrompt', e.target.value)}
+                      placeholder="Role AI pro tapering..."
                       className="w-full md3-input h-24 font-mono text-xs"
                     />
                   </div>
@@ -926,6 +985,15 @@ export default function Settings({
                          type="number"
                          value={settings.aiMaxTokens ?? 600}
                          onChange={e => updateSetting('aiMaxTokens', parseInt(e.target.value) || 600)}
+                         className="w-full md3-input font-mono text-xs"
+                       />
+                     </div>
+                     <div className="space-y-1">
+                       <label className="text-[10px] font-bold text-md3-gray">AI Max Retries (default: 2)</label>
+                       <input 
+                         type="number"
+                         value={settings.aiMaxRetries ?? 2}
+                         onChange={e => updateSetting('aiMaxRetries', parseInt(e.target.value) || 2)}
                          className="w-full md3-input font-mono text-xs"
                        />
                      </div>

@@ -232,14 +232,19 @@ export interface UserSettings {
   
   // AI Integrations
   groqApiKey?: string;
-  aiModel?: string;
+  aiModel?: string; // default prediction model
+  aiModelGlobal?: string; // model for global analysis
+  aiModelTapering?: string; // model for tapering
+  aiBaseUrl?: string; // custom base url (e.g. together, local)
   aiContextLimit?: number;
   aiTemperature?: number;
   aiMaxTokens?: number;
+  aiMaxRetries?: number;
   aiGlobalPrompt?: string;
   aiPredictionPrompt?: string;
   aiSystemPrompt?: string;
-
+  aiTaperingSystemPrompt?: string; // tapering specific system prompt
+  
   // Developer / Advanced
   developerMode?: boolean;
   toleranceMultiplier?: number;
@@ -249,6 +254,7 @@ export interface UserSettings {
   peakIntensityMultiplier?: number;
   habitAnalysisSensitivity?: number;
   doseDecayRate?: number;
+  debugMode?: boolean;
 
   // Security
   pinCode?: string | null;
