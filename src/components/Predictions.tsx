@@ -104,8 +104,11 @@ export default function Predictions({ substances, doses, settings }: Predictions
             messages: [
               {
                 role: 'system',
-                content: `Jsi analytický systém pro užívání látek. Odpovídáš POUZE striktním JSON objektem.
-Analyzuj historii dávek pro látku "${selectedSubstance.name}" a predikuj budoucí vývoj.
+                content: settings.aiSystemPrompt || `Jsi analytický systém pro užívání látek. Odpovídáš POUZE striktním JSON objektem.`
+              },
+              {
+                role: 'user',
+                content: (settings.aiPredictionPrompt || `Analyzuj historii dávek pro látku "${selectedSubstance.name}" a predikuj budoucí vývoj.
 
 Schéma JSON odpovědi:
 {
@@ -118,14 +121,10 @@ Schéma JSON odpovědi:
   "currentEstimatedBloodLevelPct": (číslo 0-100 udávající hrubý odhad zůstatku aktivní látky v krvi právě teď, na základě poločasu rozpadu u této látky),
   "intradayProbability": (pole přesně 24 čísel udávající procentuální pravděpodobnost užití v každou hodinu 0-23. Součet pole nemusí být 100, ale každé číslo reprezentuje pravděpodobnost v danou hodinu (0-100).)
 }
-Odpovídej POUZE platným formátem JSON.`
-              },
-              {
-                role: 'user',
-                content: `Zde je mých posledních max ${limitCount} dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
+Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max ${limitCount} dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
               }
             ],
-            temperature: 0.1,
+            temperature: settings.aiTemperature ?? 0.1,
             max_tokens: 500
           })
         });

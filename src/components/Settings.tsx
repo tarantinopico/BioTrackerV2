@@ -29,7 +29,10 @@ import {
   LineChart,
   ShieldAlert,
   Check,
-  Brain
+  Brain,
+  Code,
+  Terminal,
+  Sliders
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -47,7 +50,7 @@ interface SettingsProps {
   onExportCSV?: () => void;
 }
 
-type Tab = 'profile' | 'appearance' | 'dashboard' | 'notifications' | 'ai' | 'security' | 'effects' | 'data' | 'about';
+type Tab = 'profile' | 'appearance' | 'dashboard' | 'notifications' | 'ai' | 'security' | 'effects' | 'data' | 'developer' | 'about';
 
 export default function Settings({ 
   settings, 
@@ -98,6 +101,7 @@ export default function Settings({
     { id: 'security', label: 'Zabezpečení', icon: ShieldCheck },
     { id: 'data', label: 'Úložiště', icon: Database },
     { id: 'effects', label: 'Efekty', icon: Sparkles },
+    { id: 'developer', label: 'Vývojář', icon: Code },
     { id: 'about', label: 'Info', icon: Info },
   ];
 
@@ -793,12 +797,112 @@ export default function Settings({
                            />
                            <p className="text-[10px] text-md3-gray mt-1">Více záznamů = chytřejší, ale spotřebuje víc tokenů.</p>
                         </div>
-                        <div className="text-[10px] text-md3-gray">
+                        
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Kreativita (Temperature): {settings.aiTemperature ?? 0.1}</label>
+                           <input
+                             type="range"
+                             min="0"
+                             max="2"
+                             step="0.1"
+                             value={settings.aiTemperature ?? 0.1}
+                             onChange={(e) => updateSetting('aiTemperature', parseFloat(e.target.value))}
+                             className="w-full accent-md3-primary"
+                           />
+                           <div className="flex justify-between text-[10px] text-md3-gray">
+                              <span>Striktní (0.0)</span>
+                              <span>Kreativní (2.0)</span>
+                           </div>
+                        </div>
+
+                        <div className="text-[10px] text-md3-gray mt-4">
                           API klíč je uložen pouze lokálně ve vašem zařízení. Nikomu se neposílá kromě požadavku přímo na Groq server pro zhodnocení predikcí.
                         </div>
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* DEVELOPER TAB */}
+          {activeTab === 'developer' && (
+            <div className="space-y-6">
+              <div className="md3-card border border-red-500/20 bg-red-500/5 p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
+                  <Terminal size={16} /> Vývojářský Režim
+                </h3>
+                <p className="text-xs text-md3-gray leading-relaxed mb-4">
+                  Změňte základní výpočetní proměnné a upravte chování AI. Pouze pro experty, může rozbít aplikaci.
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">Systémový Prompt pro AI (Přepis)</label>
+                    <textarea 
+                      value={settings.aiSystemPrompt || ''}
+                      onChange={e => updateSetting('aiSystemPrompt', e.target.value)}
+                      placeholder="Volitelně přepište roli AI..."
+                      className="w-full md3-input h-24 font-mono text-xs"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">AI Globální Analýza Prompt (Přepis JSON Schématu)</label>
+                    <textarea 
+                      value={settings.aiGlobalPrompt || ''}
+                      onChange={e => updateSetting('aiGlobalPrompt', e.target.value)}
+                      placeholder="Custom format JSON..."
+                      className="w-full md3-input h-32 font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">AI Predikční Prompt (Přepis JSON Schématu)</label>
+                    <textarea 
+                      value={settings.aiPredictionPrompt || ''}
+                      onChange={e => updateSetting('aiPredictionPrompt', e.target.value)}
+                      placeholder="Custom format JSON..."
+                      className="w-full md3-input h-32 font-mono text-xs"
+                    />
+                  </div>
+                  
+                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mt-6 mb-2 border-b border-theme-border pb-2">Matematický Model</h4>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">Násobič Tolerance (default: 1.0)</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      value={settings.toleranceMultiplier ?? 1.0}
+                      onChange={e => updateSetting('toleranceMultiplier', parseFloat(e.target.value) || 1.0)}
+                      className="w-full md3-input font-mono text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">Násobič Rychlosti Metabolismu (default: 1.0)</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      value={settings.metabolismMultiplier ?? 1.0}
+                      onChange={e => updateSetting('metabolismMultiplier', parseFloat(e.target.value) || 1.0)}
+                      className="w-full md3-input font-mono text-xs"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-md3-gray">Násobič Poločasu Rozpadu (default: 1.0)</label>
+                    <input 
+                      type="number"
+                      step="0.1"
+                      value={settings.halfLifeMultiplier ?? 1.0}
+                      onChange={e => updateSetting('halfLifeMultiplier', parseFloat(e.target.value) || 1.0)}
+                      className="w-full md3-input font-mono text-xs"
+                    />
+                  </div>
+                  
                 </div>
               </div>
             </div>

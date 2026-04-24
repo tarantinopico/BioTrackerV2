@@ -1,15 +1,21 @@
 import { Substance, Dose, UserSettings } from '../types';
 
 export function getMetabolismMultiplier(settings: UserSettings): number {
-  const metabolism = settings.userMetabolism || 'normal';
-  switch (metabolism) {
-    case 'slow': return 0.8;
-    case 'fast': return 1.2;
-    default: return 1;
+  const baseMetabolism = settings.userMetabolism || 'normal';
+  let mult = 1.0;
+  switch (baseMetabolism) {
+    case 'slow': mult = 0.8; break;
+    case 'fast': mult = 1.2; break;
+    default: mult = 1.0; break;
   }
+  return mult * (settings.metabolismMultiplier ?? 1.0);
 }
 
-export function calculateTolerance(substanceId: string, substances: Substance[], doses: Dose[], atTimestamp: number = Date.now()): number {
+export function getHalfLifeMultiplier(settings: UserSettings): number {
+  return settings.halfLifeMultiplier ?? 1.0;
+}
+
+export function calculateTolerance(substanceId: string, substances: Substance[], doses: Dose[], atTimestamp: number = Date.now(), settings?: UserSettings): number {
   const substance = substances.find(s => s.id === substanceId);
   if (!substance) return 0;
 
@@ -40,7 +46,10 @@ export function calculateTolerance(substanceId: string, substances: Substance[],
   const frequencyFactor = (daysWithUse / 7) * 50;
   const amountFactor = Math.min(averageDailyNormalizedAmount * 30, 50);
 
-  return Math.min(frequencyFactor + amountFactor, 95);
+  const baseTolerance = Math.min(frequencyFactor + amountFactor, 95);
+  const userMult = settings?.toleranceMultiplier ?? 1.0;
+
+  return Math.min(baseTolerance * userMult, 99);
 }
 
 export function getTypicalDose(substanceId: string): number {
@@ -93,12 +102,13 @@ export function calculateDoseLevel(
   const bioavailability = (substance.bioavailability / 100) * (dose.bioavailabilityMultiplier || 1);
   const effectiveDose = amount * bioavailability;
 
-  const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substance.id, substances, doses);
+  const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substance.id, substances, doses, Date.now(), settings);
   const toleranceFactor = 1 - (tolerance / 100);
 
   const metabolismMult = getMetabolismMultiplier(settings);
+  const halfLifeMult = getHalfLifeMultiplier(settings);
   const tmax = (substance.tmax * (dose.tmaxMultiplier || 1)) / metabolismMult;
-  const halfLife = substance.halfLife / metabolismMult;
+  const halfLife = (substance.halfLife / metabolismMult) * halfLifeMult;
 
   const curveType = substance.metabolismCurve || 'standard';
   let level = 0;
@@ -187,7 +197,7 @@ export function calculateSubstanceLevelAtTime(
   const relevantDoses = doses.filter(d => d.substanceId === substanceId);
   let totalLevel = 0;
 
-  const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substanceId, substances, doses);
+  const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substanceId, substances, doses, timestamp, settings);
 
   relevantDoses.forEach(dose => {
     const doseTime = dose.timestamp;
@@ -222,18 +232,19 @@ export function calculateCleanTime(substances: Substance[], doses: Dose[], setti
   const now = Date.now();
   let maxCleanTime = 0;
   const metabolismMult = getMetabolismMultiplier(settings);
+  const halfLifeMult = getHalfLifeMultiplier(settings);
 
   doses.forEach(dose => {
     const substance = substances.find(s => s.id === dose.substanceId);
     if (!substance) return;
 
     const doseTime = dose.timestamp;
-    let eliminationTime = substance.halfLife * 5 / metabolismMult;
+    let eliminationTime = (substance.halfLife * 5 / metabolismMult) * halfLifeMult;
     
     if (substance.metabolismCurve === 'custom' && substance.customCurve && substance.customCurve.length > 0) {
       const lastPoint = [...substance.customCurve].sort((a, b) => a.time - b.time).pop();
       if (lastPoint) {
-        eliminationTime = lastPoint.time / metabolismMult;
+        eliminationTime = (lastPoint.time / metabolismMult) * halfLifeMult;
       }
     }
     

@@ -218,6 +218,16 @@ export interface UserSettings {
   groqApiKey?: string;
   aiModel?: string;
   aiContextLimit?: number;
+  aiTemperature?: number;
+  aiGlobalPrompt?: string;
+  aiPredictionPrompt?: string;
+  aiSystemPrompt?: string;
+
+  // Developer / Advanced
+  developerMode?: boolean;
+  toleranceMultiplier?: number;
+  metabolismMultiplier?: number;
+  halfLifeMultiplier?: number;
 
   // Security
   pinCode?: string | null;

@@ -285,8 +285,11 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             messages: [
               {
                 role: 'system',
-                content: `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.
-Tvá analýza musí identifikovat vzorce v dlouhodobém (agregovaném) užívání ze všech látek klienta.
+                content: settings.aiSystemPrompt || `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.`
+              },
+              {
+                role: 'user',
+                content: (settings.aiGlobalPrompt || `Tvá analýza musí identifikovat vzorce v dlouhodobém (agregovaném) užívání ze všech látek klienta.
 Schéma odpovědi:
 {
   "generalTrend": "Improving" | "Worsening" | "Stable",
@@ -304,14 +307,10 @@ Schéma odpovědi:
   "projectedRiskNextMonth": (číslo 0-100, extrapolace rizika do dalšího měsíce z aktuálního trendu),
   "primaryReason": (string, předpokládaný důvod užívání na základě dat, do 5 slov)
 }
-Odpovídej POUZE striktně JSON objektem.`
-              },
-              {
-                role: 'user',
-                content: `Historie (posledních max ${limitCount} logů):\n${doseHistory}`
+Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${limitCount} logů):\n${doseHistory}`
               }
             ],
-            temperature: 0.1,
+            temperature: settings.aiTemperature ?? 0.1,
             max_tokens: 600
           })
         });
