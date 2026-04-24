@@ -94,6 +94,10 @@ interface AiGlobalAnalysis {
     timing: number;
     combinations: number;
   };
+  habitAnalysis?: string;
+  weeklyDistribution?: number[];
+  projectedRiskNextMonth?: number;
+  primaryReason?: string;
 }
 
 const CustomTooltip = ({ active, payload, label, type = 'default', currency = 'Kč' }: any) => {
@@ -294,7 +298,11 @@ Schéma odpovědi:
     "amount": (číslo 0-100, kde 100=velké dávky),
     "timing": (číslo 0-100, rizikovost načasování např pozdě v noci),
     "combinations": (číslo 0-100, jak často se mixují látky / polydrug risk)
-  }
+  },
+  "habitAnalysis": (string, odstavec 20-30 slov o zjištěných návycích a psychologickém kontextu),
+  "weeklyDistribution": (pole 7 čísel udávající procentuální riziko nebo zátěž pro každý den v týdnu [Pondělí-Neděle], suma nemusí být 100),
+  "projectedRiskNextMonth": (číslo 0-100, extrapolace rizika do dalšího měsíce z aktuálního trendu),
+  "primaryReason": (string, předpokládaný důvod užívání na základě dat, do 5 slov)
 }
 Odpovídej POUZE striktně JSON objektem.`
               },
@@ -1760,9 +1768,9 @@ Odpovídej POUZE striktně JSON objektem.`
                   <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiGlobalError}</div>
                 ) : aiGlobalData ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                        <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Objektivní Skóre Rizika</div>
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Skóre Rizika</div>
                           <div className="flex items-end gap-2">
                              <div className={cn("text-4xl font-black leading-none", (aiGlobalData.riskScore || 0) > 75 ? "text-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "text-orange-500" : "text-emerald-500")}>{aiGlobalData.riskScore ?? '?'}</div>
                              <div className="text-sm font-bold text-md3-gray mb-1">/ 100</div>
@@ -1774,24 +1782,88 @@ Odpovídej POUZE striktně JSON objektem.`
                        
                        <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
                           <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Vývoj (Trend)</div>
-                          <div className="text-lg font-black text-theme-text mb-2">
+                          <div className="text-xl font-black text-theme-text mb-2">
                              {aiGlobalData.generalTrend === 'Improving' ? <span className="text-emerald-500 flex items-center gap-1"><ArrowDownRight size={20}/> Zlepšující</span> : aiGlobalData.generalTrend === 'Worsening' ? <span className="text-red-500 flex items-center gap-1"><ArrowUpRight size={20}/> Zhoršující</span> : <span className="text-orange-500 flex items-center gap-1"><RefreshCw size={20}/> Stabilní</span>}
                           </div>
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto">AI Doporučení</div>
-                          <div className="text-xs font-bold text-theme-text leading-tight">{aiGlobalData.suggestedAction || 'Zatím nedefinováno'}</div>
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto">Riziko M2</div>
+                          <div className="text-lg font-black text-theme-text">{aiGlobalData.projectedRiskNextMonth ?? '?'}<span className="text-xs text-md3-gray">%</span></div>
+                       </div>
+
+                       <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between col-span-2">
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">AI Doporučení</div>
+                          <div className="text-sm font-bold text-theme-text leading-tight mb-2">{aiGlobalData.suggestedAction || 'Zatím nedefinováno'}</div>
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto mb-1">Hlavní Důvod</div>
+                          <div className="text-xs font-bold text-cyan-500 uppercase">{aiGlobalData.primaryReason || 'Neznámý'}</div>
                        </div>
                     </div>
 
-                    <div className="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/20">
-                      <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        <Zap size={14} /> Detekované Spouštěče (Korelace)
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {(aiGlobalData.keyTriggers || []).map((t, i) => (
-                           <span key={i} className="px-3 py-1.5 bg-black/20 dark:bg-white/10 rounded-lg text-xs font-bold text-theme-text">{t}</span>
-                        ))}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Radar Chart for Multiple dimensions of risk */}
+                      {aiGlobalData.radarScores && (
+                        <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Brain size={14} /> Dimenze Zátěže
+                          </div>
+                          <div className="h-48 w-full mt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                                { subject: 'Frekvence', A: aiGlobalData.radarScores.frequency || 0, fullMark: 100 },
+                                { subject: 'Množství', A: aiGlobalData.radarScores.amount || 0, fullMark: 100 },
+                                { subject: 'Načasování', A: aiGlobalData.radarScores.timing || 0, fullMark: 100 },
+                                { subject: 'Kombinace', A: aiGlobalData.radarScores.combinations || 0, fullMark: 100 },
+                              ]}>
+                                <PolarGrid stroke="rgba(150,150,150,0.2)" />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--md3-gray)', fontSize: 10, fontWeight: 800 }} />
+                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                <Radar name="Zátěž" dataKey="A" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.4} />
+                                <Tooltip contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '8px', fontSize: '10px'}} />
+                              </RadarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-4">
+                        <div className="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/20 h-full flex flex-col">
+                          <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Zap size={14} /> Detekované Spouštěče
+                          </div>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {(aiGlobalData.keyTriggers || []).map((t, i) => (
+                               <span key={i} className="px-3 py-1.5 bg-black/20 dark:bg-white/10 rounded-lg text-[11px] font-bold text-theme-text">{t}</span>
+                            ))}
+                          </div>
+                          <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1 mt-auto">Psychologický Kontext</div>
+                          <p className="text-xs text-theme-text leading-relaxed">
+                            {aiGlobalData.habitAnalysis || "Nedostatek dat pro hlubší analýzu návyků."}
+                          </p>
+                        </div>
                       </div>
                     </div>
+
+                    {aiGlobalData.weeklyDistribution && aiGlobalData.weeklyDistribution.length === 7 && (
+                      <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                         <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <Activity size={14} /> Týdenní Mapa Rizika (Pondělí - Neděle)
+                         </div>
+                         <div className="h-32 w-full mt-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={aiGlobalData.weeklyDistribution.map((val, idx) => ({ day: ['Po','Út','St','Čt','Pá','So','Ne'][idx], val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                                 <defs>
+                                   <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
+                                     <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
+                                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                   </linearGradient>
+                                 </defs>
+                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#8e8e93', fontSize: 10, fontWeight: 800}} />
+                                 <Tooltip cursor={{stroke: 'var(--md3-border)', strokeWidth: 2}} contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '8px', fontSize: '10px'}} formatter={(val: number) => [`${val}%`, 'Riziko']} />
+                                 <Area type="monotone" dataKey="val" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorRisk)" />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                         </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-sm font-bold text-md3-gray italic text-center py-6">Zaznamenejte první dávky pro AI analýzu.</div>

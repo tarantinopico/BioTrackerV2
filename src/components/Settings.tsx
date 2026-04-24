@@ -47,7 +47,7 @@ interface SettingsProps {
   onExportCSV?: () => void;
 }
 
-type Tab = 'profile' | 'appearance' | 'notifications' | 'effects' | 'data' | 'about';
+type Tab = 'profile' | 'appearance' | 'dashboard' | 'notifications' | 'ai' | 'security' | 'effects' | 'data' | 'about';
 
 export default function Settings({ 
   settings, 
@@ -92,10 +92,13 @@ export default function Settings({
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'profile', label: 'Profil', icon: User },
     { id: 'appearance', label: 'Vzhled', icon: Palette },
+    { id: 'dashboard', label: 'Dashboard', icon: Activity },
     { id: 'notifications', label: 'Upozornění', icon: Bell },
+    { id: 'ai', label: 'AI Analýza', icon: Brain },
+    { id: 'security', label: 'Zabezpečení', icon: ShieldCheck },
+    { id: 'data', label: 'Úložiště', icon: Database },
     { id: 'effects', label: 'Efekty', icon: Sparkles },
-    { id: 'data', label: 'Data', icon: Database },
-    { id: 'about', label: 'O aplikaci', icon: Info },
+    { id: 'about', label: 'Info', icon: Info },
   ];
 
   return (
@@ -386,7 +389,6 @@ export default function Settings({
                     { id: 'timeFormat24h', label: '24h formát času', icon: Clock },
                     { id: 'showSeconds', label: 'Zobrazit sekundy', icon: Activity },
                     { id: 'compactMode', label: 'Kompaktní režim', icon: Smartphone },
-                    { id: 'privacyMode', label: 'Režim soukromí (skrýt částky)', icon: ShieldCheck },
                   ].map(item => (
                     <button 
                       key={item.id} 
@@ -413,43 +415,64 @@ export default function Settings({
                       </div>
                     </button>
                   ))}
-
-                  <button 
-                    onClick={() => {
-                      if (settings.requirePin) {
-                        updateSetting('requirePin', false);
-                        updateSetting('pinCode', null);
-                      } else {
-                        setIsSettingPin(true);
-                      }
-                    }}
-                    className={cn(
-                      "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
-                      settings.requirePin 
-                        ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
-                        : "bg-theme-subtle border-theme-border text-md3-gray"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Lock size={18} />
-                      <span className="font-bold text-sm">Zámek aplikace (PIN)</span>
-                    </div>
-                    <div className={cn(
-                      "w-10 h-6 rounded-full p-1 transition-all",
-                      settings.requirePin ? "bg-md3-primary" : "bg-theme-border"
-                    )}>
-                      <div className={cn(
-                        "w-4 h-4 rounded-full bg-white transition-all",
-                        settings.requirePin ? "translate-x-4" : "translate-x-0"
-                      )} />
-                    </div>
-                  </button>
                 </div>
               </div>
+            </div>
+          )}
 
+          {/* DASHBOARD TAB */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
               <div className="md3-card p-5 space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
-                  <Activity size={16} className="text-md3-primary" /> Grafy a analýza
+                  <Activity size={16} className="text-md3-primary" /> Dashboard Moduly
+                </h3>
+                <p className="text-xs text-md3-gray mb-2">Zapněte si widgety, které chcete vidět na hlavní obrazovce.</p>
+                <div className="space-y-3">
+                  {[
+                    { id: 'activeEffects', label: 'Aktivní efekty', icon: Sparkles },
+                    { id: 'recentDoses', label: 'Poslední dávky', icon: Clock },
+                    { id: 'quickAdd', label: 'Rychlé přidání', icon: Plus },
+                    { id: 'budget', label: 'Rozpočet', icon: Database },
+                    { id: 'systemLoad', label: 'Zátěž systému', icon: Cpu },
+                    { id: 'shortcuts', label: 'Zkratky', icon: Zap },
+                  ].map(item => {
+                    const isEnabled = settings.dashboardWidgets ? (settings.dashboardWidgets as any)[item.id] : true;
+                    return (
+                      <button 
+                        key={item.id} 
+                        onClick={() => {
+                          const currentWidgets = settings.dashboardWidgets || { activeEffects: true, recentDoses: true, quickAdd: true, budget: true, systemLoad: true, shortcuts: true };
+                          updateSetting('dashboardWidgets', { ...currentWidgets, [item.id]: !isEnabled });
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                          isEnabled 
+                            ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                            : "bg-theme-subtle border-theme-border text-md3-gray"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon size={18} />
+                          <span className="font-bold text-sm">{item.label}</span>
+                        </div>
+                        <div className={cn(
+                          "w-10 h-6 rounded-full p-1 transition-all",
+                          isEnabled ? "bg-md3-primary" : "bg-theme-border"
+                        )}>
+                          <div className={cn(
+                            "w-4 h-4 rounded-full bg-white transition-all",
+                            isEnabled ? "translate-x-4" : "translate-x-0"
+                          )} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <Activity size={16} className="text-md3-primary" /> Grafy a zobrazení
                 </h3>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
@@ -508,53 +531,6 @@ export default function Settings({
                       </div>
                     </button>
                   ))}
-                </div>
-              </div>
-
-              <div className="md3-card p-5 space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
-                  <Activity size={16} className="text-md3-primary" /> Přehled (Dashboard)
-                </h3>
-                <div className="space-y-3">
-                  {[
-                    { id: 'activeEffects', label: 'Aktivní efekty', icon: Sparkles },
-                    { id: 'recentDoses', label: 'Poslední dávky', icon: Clock },
-                    { id: 'quickAdd', label: 'Rychlé přidání', icon: Plus },
-                    { id: 'budget', label: 'Rozpočet', icon: Database },
-                    { id: 'systemLoad', label: 'Zátěž systému', icon: Cpu },
-                    { id: 'shortcuts', label: 'Zkratky', icon: Zap },
-                  ].map(item => {
-                    const isEnabled = settings.dashboardWidgets ? (settings.dashboardWidgets as any)[item.id] : true;
-                    return (
-                      <button 
-                        key={item.id} 
-                        onClick={() => {
-                          const currentWidgets = settings.dashboardWidgets || { activeEffects: true, recentDoses: true, quickAdd: true, budget: true, systemLoad: true, shortcuts: true };
-                          updateSetting('dashboardWidgets', { ...currentWidgets, [item.id]: !isEnabled });
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
-                          isEnabled 
-                            ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
-                            : "bg-theme-subtle border-theme-border text-md3-gray"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <item.icon size={18} />
-                          <span className="font-bold text-sm">{item.label}</span>
-                        </div>
-                        <div className={cn(
-                          "w-10 h-6 rounded-full p-1 transition-all",
-                          isEnabled ? "bg-md3-primary" : "bg-theme-border"
-                        )}>
-                          <div className={cn(
-                            "w-4 h-4 rounded-full bg-white transition-all",
-                            isEnabled ? "translate-x-4" : "translate-x-0"
-                          )} />
-                        </div>
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
             </div>
@@ -717,10 +693,9 @@ export default function Settings({
             </div>
           )}
 
-          {/* DATA TAB */}
-          {activeTab === 'data' && (
+          {/* AI ANALÝZA TAB */}
+          {activeTab === 'ai' && (
             <div className="space-y-6">
-              {/* Analytics Settings */}
               <div className="md3-card p-5 space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
                   <BarChart3 size={16} className="text-md3-primary" /> Pokročilá Analytika & AI
@@ -826,7 +801,89 @@ export default function Settings({
                   </div>
                 </div>
               </div>
-              
+            </div>
+          )}
+
+          {/* SECURITY TAB */}
+          {activeTab === 'security' && (
+            <div className="space-y-6">
+              <div className="md3-card p-5 space-y-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-md3-primary" /> Bezpečnost a soukromí
+                </h3>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => updateSetting('privacyMode', !settings.privacyMode)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                      settings.privacyMode 
+                        ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                        : "bg-theme-subtle border-theme-border text-md3-gray"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <EyeOff size={18} />
+                      <span className="font-bold text-sm">Režim soukromí (skrýt částky a detaily)</span>
+                    </div>
+                    <div className={cn(
+                      "w-10 h-6 rounded-full p-1 transition-all",
+                      settings.privacyMode ? "bg-md3-primary" : "bg-theme-border"
+                    )}>
+                      <div className={cn(
+                        "w-4 h-4 rounded-full bg-white transition-all",
+                        settings.privacyMode ? "translate-x-4" : "translate-x-0"
+                      )} />
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      if (settings.requirePin) {
+                        updateSetting('requirePin', false);
+                        updateSetting('pinCode', null);
+                      } else {
+                        setIsSettingPin(true);
+                      }
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-2xl border transition-all shadow-sm",
+                      settings.requirePin 
+                        ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                        : "bg-theme-subtle border-theme-border text-md3-gray"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Lock size={18} />
+                      <span className="font-bold text-sm">Zámek aplikace (PIN kód)</span>
+                    </div>
+                    <div className={cn(
+                      "w-10 h-6 rounded-full p-1 transition-all",
+                      settings.requirePin ? "bg-md3-primary" : "bg-theme-border"
+                    )}>
+                      <div className={cn(
+                        "w-4 h-4 rounded-full bg-white transition-all",
+                        settings.requirePin ? "translate-x-4" : "translate-x-0"
+                      )} />
+                    </div>
+                  </button>
+                  
+                  {settings.requirePin && (
+                    <button 
+                      onClick={() => setIsSettingPin(true)}
+                      className="w-full flex items-center justify-center p-3 rounded-xl border border-md3-primary text-md3-primary hover:bg-md3-primary/10 transition-all font-bold text-sm"
+                    >
+                      <Fingerprint size={16} className="mr-2" />
+                      Změnit PIN
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* DATA TAB */}
+          {activeTab === 'data' && (
+            <div className="space-y-6">
               <div className="md3-card p-5 space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-md3-gray flex items-center gap-2">
                   <Database size={16} className="text-md3-primary" /> Správa dat
