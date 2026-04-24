@@ -175,8 +175,17 @@ const calculatePredictions = (doses: Dose[], substances: Substance[], period: nu
   const totalCost = calculateCost(doses);
   const now = Date.now();
   
+  // Calculate tracking span for this period
+  let trackingDays = period;
+  if (doses.length > 0) {
+    const minTimestamp = Math.min(...doses.map(d => d.timestamp));
+    const daysSinceFirst = Math.max(1, (now - minTimestamp) / 86400000);
+    // If the user started tracking less than `period` days ago, use that smaller number.
+    trackingDays = Math.min(period, daysSinceFirst);
+  }
+  
   // Base daily logic
-  let daily = doses.length > 0 ? totalCost / period : 0;
+  let daily = doses.length > 0 ? totalCost / trackingDays : 0;
   
   // Calculate active days
   const activeDays = new Set(doses.map(d => new Date(d.timestamp).toISOString().split('T')[0])).size;
@@ -192,9 +201,20 @@ const calculatePredictions = (doses: Dose[], substances: Substance[], period: nu
   const recentCost = calculateCost(recentDoses);
   const previousCost = calculateCost(previousDoses);
   
+  let recentTrackingDays = 7;
+  if (recentDoses.length > 0) {
+     const minRTS = Math.min(...recentDoses.map(d => d.timestamp));
+     recentTrackingDays = Math.min(7, Math.max(1, (now - minRTS) / 86400000));
+  }
+  let previousTrackingDays = 7;
+  if (previousDoses.length > 0) {
+     const minPTS = Math.min(...previousDoses.map(d => d.timestamp));
+     previousTrackingDays = Math.min(7, Math.max(1, (sevenDaysAgo - minPTS) / 86400000));
+  }
+
   // Implement smartest math logic if settings enabled
-  let recentDaily = recentCost / 7;
-  const previousDaily = previousCost / 7;
+  let recentDaily = recentDoses.length > 0 ? recentCost / recentTrackingDays : 0;
+  const previousDaily = previousDoses.length > 0 ? previousCost / previousTrackingDays : 0;
 
   // ML Simulated or Exponential smoothing
   if (settings.predictionAlgorithm === 'exponential') {
@@ -492,6 +512,22 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
   const totalCost = useMemo(() => calculateCost(filteredDoses), [filteredDoses, substances]);
   const allTimeCost = useMemo(() => calculateCost(doses), [doses, substances]);
   
+  const numericPeriod = useMemo(() => {
+    if (period !== 'all') return period;
+    if (doses.length === 0) return 30; // default fallback
+    const firstTs = Math.min(...doses.map(d => d.timestamp));
+    const daysSince = Math.ceil((now - firstTs) / dayMs);
+    return Math.max(1, daysSince);
+  }, [period, doses, now, dayMs]);
+
+  // Use for specific calculations that need accurate tracking duration, not just period
+  const activeTrackingDays = useMemo(() => {
+    if (filteredDoses.length === 0) return numericPeriod;
+    const firstTsInWindow = Math.min(...filteredDoses.map(d => d.timestamp));
+    const actualDaysActive = Math.ceil((now - firstTsInWindow) / dayMs);
+    return Math.max(1, Math.min(numericPeriod, actualDaysActive));
+  }, [filteredDoses, numericPeriod, now, dayMs]);
+  
   const costBySubstance = useMemo(() => {
     const data: Record<string, { name: string, value: number, color: string }> = {};
     filteredDoses.forEach(d => {
@@ -540,7 +576,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
     let cleanDays = 0;
     
     // Calculate for the selected period
-    for (let i = period - 1; i >= 0; i--) {
+    for (let i = numericPeriod - 1; i >= 0; i--) {
       const date = new Date(now - i * dayMs);
       const dayStart = new Date(date.setHours(0, 0, 0, 0)).getTime();
       const dayEnd = dayStart + dayMs;
@@ -1016,7 +1052,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             <div className="w-8 h-8 rounded-lg bg-md3-primary/10 flex items-center justify-center text-md3-primary">
               <DollarSign size={16} />
             </div>
-            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Útrata ({period}D)</span>
+            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Útrata ({numericPeriod}D)</span>
           </div>
           <div className="text-2xl font-bold text-theme-text tracking-tight">
             {settings.privacyMode ? '***' : totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
@@ -1052,7 +1088,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Čisté dny</span>
           </div>
           <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {stats.cleanDays} <span className="text-sm font-medium text-md3-gray">/ {period}</span>
+            {stats.cleanDays} <span className="text-sm font-medium text-md3-gray">/ {numericPeriod}</span>
           </div>
         </div>
       </div>
@@ -1093,11 +1129,11 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
       {/* Trend Chart */}
       <section className="md3-card p-6 relative z-10">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
+           <div className="flex items-center gap-2">
             <TrendingUp size={16} className="text-md3-primary" />
             <h2 className="text-sm font-bold text-theme-text uppercase tracking-wider">Trend Výdajů</h2>
           </div>
-          <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">{settings.privacyMode ? '***' : (totalCost / period).toFixed(0)} {settings.currency || 'Kč'} / den</span>
+          <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">{settings.privacyMode ? '***' : (totalCost / activeTrackingDays).toFixed(0)} {settings.currency || 'Kč'} / den</span>
         </div>
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -2662,6 +2698,10 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
     const substancePredictions = calculatePredictions(sDoses, substances, period, settings);
     const IconComponent = getIconComponent(substance.icon);
     
+    const substanceTrackingDays = sDoses.length > 0 
+      ? Math.min(numericPeriod, Math.max(1, Math.ceil((now - Math.min(...sDoses.map(d => d.timestamp))) / dayMs))) 
+      : numericPeriod;
+
     const strainsData = (() => {
       const data: Record<string, { name: string, value: number, count: number }> = {};
       sDoses.forEach(d => {
@@ -2675,7 +2715,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
       return Object.values(data).sort((a, b) => b.value - a.value);
     })();
 
-    const dailyAmount = sDoses.length > 0 ? totalAmount / period : 0;
+    const dailyAmount = sDoses.length > 0 ? totalAmount / substanceTrackingDays : 0;
     const packageDuration = substance.packageSize && dailyAmount > 0 ? substance.packageSize / dailyAmount : 0;
     const currentPackageRemaining = substance.packageSize ? substance.packageSize - (totalAmount % substance.packageSize) : 0;
     const daysRemaining = dailyAmount > 0 ? currentPackageRemaining / dailyAmount : 0;
@@ -3315,7 +3355,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border">
                     <span className="text-sm font-bold text-md3-gray">Průměrně za den</span>
                     <span className="text-lg font-bold text-theme-text">
-                      {(sDoses.length / period).toFixed(1)}x
+                      {(sDoses.length / substanceTrackingDays).toFixed(1)}x
                     </span>
                   </div>
                   {substance.packageSize && substance.packageSize > 0 && (

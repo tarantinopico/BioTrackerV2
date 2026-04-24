@@ -362,7 +362,7 @@ export default function Dashboard({
     const today = new Date().toDateString();
     const todayDoses = doses.filter(d => new Date(d.timestamp).toDateString() === today);
     
-    const stats: Record<string, { amount: number; unit: string; color: string; name: string; icon: string }> = {};
+    const stats: Record<string, { amount: number; cost: number; unit: string; color: string; name: string; icon: string }> = {};
     
     todayDoses.forEach(d => {
       const substance = substances.find(s => s.id === d.substanceId) || {
@@ -371,12 +371,18 @@ export default function Dashboard({
         unit: '?',
         color: '#8e8e93',
         icon: 'pill',
-        category: 'other'
+        category: 'other',
+        price: 0
       } as unknown as Substance;
+      
+      const strainPrice = substance && d.strainId ? substance.strains?.find(s => s.name === d.strainId)?.price : null;
+      const price = strainPrice || (substance ? substance.price : 0) || 0;
+      const doseCost = d.amount * price;
       
       if (!stats[d.substanceId]) {
         stats[d.substanceId] = { 
           amount: 0, 
+          cost: 0,
           unit: substance.unit || '', 
           color: substance.color || CATEGORY_COLORS[substance.category] || '#fff',
           name: substance.name,
@@ -384,6 +390,7 @@ export default function Dashboard({
         };
       }
       stats[d.substanceId].amount += d.amount;
+      stats[d.substanceId].cost += doseCost;
     });
     
     return Object.values(stats);
@@ -591,6 +598,34 @@ export default function Dashboard({
              </div>
           );
         })()}
+
+        {/* Today's Stats per Substance */}
+        {dailyStats.length > 0 && (
+          <div className="bg-theme-bg/80 backdrop-blur-md rounded-[1.5rem] border border-theme-border p-3 shadow-sm flex gap-2 overflow-x-auto custom-scrollbar snap-x snap-mandatory hide-scroll-indicator">
+            {dailyStats.map((stat, idx) => {
+              const IconComp = SUBSTANCE_ICONS[stat.icon] || Pill;
+              return (
+                <div key={idx} className="bg-theme-card border border-theme-border rounded-xl p-3 min-w-[140px] flex-shrink-0 snap-center flex flex-col justify-between shadow-sm relative overflow-hidden" style={{ borderLeftColor: stat.color, borderLeftWidth: '3px' }}>
+                  <div className="flex gap-2 items-center mb-2 relative z-10">
+                    <div className="w-6 h-6 rounded-md flex justify-center items-center opacity-80" style={{ backgroundColor: stat.color + '20', color: stat.color }}>
+                      <IconComp size={12} strokeWidth={2.5}/>
+                    </div>
+                    <span className="text-[10px] uppercase tracking-widest font-black text-md3-gray truncate">{stat.name}</span>
+                  </div>
+                  <div className="relative z-10">
+                    <div className="text-xl font-black text-theme-text leading-none">{stat.amount} {stat.unit}</div>
+                    {!settings.privacyMode && stat.cost > 0 && (
+                      <div className="text-[10px] font-bold text-md3-green mt-1">Dnes: {stat.cost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}</div>
+                    )}
+                  </div>
+                  <div className="absolute right-0 bottom-0 opacity-5" style={{ color: stat.color }}>
+                    <IconComp size={64} style={{ transform: 'translate(20%, 20%)' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         
         {/* Active Substance Monitor & Recent */}
         {settings.dashboardWidgets?.activeEffects !== false && (
