@@ -667,6 +667,7 @@ export default function App() {
                 doses={doses} 
                 settings={settings} 
                 onToggleTheme={() => {}} // Theme is locked to dark for iOS overhaul
+                onUpdateSettings={setSettings}
               />
             )}
             {view === 'predictions' && (

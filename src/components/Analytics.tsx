@@ -79,6 +79,7 @@ interface AnalyticsProps {
   doses: Dose[];
   settings: UserSettings;
   onToggleTheme?: () => void;
+  onUpdateSettings?: (settings: UserSettings) => void;
 }
 
 type Period = 7 | 30 | 90 | 365 | 'all';
@@ -230,17 +231,22 @@ const calculatePredictions = (doses: Dose[], substances: Substance[], period: nu
   };
 };
 
-export default function Analytics({ substances, doses, settings, onToggleTheme }: AnalyticsProps) {
+export default function Analytics({ substances, doses, settings, onToggleTheme, onUpdateSettings }: AnalyticsProps) {
   const [selectedSubstanceId, setSelectedSubstanceId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients' | 'custom-fields'>('trends');
-  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights' | 'patterns' | 'habits'>('overview');
+  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights' | 'patterns' | 'habits' | 'taper'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
   
   const [aiGlobalData, setAiGlobalData] = useState<AiGlobalAnalysis | null>(null);
   const [isAiGlobalLoading, setIsAiGlobalLoading] = useState(false);
   const [aiGlobalError, setAiGlobalError] = useState<string | null>(null);
+
+  const [taperSubstanceId, setTaperSubstanceId] = useState<string>('');
+  const [taperPrompt, setTaperPrompt] = useState<string>('');
+  const [isTaperLoading, setIsTaperLoading] = useState(false);
+  const [taperError, setTaperError] = useState<string | null>(null);
 
   // Stabilize 'now' to prevent excessive re-renders. Updates every 5 minutes.
   const roundedNow = Math.floor(Date.now() / 300000) * 300000;
@@ -344,6 +350,83 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
 
     fetchGlobalAiAnalysis();
   }, [overviewTab, settings.predictionAlgorithm, settings.groqApiKey, settings.aiModel, filteredDoses]);
+
+  const generateTaperPlan = async () => {
+    if (!settings.groqApiKey) {
+      setTaperError('Chybí Groq API klíč. Zadejte jej v Nastavení.');
+      return;
+    }
+    if (!taperSubstanceId) {
+      setTaperError('Vyberte látku pro plán.');
+      return;
+    }
+    const sub = substances.find(s => s.id === taperSubstanceId);
+    if (!sub) return;
+
+    setIsTaperLoading(true);
+    setTaperError(null);
+    try {
+      const subDoses = doses.filter(d => d.substanceId === taperSubstanceId).slice(-50);
+      const doseHistory = subDoses.map(d => `${new Date(d.timestamp).toISOString()}: ${d.amount} ${sub.unit}`).join('\\n');
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${settings.groqApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: settings.aiModel || 'llama-3.3-70b-versatile',
+          messages: [
+            {
+              role: 'system',
+              content: `Jsi lékařský asistent a farmakolog. Specializuješ se na bezpečné a postupné snižování dávek (tapering). Odpovídáš striktně JSON formátem.`
+            },
+            {
+              role: 'user',
+              content: `Látka: ${sub.name}\\nCíl/Prompt uživatele: ${taperPrompt || 'Vytvoř bezpečný plán postupného vysazení látky.'}\\n\\nHistorie užívání:\\n${doseHistory || 'Žádné dřívější dávky'}\\n\\nVytvoř detailní denní plán vysazování. Odpověz POUZE validním JSON.\\nSchéma:\\n{\\n "aiAdvice": "...",\\n "plan": [{ "day": 1, "recommendedAmount": číslo }, { "day": 2, "recommendedAmount": číslo }]\\n}`
+            }
+          ],
+          temperature: settings.aiTemperature ?? 0.2,
+          max_tokens: settings.aiMaxTokens ?? 1000
+        })
+      });
+
+      if (!response.ok) throw new Error('API fetch error');
+      const data = await response.json();
+      let content = data.choices?.[0]?.message?.content || '{}';
+      
+      const match = content.match(/\\{[\\s\\S]*\\}/);
+      if (match) content = match[0];
+      
+      const parsed = JSON.parse(content);
+      
+      // Transform day sequence to actual dates
+      const startMs = Date.now() + 86400000; // Start tomorrow
+      const mappedPlan = (parsed.plan || []).map((p: any) => ({
+        day: p.day,
+        recommendedAmount: p.recommendedAmount,
+        date: new Date(startMs + (p.day - 1) * 86400000).toISOString().split('T')[0]
+      }));
+
+      const newPlan = {
+        substanceId: taperSubstanceId,
+        prompt: taperPrompt,
+        startDate: new Date(startMs).toISOString(),
+        plan: mappedPlan,
+        aiAdvice: parsed.aiAdvice || ''
+      };
+
+      if (onUpdateSettings) {
+        onUpdateSettings({ ...settings, activeTaperingPlan: newPlan });
+      }
+
+    } catch (err) {
+      setTaperError('Nepodařilo se vygenerovat plán. Zkuste to zadat jinak nebo zkontrolujte API.');
+    } finally {
+      setIsTaperLoading(false);
+    }
+  };
 
   const calculateCost = (dosesList: Dose[]) => {
     return dosesList.reduce((sum, d) => {
@@ -849,6 +932,20 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
           <Target size={14} />
           Zvyky
         </button>
+        {settings.taperingPlanEnabled && (
+          <button
+            onClick={() => setOverviewTab('taper')}
+            className={cn(
+              "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+              overviewTab === 'taper' 
+                ? "bg-theme-subtle-hover text-theme-text shadow-sm border border-emerald-500/20" 
+                : "text-md3-gray hover:text-theme-text"
+            )}
+          >
+            <Brain size={14} className="text-emerald-500" />
+            Taper Plán
+          </button>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -2361,6 +2458,105 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               );
             })()}
+          </motion.div>
+        )}
+
+        {overviewTab === 'taper' && (
+          <motion.div
+            key="taper"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6"
+          >
+            <div className="md3-card p-6">
+               <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-500">
+                     <Brain size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-theme-text uppercase tracking-widest leading-none mb-1">Systém Postupného Snižování Dávek</h3>
+                    <div className="text-[10px] font-bold text-md3-gray">Inteligentní tapering řízený AI.</div>
+                  </div>
+               </div>
+               
+               {taperError && (
+                 <div className="text-xs bg-red-500/10 text-red-500 border border-red-500/20 p-3 rounded-lg mb-4">
+                   {taperError}
+                 </div>
+               )}
+
+               {!settings.activeTaperingPlan ? (
+                 <div className="space-y-4">
+                   <div className="space-y-1">
+                     <label className="text-xs font-bold text-md3-gray">Vyberte látku k vysazování</label>
+                     <select
+                       value={taperSubstanceId}
+                       onChange={(e) => setTaperSubstanceId(e.target.value)}
+                       className="w-full md3-input"
+                     >
+                       <option value="">Zvolte látku...</option>
+                       {substances.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                     </select>
+                   </div>
+                   <div className="space-y-1">
+                     <label className="text-xs font-bold text-md3-gray">Vaše Cíle (Doplňte prompt pro AI)</label>
+                     <textarea
+                       value={taperPrompt}
+                       onChange={(e) => setTaperPrompt(e.target.value)}
+                       placeholder="Např: Rád bych to snížil na nulu během 14 dnů bez těžkých absťáků..."
+                       className="w-full md3-input h-24 text-xs"
+                     />
+                   </div>
+                   <button
+                     onClick={generateTaperPlan}
+                     disabled={isTaperLoading}
+                     className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                   >
+                     {isTaperLoading ? 'Generuji plán...' : 'Vytvořit AI Tapering Plán'}
+                   </button>
+                 </div>
+               ) : (
+                 <div className="space-y-6">
+                   <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                     <h4 className="text-xs font-black text-emerald-500 uppercase tracking-widest mb-2">Aktivní Plán: {substances.find(s => s.id === settings.activeTaperingPlan?.substanceId)?.name || 'Látka'}</h4>
+                     <p className="text-xs text-theme-text mb-4">
+                       {settings.activeTaperingPlan.aiAdvice}
+                     </p>
+                     
+                     <div className="h-48 mt-4 w-full">
+                       <ResponsiveContainer width="100%" height="100%">
+                         <LineChart data={settings.activeTaperingPlan.plan} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                            <XAxis dataKey="day" tickFormatter={(val) => `Den ${val}`} tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                            <Tooltip 
+                              cursor={{ stroke: 'rgba(150,150,150,0.2)', strokeWidth: 2 }}
+                              contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                              labelFormatter={(label) => `Den ${label}`}
+                              formatter={(val: number) => [val, 'Doporučená Dávka']}
+                            />
+                            <Line type="monotone" dataKey="recommendedAmount" stroke="#10b981" strokeWidth={3} dot={{ r: 3, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 6, fill: '#10b981' }} />
+                         </LineChart>
+                       </ResponsiveContainer>
+                     </div>
+                   </div>
+                   
+                   <div className="flex gap-2">
+                     <button
+                       onClick={() => {
+                         if (onUpdateSettings) {
+                           onUpdateSettings({ ...settings, activeTaperingPlan: null });
+                         }
+                       }}
+                       className="flex-1 py-3 bg-theme-subtle hover:bg-theme-subtle-hover text-theme-text font-black uppercase tracking-widest text-xs rounded-xl border border-theme-border flex items-center justify-center gap-2"
+                     >
+                       Zrušit Plán
+                     </button>
+                   </div>
+                 </div>
+               )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

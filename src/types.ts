@@ -147,6 +147,20 @@ export interface Dose {
   customFieldValues?: Record<string, any>;
 }
 
+export interface TaperingPlanItem {
+  day: number;
+  date: string;
+  recommendedAmount: number;
+}
+
+export interface TaperingPlan {
+  substanceId: string;
+  prompt: string;
+  startDate: string;
+  plan: TaperingPlanItem[];
+  aiAdvice: string;
+}
+
 export interface UserSettings {
   // Profile
   userWeight: number;
@@ -213,6 +227,8 @@ export interface UserSettings {
   predictiveAnalytics?: boolean;
   insightEngine?: boolean;
   predictionAlgorithm?: 'basic' | 'exponential' | 'ml_simulated' | 'ai_groq';
+  taperingPlanEnabled?: boolean;
+  activeTaperingPlan?: TaperingPlan | null;
   
   // AI Integrations
   groqApiKey?: string;

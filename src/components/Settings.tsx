@@ -744,6 +744,7 @@ export default function Settings({
                     { id: 'smartPredictions', label: 'Chytré Predikce', icon: Sparkles },
                     { id: 'insightEngine', label: 'Insight Engine (Algoritmy)', icon: Cpu },
                     { id: 'predictiveAnalytics', label: 'Prediktivní Kalkulace Ceny', icon: LineChart },
+                    { id: 'taperingPlanEnabled', label: 'Plán Snižování Dávek (Tapering)', icon: Brain },
                   ].map(item => (
                     <button 
                       key={item.id} 
