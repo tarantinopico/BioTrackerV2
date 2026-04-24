@@ -47,6 +47,15 @@ interface PredictionsProps {
   settings: UserSettings;
 }
 
+interface AiAnalysis {
+  predictedNextDoseHours: number;
+  confidenceScore: number;
+  suggestedOptimalDose: number;
+  patternDetected: string;
+  trajectory: 'escalating' | 'stable' | 'decreasing';
+  projectedUsageNext7Days: number[];
+}
+
 export default function Predictions({ substances, doses, settings }: PredictionsProps) {
   const [selectedSubstanceId, setSelectedSubstanceId] = useState<string | null>(
     substances.length > 0 ? substances[0].id : null
@@ -54,7 +63,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
   
   const [timeframe, setTimeframe] = useState<'intraday' | '48h' | '7d' | '14d' | '3m' | 'density'>('intraday');
   const [useAllData, setUseAllData] = useState(false);
-  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [aiData, setAiData] = useState<AiAnalysis | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -68,7 +77,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
 
   useEffect(() => {
     if (settings.predictionAlgorithm !== 'ai_groq' || !settings.groqApiKey || !selectedSubstance || sDoses.length < 5) {
-      setAiInsight(null);
+      setAiData(null);
       setAiError(null);
       return;
     }
@@ -87,17 +96,30 @@ export default function Predictions({ substances, doses, settings }: Predictions
           },
           body: JSON.stringify({
             model: settings.aiModel || 'llama-3.3-70b-versatile',
+            response_format: { type: "json_object" },
             messages: [
               {
                 role: 'system',
-                content: `Jsi specializovaný analytik dat o užívání látek. Uživatel ti poskytne historii užívání látky "${selectedSubstance.name}". Tvým úkolem je analyzovat historii, odhadnout KDY uživatel pravděpodobně užije další dávku a poskytnout krátké shrnutí vzorců chování. Odpovídej vždy v češtině, stručně, s důrazem na přesnost. Nehodnoť morálně. Poskytni rovnou analýzu a odhad.`
+                content: `Jsi analytický systém pro užívání látek. Odpovídáš POUZE striktním JSON objektem.
+Analyzuj historii dávek pro látku "${selectedSubstance.name}" a predikuj budoucí vývoj.
+
+Schéma JSON odpovědi:
+{
+  "predictedNextDoseHours": (číslo - za kolik hodin by si měl uživatel dát další dávku / pravděpodobně dá),
+  "confidenceScore": (číslo 0-100 udávající přesnost predikce),
+  "suggestedOptimalDose": (číslo - doporučená velikost dávky, např. tapering. V jednotkách látky),
+  "patternDetected": (krátký string česky popisující zjištěný vzorec, např. "Zvýšená frekvence o víkendech"),
+  "trajectory": (přesně jeden z těchto stringů: "escalating", "stable", "decreasing"),
+  "projectedUsageNext7Days": (pole 7 čísel udávající odhadované denní množství pro následujících 7 dní)
+}
+Odpovídej POUZE platným formátem JSON.`
               },
               {
                 role: 'user',
-                content: `Zde je mých posledních max 50 dávek:\n${doseHistory}\n\nKdy bude podle tebe má další dávka a jaký vzorec z toho vyvozuješ? Aktualní čas je ${new Date().toISOString()}.`
+                content: `Zde je mých posledních max 50 dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
               }
             ],
-            temperature: 0.4,
+            temperature: 0.1,
             max_tokens: 500
           })
         });
@@ -107,16 +129,24 @@ export default function Predictions({ substances, doses, settings }: Predictions
         }
 
         const data = await response.json();
-        setAiInsight(data.choices[0].message.content);
+        let content = data.choices?.[0]?.message?.content || '{}';
+        
+        // Bezpečné parsování v případě, že LLM vrátí markdown bloky
+        const match = content.match(/\{[\s\S]*\}/);
+        if (match) {
+          content = match[0];
+        }
+        
+        const parsed = JSON.parse(content);
+        setAiData(parsed as AiAnalysis);
       } catch (err) {
-        setAiError('Nepodařilo se spojit s Groq API. Zkontrolujte API klíč.');
+        setAiError('Chyba komunikace s Groq API nebo chybný formát JSON. Zkontrolujte API klíč.');
       } finally {
         setIsAiLoading(false);
       }
     };
 
-    // Debounce the call so it doesn't run on every single dose add instantly, or when swapping too fast
-    const timeout = setTimeout(fetchAiPrediction, 1000);
+    const timeout = setTimeout(fetchAiPrediction, 1500);
     return () => clearTimeout(timeout);
   }, [sDoses, selectedSubstance, settings.predictionAlgorithm, settings.groqApiKey, settings.aiModel]);
 
@@ -738,24 +768,70 @@ export default function Predictions({ substances, doses, settings }: Predictions
                 </div>
 
                 {settings.predictionAlgorithm === 'ai_groq' && (
-                  <div className="md3-card p-4 flex gap-4 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 border-purple-500/20 shadow-inner">
-                     <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
-                        <Brain size={20} className="text-purple-500" />
-                     </div>
-                     <div className="flex-1">
-                        <div className="text-[10px] uppercase font-black text-purple-500 tracking-widest mb-2 flex items-center gap-2">
-                           AI Predikce (Groq Cloud) {isAiLoading && <Activity size={10} className="animate-pulse" />}
+                  <div className="md3-card p-4 bg-gradient-to-br from-purple-500/5 to-cyan-500/5 border-purple-500/20 shadow-inner">
+                     <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0">
+                           <Brain size={18} className="text-purple-500" />
                         </div>
-                        {isAiLoading ? (
-                           <div className="text-sm font-bold text-md3-gray animate-pulse">Llama/Mixtral model analyzuje vzorce...</div>
-                        ) : aiError ? (
-                           <div className="text-xs font-bold text-red-500">{aiError}</div>
-                        ) : aiInsight ? (
-                           <div className="text-sm font-medium text-theme-text leading-relaxed whitespace-pre-wrap">{aiInsight}</div>
-                        ) : (
-                           <div className="text-sm font-bold text-md3-gray italic">Nejprve přidejte více dat o dávkování nebo nastavte platný API klíč.</div>
-                        )}
+                        <div className="flex-1">
+                           <div className="text-[10px] uppercase font-black text-purple-500 tracking-widest flex items-center gap-2">
+                              Deep Learning Analýza {isAiLoading && <Activity size={10} className="animate-pulse" />}
+                           </div>
+                           <div className="text-sm font-bold text-theme-text">
+                              {settings.aiModel || 'Llama 3.3'}
+                           </div>
+                        </div>
                      </div>
+                     
+                     {isAiLoading ? (
+                        <div className="text-sm font-bold text-md3-gray animate-pulse py-4 text-center">AI model analyzuje nelineární vzorce...</div>
+                     ) : aiError ? (
+                        <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiError}</div>
+                     ) : aiData ? (
+                        <div className="space-y-4">
+                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
+                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Skóre Jistoty</div>
+                                 <div className="text-2xl font-black text-theme-text">{aiData.confidenceScore}<span className="text-sm text-md3-gray">%</span></div>
+                              </div>
+                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
+                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Predikce (Za)</div>
+                                 <div className="text-2xl font-black text-purple-500">{aiData.predictedNextDoseHours.toFixed(1)}<span className="text-sm text-md3-gray">h</span></div>
+                              </div>
+                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
+                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Navrhovaná Dávka</div>
+                                 <div className="text-2xl font-black text-cyan-500">{aiData.suggestedOptimalDose} <span className="text-sm text-md3-gray">{selectedSubstance.unit}</span></div>
+                              </div>
+                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
+                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Vývoj (Trajektorie)</div>
+                                 <div className="text-sm font-black text-theme-text leading-tight uppercase">
+                                    {aiData.trajectory === 'escalating' ? 'Zrychlující ⚠️' : aiData.trajectory === 'decreasing' ? 'Klesající 📉' : 'Stabilní ⚖️'}
+                                 </div>
+                              </div>
+                           </div>
+                           
+                           <div className="bg-purple-500/10 p-3 rounded-xl border border-purple-500/20">
+                              <div className="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">Pozorovaný Vzorec (LLM Insight)</div>
+                              <div className="text-sm font-bold text-theme-text">{aiData.patternDetected}</div>
+                           </div>
+
+                           {aiData.projectedUsageNext7Days && aiData.projectedUsageNext7Days.length > 0 && (
+                             <div className="h-32 w-full mt-4">
+                                <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2">Simulace 7D Spotřeby (AI Generováno)</div>
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart data={aiData.projectedUsageNext7Days.map((val, idx) => ({ day: `D+${idx+1}`, val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                     <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#8e8e93', fontSize: 10, fontWeight: 800}} />
+                                     <Tooltip cursor={{fill: 'var(--md3-border)', opacity: 0.5}} contentStyle={{backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '8px', fontSize: '10px'}} labelStyle={{display: 'none'}} formatter={(val: number) => [`${val} ${selectedSubstance.unit}`, 'Odhad AI']} />
+                                     <Bar dataKey="val" fill="#a855f7" radius={[4,4,0,0]} opacity={0.8} />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                             </div>
+                           )}
+                        </div>
+                     ) : (
+                        <div className="text-sm font-bold text-md3-gray italic text-center py-6">Nedostatek dat pro ML zpracování.</div>
+                     )}
                   </div>
                 )}
 

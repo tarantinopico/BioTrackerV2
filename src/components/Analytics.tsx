@@ -82,6 +82,19 @@ interface AnalyticsProps {
 
 type Period = 7 | 30 | 90 | 365 | 'all';
 
+interface AiGlobalAnalysis {
+  generalTrend: 'Improving' | 'Worsening' | 'Stable';
+  riskScore: number;
+  keyTriggers: string[];
+  suggestedAction: string;
+  radarScores: {
+    frequency: number;
+    amount: number;
+    timing: number;
+    combinations: number;
+  };
+}
+
 const CustomTooltip = ({ active, payload, label, type = 'default', currency = 'Kč' }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -219,6 +232,10 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients' | 'custom-fields'>('trends');
   const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights' | 'patterns' | 'habits'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
+  
+  const [aiGlobalData, setAiGlobalData] = useState<AiGlobalAnalysis | null>(null);
+  const [isAiGlobalLoading, setIsAiGlobalLoading] = useState(false);
+  const [aiGlobalError, setAiGlobalError] = useState<string | null>(null);
 
   // Stabilize 'now' to prevent excessive re-renders. Updates every 5 minutes.
   const roundedNow = Math.floor(Date.now() / 300000) * 300000;
@@ -231,6 +248,82 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const filteredDoses = useMemo(() => {
     return doses.filter(d => d.timestamp > startTime);
   }, [doses, startTime]);
+
+  useEffect(() => {
+    if (overviewTab !== 'patterns' || settings.predictionAlgorithm !== 'ai_groq' || !settings.groqApiKey || filteredDoses.length < 10) {
+      return;
+    }
+
+    if (aiGlobalData) return; // Fetch only once if we already have it
+
+    const fetchGlobalAiAnalysis = async () => {
+      setIsAiGlobalLoading(true);
+      setAiGlobalError(null);
+      try {
+        // Prepare context
+        const subMap: Record<string, string> = {};
+        substances.forEach(s => subMap[s.id] = s.name);
+        
+        // Use only the last 100 doses to keep token count low
+        const doseHistory = filteredDoses.slice(-100).map(d => `${new Date(d.timestamp).toISOString()}: ${subMap[d.substanceId] || 'Neznámá látka'} - ${d.amount}`).join('\n');
+        
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${settings.groqApiKey}`
+          },
+          body: JSON.stringify({
+            model: settings.aiModel || 'llama-3.3-70b-versatile',
+            response_format: { type: "json_object" },
+            messages: [
+              {
+                role: 'system',
+                content: `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.
+Tvá analýza musí identifikovat vzorce v dlouhodobém (agregovaném) užívání ze všech látek klienta.
+Schéma odpovědi:
+{
+  "generalTrend": "Improving" | "Worsening" | "Stable",
+  "riskScore": (celé číslo 0-100, analyzující risk vyhoření/závislosti),
+  "keyTriggers": (pole 2-3 krátkých stringů, např. "Ráno v pracovní dny", "Při mixování látek", "O Víkendových nocích"),
+  "suggestedAction": (string, jedno jasné doporučení do 15 slov),
+  "radarScores": {
+    "frequency": (číslo 0-100, kde 100=extrémně časté užívání),
+    "amount": (číslo 0-100, kde 100=velké dávky),
+    "timing": (číslo 0-100, rizikovost načasování např pozdě v noci),
+    "combinations": (číslo 0-100, jak často se mixují látky / polydrug risk)
+  }
+}
+Odpovídej POUZE striktně JSON objektem.`
+              },
+              {
+                role: 'user',
+                content: `Historie (posledních max 100 logů):\n${doseHistory}`
+              }
+            ],
+            temperature: 0.1,
+            max_tokens: 600
+          })
+        });
+
+        if (!response.ok) throw new Error('API request failed');
+
+        const data = await response.json();
+        let content = data.choices?.[0]?.message?.content || '{}';
+        const match = content.match(/\{[\s\S]*\}/);
+        if (match) content = match[0];
+        
+        const parsed = JSON.parse(content);
+        setAiGlobalData(parsed as AiGlobalAnalysis);
+      } catch (err) {
+        setAiGlobalError('Nepodařilo se zpracovat komplexní AI analýzu. Zkuste to déle.');
+      } finally {
+        setIsAiGlobalLoading(false);
+      }
+    };
+
+    fetchGlobalAiAnalysis();
+  }, [overviewTab, settings.predictionAlgorithm, settings.groqApiKey, settings.aiModel, filteredDoses]);
 
   const calculateCost = (dosesList: Dose[]) => {
     return dosesList.reduce((sum, d) => {
@@ -1637,6 +1730,67 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                 <Brain size={24} className="text-md3-gray mb-2 opacity-50" />
                 <h3 className="text-sm font-bold text-theme-text mb-1 tracking-widest uppercase">Insight Engine deaktivován</h3>
                 <p className="text-xs text-md3-gray">Zapněte Pokročilé analytiky a Insight Engine v Nastavení (Správa Dat) pro odemknutí automatického hledání vzorců chování.</p>
+              </div>
+            )}
+
+            {settings.insightEngine && settings.predictionAlgorithm === 'ai_groq' && (
+              <div className="md3-card p-5 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 border-cyan-500/20 shadow-inner">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
+                    <Brain size={18} className="text-cyan-500" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[10px] uppercase font-black text-cyan-500 tracking-widest flex items-center gap-2">
+                      Globální AI Audit {isAiGlobalLoading && <Activity size={10} className="animate-pulse text-cyan-500" />}
+                    </div>
+                    <div className="text-sm font-bold text-theme-text">
+                      {settings.aiModel || 'Llama 3'}
+                    </div>
+                  </div>
+                </div>
+
+                {isAiGlobalLoading ? (
+                  <div className="text-sm font-bold text-md3-gray animate-pulse py-6 text-center">Analyzuji interakce, rizika a dlouhodobý vývoj...</div>
+                ) : aiGlobalError ? (
+                  <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiGlobalError}</div>
+                ) : aiGlobalData ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Objektivní Skóre Rizika</div>
+                          <div className="flex items-end gap-2">
+                             <div className={cn("text-4xl font-black leading-none", aiGlobalData.riskScore > 75 ? "text-red-500" : aiGlobalData.riskScore > 40 ? "text-orange-500" : "text-emerald-500")}>{aiGlobalData.riskScore}</div>
+                             <div className="text-sm font-bold text-md3-gray mb-1">/ 100</div>
+                          </div>
+                          <div className="mt-2 w-full h-1.5 bg-theme-border rounded-full overflow-hidden">
+                             <div className={cn("h-full rounded-full transition-all", aiGlobalData.riskScore > 75 ? "bg-red-500" : aiGlobalData.riskScore > 40 ? "bg-orange-500" : "bg-emerald-500")} style={{width: `${aiGlobalData.riskScore}%`}} />
+                          </div>
+                       </div>
+                       
+                       <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Vývoj (Trend)</div>
+                          <div className="text-lg font-black text-theme-text mb-2">
+                             {aiGlobalData.generalTrend === 'Improving' ? <span className="text-emerald-500 flex items-center gap-1"><ArrowDownRight size={20}/> Zlepšující</span> : aiGlobalData.generalTrend === 'Worsening' ? <span className="text-red-500 flex items-center gap-1"><ArrowUpRight size={20}/> Zhoršující</span> : <span className="text-orange-500 flex items-center gap-1"><RefreshCw size={20}/> Stabilní</span>}
+                          </div>
+                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto">AI Doporučení</div>
+                          <div className="text-xs font-bold text-theme-text leading-tight">{aiGlobalData.suggestedAction}</div>
+                       </div>
+                    </div>
+
+                    <div className="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/20">
+                      <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <Zap size={14} /> Detekované Spouštěče (Korelace)
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {aiGlobalData.keyTriggers.map((t, i) => (
+                           <span key={i} className="px-3 py-1.5 bg-black/20 dark:bg-white/10 rounded-lg text-xs font-bold text-theme-text">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm font-bold text-md3-gray italic text-center py-6">Zaznamenejte první dávky pro AI analýzu.</div>
+                )}
               </div>
             )}
 
