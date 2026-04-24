@@ -27,7 +27,8 @@ import {
   Brain,
   Database,
   Clock,
-  Eye
+  Eye,
+  Droplet
 } from 'lucide-react';
 import { formatAmount, cn } from '../lib/utils';
 import { 
@@ -48,7 +49,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
     substances.length > 0 ? substances[0].id : null
   );
   
-  const [timeframe, setTimeframe] = useState<'48h' | '14d' | '3m'>('14d');
+  const [timeframe, setTimeframe] = useState<'intraday' | '48h' | '7d' | '14d' | '3m'>('intraday');
 
   const activeSubstances = useMemo(() => {
     const activeIds = Array.from(new Set(doses.map(d => d.substanceId)));
@@ -82,12 +83,23 @@ export default function Predictions({ substances, doses, settings }: Predictions
            : (dailyTotalsArray[daysWithDosesCount / 2 - 1] + dailyTotalsArray[daysWithDosesCount / 2]) / 2)
         : 0;
 
-    // Intervals
+    // Intervals (Global vs Recent)
     let totalInterval = 0;
     for (let i = 0; i < sDoses.length - 1; i++) {
        totalInterval += (sDoses[i+1].timestamp - sDoses[i].timestamp);
     }
-    const avgIntervalMs = totalInterval / (sDoses.length - 1);
+    const globalAvgIntervalMs = totalInterval / (sDoses.length - 1);
+
+    // AI Insight: Heavily weight recent doses (last 5-10) to fix the "too long gap" bug
+    let recentAvgIntervalMs = globalAvgIntervalMs;
+    if (sDoses.length >= 5) {
+       let recentTotal = 0;
+       const recentCount = Math.min(10, sDoses.length - 1);
+       for(let i = sDoses.length - recentCount - 1; i < sDoses.length - 1; i++) {
+          recentTotal += (sDoses[i+1].timestamp - sDoses[i].timestamp);
+       }
+       recentAvgIntervalMs = recentTotal / recentCount;
+    }
 
     // Circadian analysis
     const hourBuckets: Record<number, { amount: number, count: number }> = {};
@@ -123,14 +135,15 @@ export default function Predictions({ substances, doses, settings }: Predictions
       projectedStashZero = stashExhaustionDate.getTime();
     }
 
-    // Predict Next Specific Dose Event
+    // Predict Next Specific Dose Event using Recent Interval
     let predictedNextDoseTime = "";
     let predictionReason = "";
     let predictionStatusColor = "text-md3-primary";
 
-    if (avgIntervalMs > 86400000) {
-       const daysInterval = Math.round(avgIntervalMs / 86400000);
-       const nextDateRaw = new Date(lastDose.timestamp + (avgIntervalMs));
+    // If even the recent average is over 24h, the user is likely a daily or sparse user
+    if (recentAvgIntervalMs > 86400000 && !((Date.now() - lastDose.timestamp) < 43200000 && recentAvgIntervalMs < 172800000)) {
+       const daysInterval = Math.round(recentAvgIntervalMs / 86400000);
+       const nextDateRaw = new Date(lastDose.timestamp + (recentAvgIntervalMs));
        const dateNext = new Date(nextDateRaw);
        dateNext.setHours(peakHour, 0, 0, 0); // align to typical hour, but on the expected day
        
@@ -145,19 +158,21 @@ export default function Predictions({ substances, doses, settings }: Predictions
           predictedNextDoseTime = `${dateStr} kolem ${peakHour}:00`;
        }
 
-       predictionReason = `Užíváno obden či nepravidelně (ø ${daysInterval} dnů). Model ukazuje na obvyklý slot v ${peakHour}:00.`;
+       predictionReason = `Užíváno s větším odstupem (ø ${daysInterval} dnů). Model ukazuje na obvyklý slot v ${peakHour}:00.`;
     } else {
-       const rawExpectedMs = lastDose.timestamp + avgIntervalMs;
+       // Frequent intra-day user
+       const rawExpectedMs = lastDose.timestamp + recentAvgIntervalMs;
        const nextExpectedDate = new Date(rawExpectedMs);
        if (rawExpectedMs < Date.now()) {
           predictedNextDoseTime = "Očekáváno nyní / Zpoždění";
           predictionStatusColor = "text-md3-orange";
-          predictionReason = "Nejbližší intra-denní okno již proběhlo. Frekvence stagnuje.";
+          predictionReason = `Nejbližší intra-denní okno již proběhlo (frekvence cca ${(recentAvgIntervalMs / 3600000).toFixed(1)}h).`;
        } else {
           const h = nextExpectedDate.getHours();
+          const m = nextExpectedDate.getMinutes() < 30 ? "00" : "30";
           const isTomm = nextExpectedDate.getDate() !== new Date().getDate();
-          predictedNextDoseTime = `${isTomm ? 'Zítra' : 'Dnes'} v ${h}:00 - ${h+1}:00`;
-          predictionReason = `Extrapolace vnitrodenní hustoty (cca ${(avgIntervalMs / 3600000).toFixed(1)}h). V tento čas běžně dosahujete typické dávky.`;
+          predictedNextDoseTime = `${isTomm ? 'Zítra' : 'Dnes'} v ${h}:${m}`;
+          predictionReason = `Extrapolace nedávné vnitrodenní hustoty (cca ${(recentAvgIntervalMs / 3600000).toFixed(1)}h mezi dávkami).`;
        }
     }
 
@@ -221,47 +236,70 @@ export default function Predictions({ substances, doses, settings }: Predictions
     else if (weekdayDoses > weekendDoses * 3) usePatternStr = 'Pracovní / Denní rutinní užívání';
     else usePatternStr = 'Rovnoměrné (Denní užívání)';
     
-    // Trend escalation check
+    // Trend escalation & Dependency Risk check
     let trendEscalation = 'Stabilní (Žádná eskalace)';
     let trendColor = 'text-emerald-500';
     let riskLevel = 'Nízké';
     let riskColorbg = 'bg-emerald-500/10 border-emerald-500/20';
+    let dependencyScore = 15; // Base minimum risk
+    let dependencyReason = "Stabilní a příležitostné užívání.";
 
     if (sDoses.length >= 10) {
        const recentHalf = sDoses.slice(-5);
-       const oldHalf = sDoses.slice(0, 5);
+       const oldHalf = sDoses.slice(-10, -5);
        
        let recentIntervals = 0, oldIntervals = 0;
        for(let i=0; i<4; i++) {
            recentIntervals += (recentHalf[i+1].timestamp - recentHalf[i].timestamp);
            oldIntervals += (oldHalf[i+1].timestamp - oldHalf[i].timestamp);
        }
-       if (recentIntervals < oldIntervals * 0.6) {
+       
+       // Calculate an acceleration ratio (lower means faster)
+       const ratio = recentIntervals / Math.max(1, oldIntervals);
+       
+       if (ratio < 0.6 || currentStreak >= 7) {
            trendEscalation = 'Kritická eskalace frekvence (Varování)';
            trendColor = 'text-rose-500';
            riskLevel = 'Vysoké';
            riskColorbg = 'bg-rose-500/10 border-rose-500/20';
-       } else if (recentIntervals < oldIntervals * 0.8) {
+           dependencyScore = ratio < 0.4 ? 90 : 75;
+           dependencyReason = "Zkracování intervalů mezi dávkami a silná progrese sekvence užívání.";
+       } else if (ratio < 0.85 || currentStreak >= 3) {
            trendEscalation = 'Mírná eskalace užívání';
            trendColor = 'text-md3-orange';
            riskLevel = 'Střední';
            riskColorbg = 'bg-md3-orange/10 border-md3-orange/20';
-       } else if (recentIntervals > oldIntervals * 1.5) {
+           dependencyScore = ratio < 0.7 ? 60 : 45;
+           dependencyReason = "Postupně se zvyšující frekvence užívání s náznaky habituace.";
+       } else if (ratio > 1.3) {
            trendEscalation = 'Zpomalení frekvence (Tapering)';
            trendColor = 'text-md3-primary';
            riskLevel = 'Minimální';
            riskColorbg = 'bg-md3-primary/10 border-md3-primary/20';
+           dependencyScore = 20;
+           dependencyReason = "Aktivní snižování dávkování nebo pozvolné protahování pauz.";
        }
+       
+       // Modifier for multi-dosing today
+       const dosesInLast24h = sDoses.filter(d => d.timestamp > Date.now() - 86400000).length;
+       if (dosesInLast24h > 3) dependencyScore = Math.min(100, dependencyScore + 20);
     } else if (sDoses.length > 3 && sDoses.length < 10) {
        trendEscalation = 'Zatím krátkodobý profil';
        trendColor = 'text-md3-gray';
        riskColorbg = 'bg-theme-subtle border-theme-border';
+       dependencyScore = 15;
     }
+
+    // Time to washout (Clearance Prediction)
+    const halfLifeH = selectedSubstance.halfLife || 12;
+    const timeToClearanceMs = halfLifeH * 5.5 * 3600000;
+    const estimatedClearanceDate = new Date(lastDose.timestamp + timeToClearanceMs);
+    let clearanceText = estimatedClearanceDate.getTime() < Date.now() ? "Již čistý" : `${estimatedClearanceDate.toLocaleDateString('cs-CZ')} v ${estimatedClearanceDate.getHours()}:00`;
 
     return {
        medianDailyDoseRaw,
        avgDailyConsumptionGlobal,
-       avgIntervalMs,
+       recentAvgIntervalMs,
        peakHour,
        lastDose,
        predictedNextAmount,
@@ -283,7 +321,10 @@ export default function Predictions({ substances, doses, settings }: Predictions
        currentStreak,
        maxStreak,
        timeDriftText,
-       timeDrift
+       timeDrift,
+       dependencyScore,
+       dependencyReason,
+       clearanceText
     };
 
   }, [selectedSubstance, sDoses]);
@@ -292,11 +333,11 @@ export default function Predictions({ substances, doses, settings }: Predictions
   const kineticsData48h = useMemo(() => {
     if (!selectedSubstance || !predictionMetrics) return [];
     
-    const { avgIntervalMs, predictedNextAmount, lastDose } = predictionMetrics;
+    const { recentAvgIntervalMs, predictedNextAmount, lastDose } = predictionMetrics;
     const projectionDoses = [...sDoses];
     const FUTURE_WINDOW_HOURS = 48;
-    const intervalSafe = Math.max(avgIntervalMs, 3600000); // minimum 1h interval
-    let projectedTime = (avgIntervalMs > 86400000 && lastDose.timestamp < Date.now() - 86400000) 
+    const intervalSafe = Math.max(recentAvgIntervalMs, 3600000); // minimum 1h interval
+    let projectedTime = (recentAvgIntervalMs > 86400000 && lastDose.timestamp < Date.now() - 86400000) 
          ? Date.now() + 3600000 
          : Math.max(lastDose.timestamp + intervalSafe, Date.now() + 1800000);
      
@@ -376,8 +417,8 @@ export default function Predictions({ substances, doses, settings }: Predictions
         
         // Quasi-probability 0-100%
         const userDowProb = (dayFreq[dow] / maxFreq); 
-        // Overall frequency weighting
-        const overallFreq = Math.min(1, 1 / Math.max(1, (predictionMetrics.avgIntervalMs / 86400000)));
+        // Overall frequency weighting using recent avg
+        const overallFreq = Math.min(1, 1 / Math.max(1, (predictionMetrics.recentAvgIntervalMs / 86400000)));
         
         let finalProb = userDowProb * overallFreq * 100;
         
@@ -401,6 +442,31 @@ export default function Predictions({ substances, doses, settings }: Predictions
      }
      return prob7d;
   }, [selectedSubstance, predictionMetrics, sDoses]);
+
+  // -- Intraday 24H Probability Model --
+  const probData24h = useMemo(() => {
+     if (!selectedSubstance || sDoses.length < 5) return [];
+
+     const hourBuckets: Record<number, number> = {};
+     sDoses.forEach(d => {
+        const h = new Date(d.timestamp).getHours();
+        hourBuckets[h] = (hourBuckets[h] || 0) + 1;
+     });
+     
+     const maxFreq = Math.max(...Object.values(hourBuckets), 1);
+     const currentHour = new Date().getHours();
+     
+     const prob24h = [];
+     for(let i=0; i<24; i++) {
+        const rawProb = ((hourBuckets[i] || 0) / maxFreq) * 100;
+        prob24h.push({
+           hour: `${i}:00`,
+           isCurrent: i === currentHour,
+           probability: Math.round(rawProb)
+        });
+     }
+     return prob24h;
+  }, [selectedSubstance, sDoses]);
 
   // -- 3M Macro Moving Averages --
   const trendData3m = useMemo(() => {
@@ -522,7 +588,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
                       </div>
                       <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1">Průměrný Rozestup</div>
                       <div className="text-xl font-black text-theme-text mb-1">
-                         {(predictionMetrics.avgIntervalMs / 3600000).toFixed(1)} <span className="text-xs">h</span>
+                         {(predictionMetrics.recentAvgIntervalMs / 3600000).toFixed(1)} <span className="text-xs">h</span>
                       </div>
                       <div className="text-[9px] font-bold text-md3-gray">AI extrapolace</div>
                    </div>
@@ -568,7 +634,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
                 {/* Main Prediction Terminal */}
                 <div className="md3-card overflow-hidden">
                     <div className="border-b border-theme-border bg-theme-bg p-2 flex overflow-x-auto hide-scrollbar gap-2">
-                       {[{ id: '48h', label: 'Mikro (48H)' }, { id: '7d', label: 'Týden (7D)' }, { id: '14d', label: 'Makro (14D)' }, { id: '3m', label: 'Trendy (3M)' }].map(opt => (
+                       {[{ id: 'intraday', label: 'Den (24H)' }, { id: '48h', label: 'Mikro (48H)' }, { id: '7d', label: 'Týden (7D)' }, { id: '14d', label: 'Makro (14D)' }, { id: '3m', label: 'Trendy (3M)' }].map(opt => (
                           <button
                             key={opt.id}
                             onClick={() => setTimeframe(opt.id as any)}
@@ -584,6 +650,42 @@ export default function Predictions({ substances, doses, settings }: Predictions
 
                     <div className="p-4">
                        <AnimatePresence mode="wait">
+                          {timeframe === 'intraday' && (
+                             <motion.div key="intraday" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-4">
+                                <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest flex items-center gap-1 mb-2">
+                                   <Clock size={12} className="text-md3-primary" /> Cirkadiánní Model (Pravděpodobnost Intraday)
+                                </div>
+                                {probData24h.length < 2 ? (
+                                   <div className="h-56 flex items-center justify-center text-sm text-md3-gray font-medium italic">Nedostatek dat pro výpočet intraday.</div>
+                                ) : (
+                                   <>
+                                      <div className="h-56 w-full">
+                                          <ResponsiveContainer width="100%" height="100%">
+                                             <BarChart data={probData24h} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <XAxis dataKey="hour" tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} tickLine={false} axisLine={false} interval={2} />
+                                                <YAxis tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}%`} />
+                                                <Tooltip 
+                                                  cursor={{ fill: 'var(--md3-border)', opacity: 0.4 }}
+                                                  contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                                  labelStyle={{ color: '#8e8e93', fontWeight: 800 }}
+                                                  formatter={(val: number) => [`${val}%`, 'Pravděpodobnost']}
+                                                />
+                                                <Bar dataKey="probability" radius={[4, 4, 0, 0]}>
+                                                  {probData24h.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.isCurrent ? '#0a84ff' : (selectedSubstance.color || '#a855f7')} opacity={entry.isCurrent ? 1 : 0.6} />
+                                                  ))}
+                                                </Bar>
+                                             </BarChart>
+                                          </ResponsiveContainer>
+                                      </div>
+                                      <div className="bg-theme-bg p-3 rounded-xl border border-theme-border text-xs text-md3-gray font-medium border-l-4 border-l-md3-primary">
+                                         Graf ukazuje historicky nejčastější hodiny vaší konzumace. Sloupec se 100% ukazuje hodinu s největším množstvím zkonzumovaných dávek a určuje tak váš Peak (Vrchol dne). Zvýrazněný sloupec představuje aktuální hodinu.
+                                      </div>
+                                   </>
+                                )}
+                             </motion.div>
+                          )}
+
                           {timeframe === '48h' && (
                              <motion.div key="48h" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-4">
                                 <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest flex items-center gap-1 mb-2">
