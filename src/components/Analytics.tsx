@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Wallet, 
@@ -35,7 +35,8 @@ import {
   Cpu,
   Brain,
   Dna,
-  Timer
+  Timer,
+  Loader2
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -1750,7 +1751,10 @@ Odpovídej POUZE striktně JSON objektem.`
                 </div>
 
                 {isAiGlobalLoading ? (
-                  <div className="text-sm font-bold text-md3-gray animate-pulse py-6 text-center">Analyzuji interakce, rizika a dlouhodobý vývoj...</div>
+                  <div className="flex flex-col items-center justify-center py-10 gap-3">
+                    <Loader2 size={32} className="text-cyan-500 animate-spin" />
+                    <div className="text-sm font-bold text-md3-gray animate-pulse text-center">Analyzuji interakce, rizika a dlouhodobý vývoj...</div>
+                  </div>
                 ) : aiGlobalError ? (
                   <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiGlobalError}</div>
                 ) : aiGlobalData ? (

@@ -31,7 +31,8 @@ import {
   Database,
   Clock,
   Eye,
-  Droplet
+  Droplet,
+  Loader2
 } from 'lucide-react';
 import { formatAmount, cn } from '../lib/utils';
 import { 
@@ -784,7 +785,10 @@ Odpovídej POUZE platným formátem JSON.`
                      </div>
                      
                      {isAiLoading ? (
-                        <div className="text-sm font-bold text-md3-gray animate-pulse py-4 text-center">AI model analyzuje nelineární vzorce...</div>
+                        <div className="flex flex-col items-center justify-center py-8 gap-3">
+                           <Loader2 size={24} className="text-purple-500 animate-spin" />
+                           <div className="text-sm font-bold text-md3-gray animate-pulse text-center">AI model analyzuje nelineární vzorce...</div>
+                        </div>
                      ) : aiError ? (
                         <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiError}</div>
                      ) : aiData ? (
