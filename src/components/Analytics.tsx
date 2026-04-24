@@ -215,7 +215,7 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
   const [period, setPeriod] = useState<Period>(30);
   const [searchQuery, setSearchQuery] = useState('');
   const [detailTab, setDetailTab] = useState<'trends' | 'time' | 'distribution' | 'stats' | 'finance' | 'history' | 'strains' | 'day-view' | 'combinations' | 'reactions' | 'predictions' | 'active-ingredients' | 'custom-fields'>('trends');
-  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights' | 'patterns'>('overview');
+  const [overviewTab, setOverviewTab] = useState<'overview' | 'day-view' | 'finance' | 'insights' | 'patterns' | 'habits'>('overview');
   const [selectedDay, setSelectedDay] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Stabilize 'now' to prevent excessive re-renders. Updates every 5 minutes.
@@ -721,6 +721,18 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         >
           <Brain size={14} className={settings.insightEngine ? "text-cyan-primary" : ""} />
           Vzorce & AI
+        </button>
+        <button
+          onClick={() => setOverviewTab('habits')}
+          className={cn(
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            overviewTab === 'habits' 
+              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
+              : "text-md3-gray hover:text-theme-text"
+          )}
+        >
+          <Target size={14} />
+          Zvyky
         </button>
       </div>
 
@@ -1750,6 +1762,202 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                        </div>
                     )}
                  </div>
+              );
+            })()}
+          </motion.div>
+        )}
+        
+        {overviewTab === 'habits' && (
+          <motion.div
+            key="habits"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6 relative z-10 pb-24"
+          >
+            {(() => {
+              if (doses.length < 5) {
+                return (
+                  <div className="md3-card p-6 border-dashed border-2 border-theme-border/50 text-center">
+                    <Target size={24} className="mx-auto text-md3-gray mb-3" />
+                    <h3 className="text-sm font-bold text-theme-text mb-1">Příliš málo dat</h3>
+                    <p className="text-xs text-md3-gray">Pro hloubkovou analýzu zvyků je potřeba více záznamů o dávkování.</p>
+                  </div>
+                );
+              }
+
+              const sortedDocs = [...doses].sort((a,b) => a.timestamp - b.timestamp);
+              
+              // Gaps analysis (Rozestupy)
+              const intervalData = [];
+              let totalGapHours = 0;
+              for (let i = 1; i < sortedDocs.length; i++) {
+                const gap = (sortedDocs[i].timestamp - sortedDocs[i-1].timestamp) / 3600000;
+                totalGapHours += gap;
+                intervalData.push({
+                   index: i,
+                   date: formatTime(sortedDocs[i].timestamp, { day: 'numeric', month: 'short' }),
+                   gapHours: Number(gap.toFixed(1))
+                });
+              }
+              const avgGap = (totalGapHours / intervalData.length).toFixed(1);
+
+              // Cross-Substance Reactivity
+              const reactivity: Record<string, Record<string, number>> = {};
+              for (let i = 0; i < sortedDocs.length - 1; i++) {
+                const current = sortedDocs[i];
+                const next = sortedDocs[i+1];
+                const timeDiff = next.timestamp - current.timestamp;
+                if (timeDiff <= 6 * 3600000 && current.substanceId !== next.substanceId) { // within 6 hours
+                  if (!reactivity[current.substanceId]) reactivity[current.substanceId] = {};
+                  reactivity[current.substanceId][next.substanceId] = (reactivity[current.substanceId][next.substanceId] || 0) + 1;
+                }
+              }
+
+              const combinationInsights = [];
+              Object.entries(reactivity).forEach(([sourceId, targets]) => {
+                const sourceSub = substances.find(s => s.id === sourceId);
+                Object.entries(targets).forEach(([targetId, count]) => {
+                  if (count > 1) { // 2+ times
+                    const targetSub = substances.find(s => s.id === targetId);
+                    if (sourceSub && targetSub) {
+                      combinationInsights.push({
+                         sourceName: sourceSub.name,
+                         sourceColor: sourceSub.color,
+                         targetName: targetSub.name,
+                         targetColor: targetSub.color,
+                         count
+                      });
+                    }
+                  }
+                });
+              });
+
+              combinationInsights.sort((a,b) => b.count - a.count);
+
+              // Density / Momentum
+              const chunkedGaps = [];
+              const chunkSize = Math.max(3, Math.floor(intervalData.length / 5));
+              for (let i=0; i<intervalData.length; i+=chunkSize) {
+                 const chunk = intervalData.slice(i, i+chunkSize);
+                 const chunkAvg = chunk.reduce((acc, c) => acc + c.gapHours, 0) / chunk.length;
+                 chunkedGaps.push({
+                   segment: `${chunk[0].date}`,
+                   avgGapHours: Number(chunkAvg.toFixed(1))
+                 });
+              }
+
+              const momentumRatio = chunkedGaps.length >= 2 
+                 ? chunkedGaps[0].avgGapHours / Math.max(0.1, chunkedGaps[chunkedGaps.length - 1].avgGapHours)
+                 : 1;
+
+              return (
+                <div className="space-y-6">
+                  {/* Summary Metric Header */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="md3-card p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Activity size={16} className="text-md3-primary" />
+                          <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Průměrný Rozestup (Komplexně)</h3>
+                        </div>
+                        <div className="text-3xl font-black text-theme-text mb-1">{avgGap} <span className="text-sm text-md3-gray font-medium">Hodin</span></div>
+                        <div className="text-xs font-bold p-2 bg-theme-bg rounded border border-theme-border text-md3-gray">
+                           Dlouhodobý průměr napříč všemi substancemi bez ohledu na druh.
+                        </div>
+                     </div>
+                     <div className="md3-card p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp size={16} className={momentumRatio > 1.2 ? "text-red-500" : "text-emerald-500"} />
+                          <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Trajektorie Momentum</h3>
+                        </div>
+                        <div className="text-lg font-black text-theme-text mb-2 leading-tight">
+                           {momentumRatio > 1.2 ? "Zrychlování (Zkracování Pauz)" : momentumRatio < 0.8 ? "Zpomalování (Snižování Hustoty)" : "Konzistentní / Stabilní Vzorec"}
+                        </div>
+                        <div className="text-xs font-bold p-2 bg-theme-bg rounded border border-theme-border text-md3-gray">
+                           {momentumRatio > 1.2 
+                             ? "Vaše nedávné rozestupy jsou celkově kratší než dřívější průměry. Hustota narůstá." 
+                             : momentumRatio < 0.8
+                             ? "Daří se vám protahovat rozestupy mezi jednotlivými konzumacemi."
+                             : "Frekvence zůstává delší dobu beze změn (stabilní hustota)."}
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Rozestupy v čase - graf */}
+                  <section className="md3-card p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <Clock size={16} className="text-md3-primary" />
+                      <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Vývoj Průměrných Rozestupů Dávkování</h3>
+                    </div>
+                    <div className="h-48 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chunkedGaps} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="gapGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#0a84ff" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="#0a84ff" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                          <XAxis dataKey="segment" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                            formatter={(val: number) => [`${val} h`, 'Prům. pauza']}
+                            labelStyle={{ color: '#8e8e93', fontWeight: 800 }}
+                          />
+                          <Area type="monotone" dataKey="avgGapHours" name="Pauza / Doba bez účinku" stroke="#0a84ff" fill="url(#gapGrad)" strokeWidth={3} activeDot={{ r: 5, strokeWidth: 0, fill: '#0a84ff' }} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 text-xs font-bold text-md3-gray bg-theme-bg p-3 rounded-xl border border-theme-border flex gap-2">
+                       <Lightbulb size={14} className="text-md3-gray shrink-0 mt-0.5" />
+                       Jedná se o agregační graf sledující výplň "hluchých míst". Čím je čára níž, tím častěji dávkujete bez ohledu na substanci. Vzrůstající křivka je naopak velice pozitivní indikátor (Tapering a delší prodlevy).
+                    </div>
+                  </section>
+
+                  {/* Combinations Graph */}
+                  <section className="md3-card p-6">
+                    <div className="flex items-center gap-2 mb-6">
+                      <GitMerge size={16} className="text-purple-500" />
+                      <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Polydrug Spouštěče (Do 6 hodin od sebe)</h3>
+                    </div>
+                    
+                    {combinationInsights.length === 0 ? (
+                      <div className="text-center py-6 text-sm text-md3-gray font-bold italic">Nebyly s jistotou zaznamenány opakující se kombinace. Všechny vaše dávky jsou separované.</div>
+                    ) : (
+                      <div className="space-y-4">
+                         <div className="text-xs text-md3-gray font-medium mb-2">
+                            Analýza identifikovala sekvence látek, u nichž použití látky A velmi často spouští použití Látky B.
+                         </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                           {combinationInsights.map((ci, idx) => (
+                             <div key={idx} className="flex flex-col bg-theme-bg rounded-xl border border-theme-border p-4 gap-3 relative overflow-hidden group">
+                               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-black/5 dark:to-white/5 transform translate-x-4 -translate-y-4 rounded-full pointer-events-none" />
+                               <div className="flex items-center justify-between z-10">
+                                  <div className="flex items-center gap-2 max-w-[70%]">
+                                     <div className="flex items-center gap-1 min-w-0">
+                                        <div className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ backgroundColor: ci.sourceColor }} />
+                                        <span className="text-xs font-bold text-theme-text truncate">{ci.sourceName}</span>
+                                     </div>
+                                     <ChevronRight size={14} className="text-md3-gray shrink-0" />
+                                     <div className="flex items-center gap-1 min-w-0">
+                                        <div className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ backgroundColor: ci.targetColor }} />
+                                        <span className="text-xs font-bold text-theme-text truncate">{ci.targetName}</span>
+                                     </div>
+                                  </div>
+                                  <div className="text-lg font-black text-theme-text whitespace-nowrap">{ci.count}x</div>
+                               </div>
+                               <div className="text-[9px] font-black text-md3-gray uppercase tracking-widest bg-theme-card/50 p-2 rounded z-10">
+                                  Látka <strong className="text-theme-text">{ci.sourceName}</strong> velmi pravděpodobně navodila potřebu následného užití látky <strong className="text-theme-text">{ci.targetName}</strong>.
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                      </div>
+                    )}
+                  </section>
+                </div>
               );
             })()}
           </motion.div>

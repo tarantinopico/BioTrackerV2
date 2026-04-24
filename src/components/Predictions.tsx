@@ -612,50 +612,57 @@ export default function Predictions({ substances, doses, settings }: Predictions
                key={selectedSubstance.id}
                className="space-y-4 z-10"
              >
-                {/* At a Glance Summaries */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                   <div className="md3-card p-4 relative overflow-hidden group">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                   <div className="md3-card p-4 relative overflow-hidden group flex flex-col justify-between">
                       <div className="absolute -right-3 -bottom-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                          <Activity size={80} />
                       </div>
-                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1">Typická denní dávka</div>
-                      <div className="text-2xl font-black text-theme-text mb-1">{formatAmount(predictionMetrics.medianDailyDoseRaw, selectedSubstance.unit, 1)}</div>
-                      <div className="text-[9px] font-bold text-md3-gray">Očištěný medián</div>
+                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Typická denní dávka</div>
+                      <div>
+                         <div className="text-2xl font-black text-theme-text mb-1">{formatAmount(predictionMetrics.medianDailyDoseRaw, selectedSubstance.unit, 1)}</div>
+                         <div className="text-[9px] font-bold text-md3-gray">Očištěný medián</div>
+                      </div>
                    </div>
 
-                   <div className="md3-card p-4 relative overflow-hidden group">
+                   <div className="md3-card p-4 relative overflow-hidden group flex flex-col justify-between">
                       <div className="absolute -right-3 -bottom-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                          <Clock size={80} />
                       </div>
-                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1">Průměrný Rozestup</div>
-                      <div className="text-xl font-black text-theme-text mb-1">
-                         {(predictionMetrics.recentAvgIntervalMs / 3600000).toFixed(1)} <span className="text-xs">h</span>
+                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Průměrný Rozestup</div>
+                      <div>
+                         <div className="text-xl font-black text-theme-text mb-1">
+                            {(predictionMetrics.recentAvgIntervalMs / 3600000).toFixed(1)} <span className="text-xs">h</span>
+                         </div>
+                         <div className="text-[9px] font-bold text-md3-gray">AI extrapolace</div>
                       </div>
-                      <div className="text-[9px] font-bold text-md3-gray">AI extrapolace</div>
                    </div>
 
-                   <div className="md3-card p-4 relative overflow-hidden group">
+                   <div className="md3-card p-4 relative overflow-hidden group flex flex-col justify-between">
                       <div className="absolute -right-3 -bottom-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                          <Wallet size={80} />
                       </div>
-                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1">Cena za Qurtál</div>
-                      <div className="text-xl font-black text-theme-text mb-1">
-                         {predictionMetrics.projectedCost3Months > 0 ? `${predictionMetrics.projectedCost3Months.toLocaleString('cs-CZ')} Kč` : '—'}
+                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Cena za Qurtál</div>
+                      <div>
+                         <div className="text-xl font-black text-theme-text mb-1">
+                            {predictionMetrics.projectedCost3Months > 0 ? `${predictionMetrics.projectedCost3Months.toLocaleString('cs-CZ')} Kč` : '—'}
+                         </div>
+                         <div className="text-[9px] font-bold text-md3-gray uppercase text-md3-orange">90denní Projekce</div>
                       </div>
-                      <div className="text-[9px] font-bold text-md3-gray uppercase text-md3-orange">90denní Projekce</div>
                    </div>
 
-                   <div className="md3-card p-4 relative overflow-hidden group">
+                   <div className="md3-card p-4 relative overflow-hidden group flex flex-col justify-between">
                       <div className="absolute -right-3 -bottom-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                          <AlertTriangle size={80} />
                       </div>
-                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-1">Zásoba dojde</div>
-                      <div className="text-xl font-black text-theme-text mb-1">
-                         {predictionMetrics.stashDaysLeft && predictionMetrics.stashDaysLeft < 365 
-                           ? `Za ${predictionMetrics.stashDaysLeft.toFixed(0)} dní` 
-                           : '> 1 ROK'}
+                      <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Zásoba dojde</div>
+                      <div>
+                         <div className="text-xl font-black text-theme-text mb-1">
+                            {predictionMetrics.stashDaysLeft && predictionMetrics.stashDaysLeft < 365 
+                              ? `Za ${predictionMetrics.stashDaysLeft.toFixed(0)} dní` 
+                              : '> 1 ROK'}
+                         </div>
+                         <div className="text-[9px] font-bold text-md3-gray uppercase text-md3-green">Simulace Burn Rate</div>
                       </div>
-                      <div className="text-[9px] font-bold text-md3-gray uppercase text-md3-green">Simulace Burn Rate</div>
                    </div>
                 </div>
 
@@ -941,7 +948,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
                             </div>
                          </div>
                          
-                         <div className="grid grid-cols-2 gap-3">
+                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                             <div className="bg-theme-bg rounded-xl border border-theme-border p-3 flex flex-col justify-between">
                                <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Aktuální Série</div>
                                <div className="text-xl font-black text-theme-text">{predictionMetrics.currentStreak} <span className="text-xs text-md3-gray font-bold uppercase tracking-widest">Dní</span></div>
