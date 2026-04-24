@@ -14,7 +14,10 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Legend,
-  Cell
+  Cell,
+  ScatterChart,
+  Scatter,
+  ZAxis
 } from 'recharts';
 import { 
   Lightbulb, 
@@ -49,7 +52,8 @@ export default function Predictions({ substances, doses, settings }: Predictions
     substances.length > 0 ? substances[0].id : null
   );
   
-  const [timeframe, setTimeframe] = useState<'intraday' | '48h' | '7d' | '14d' | '3m'>('intraday');
+  const [timeframe, setTimeframe] = useState<'intraday' | '48h' | '7d' | '14d' | '3m' | 'density'>('intraday');
+  const [useAllData, setUseAllData] = useState(false);
 
   const activeSubstances = useMemo(() => {
     const activeIds = Array.from(new Set(doses.map(d => d.substanceId)));
@@ -92,7 +96,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
 
     // AI Insight: Heavily weight recent doses (last 5-10) to fix the "too long gap" bug
     let recentAvgIntervalMs = globalAvgIntervalMs;
-    if (sDoses.length >= 5) {
+    if (!useAllData && sDoses.length >= 5) {
        let recentTotal = 0;
        const recentCount = Math.min(10, sDoses.length - 1);
        for(let i = sDoses.length - recentCount - 1; i < sDoses.length - 1; i++) {
@@ -327,7 +331,7 @@ export default function Predictions({ substances, doses, settings }: Predictions
        clearanceText
     };
 
-  }, [selectedSubstance, sDoses]);
+  }, [selectedSubstance, sDoses, useAllData]);
 
   // -- 48h Micro Kinetics --
   const kineticsData48h = useMemo(() => {
@@ -511,6 +515,43 @@ export default function Predictions({ substances, doses, settings }: Predictions
      return data;
   }, [selectedSubstance, sDoses]);
 
+  // -- Density Heatmap --
+  const densityData = useMemo(() => {
+     if (!selectedSubstance || sDoses.length < 5) return [];
+
+     const matrix: Record<number, Record<number, number>> = {};
+     for(let i=0; i<7; i++) matrix[i] = {};
+
+     let maxVal = 1;
+     sDoses.forEach(d => {
+        const date = new Date(d.timestamp);
+        const day = date.getDay();
+        // Bucket into 2-hour chunks to make scatter look better
+        const hr = Math.floor(date.getHours() / 2) * 2;
+        
+        matrix[day][hr] = (matrix[day][hr] || 0) + 1;
+        if (matrix[day][hr] > maxVal) maxVal = matrix[day][hr];
+     });
+
+     const data = [];
+     const daysStr = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
+     for(let d=0; d<7; d++) {
+        for(let h=0; h<24; h+=2) {
+           if (matrix[d][h]) {
+              data.push({
+                 dayIndex: d,
+                 dayName: daysStr[d],
+                 hour: h,
+                 count: matrix[d][h],
+                 intensity: matrix[d][h] / maxVal,
+                 hourLabel: `${h}:00 - ${h+2}:00`
+              });
+           }
+        }
+     }
+     return data;
+  }, [selectedSubstance, sDoses]);
+
   if (!settings.insightEngine) {
     return (
       <div className="flex flex-col items-center justify-center p-8 h-full text-center space-y-4">
@@ -633,19 +674,36 @@ export default function Predictions({ substances, doses, settings }: Predictions
 
                 {/* Main Prediction Terminal */}
                 <div className="md3-card overflow-hidden">
-                    <div className="border-b border-theme-border bg-theme-bg p-2 flex overflow-x-auto hide-scrollbar gap-2">
-                       {[{ id: 'intraday', label: 'Den (24H)' }, { id: '48h', label: 'Mikro (48H)' }, { id: '7d', label: 'Týden (7D)' }, { id: '14d', label: 'Makro (14D)' }, { id: '3m', label: 'Trendy (3M)' }].map(opt => (
-                          <button
-                            key={opt.id}
-                            onClick={() => setTimeframe(opt.id as any)}
-                            className={cn(
-                               "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                               timeframe === opt.id ? "bg-md3-primary/20 text-md3-primary" : "text-md3-gray hover:text-theme-text"
-                            )}
-                          >
-                             {opt.label}
-                          </button>
-                       ))}
+                    <div className="border-b border-theme-border bg-theme-bg p-2 flex items-center justify-between">
+                       <div className="flex overflow-x-auto hide-scrollbar gap-2 flex-1 mr-2">
+                          {[{ id: 'intraday', label: 'Den (24H)' }, { id: '48h', label: 'Mikro (48H)' }, { id: '7d', label: 'Týden (7D)' }, { id: '14d', label: 'Makro (14D)' }, { id: '3m', label: 'Trendy (3M)' }, { id: 'density', label: 'Hustota' }].map(opt => (
+                             <button
+                               key={opt.id}
+                               onClick={() => setTimeframe(opt.id as any)}
+                               className={cn(
+                                  "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                                  timeframe === opt.id ? "bg-md3-primary/20 text-md3-primary" : "text-md3-gray hover:text-theme-text"
+                               )}
+                             >
+                                {opt.label}
+                             </button>
+                          ))}
+                       </div>
+                       
+                       <button
+                         onClick={() => setUseAllData(!useAllData)}
+                         className={cn(
+                           "shrink-0 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                           useAllData 
+                             ? "bg-md3-primary/10 border-md3-primary/30 text-md3-primary" 
+                             : "bg-theme-bg border-theme-border text-md3-gray hover:text-theme-text"
+                         )}
+                         title={useAllData ? "Výpočet vychází z celkové historie dávkování" : "Výpočet chytře upřednostňuje nedávné zvyky"}
+                       >
+                         {useAllData ? "Celá Historie Vypnuta" : "Chytrý Odhad Zapnut"}
+                         {/* We can clarify the text */}
+                         {useAllData ? "VŠE" : "AUTO"}
+                       </button>
                     </div>
 
                     <div className="p-4">
@@ -820,6 +878,41 @@ export default function Predictions({ substances, doses, settings }: Predictions
                                 )}
                              </motion.div>
                           )}
+
+                          {timeframe === 'density' && (
+                             <motion.div key="density" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-4">
+                                <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest flex items-center gap-1 mb-2">
+                                   <Activity size={12} className="text-pink-500" /> Matice Hustoty Užívání (Heatmapa)
+                                </div>
+                                {densityData.length < 2 ? (
+                                   <div className="h-56 flex items-center justify-center text-sm text-md3-gray font-medium italic">Nedostatek dat pro Matici hustoty.</div>
+                                ) : (
+                                   <>
+                                      <div className="h-56 w-full">
+                                          <ResponsiveContainer width="100%" height="100%">
+                                             <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                                <XAxis dataKey="dayName" type="category" allowDuplicatedCategory={false} tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} tickLine={false} axisLine={false} />
+                                                <YAxis dataKey="hourLabel" type="category" allowDuplicatedCategory={false} tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} tickLine={false} axisLine={false} />
+                                                <ZAxis dataKey="intensity" range={[20, 600]} />
+                                                <Tooltip 
+                                                  cursor={{ strokeDasharray: '3 3' }}
+                                                  contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                                  labelStyle={{ color: '#8e8e93', fontWeight: 800 }}
+                                                  formatter={(value, name, props) => {
+                                                     return [props.payload.count + ' dávek', 'Záznamy'];
+                                                  }}
+                                                />
+                                                <Scatter data={densityData} fill={selectedSubstance.color || '#ec4899'} />
+                                             </ScatterChart>
+                                          </ResponsiveContainer>
+                                      </div>
+                                      <div className="bg-theme-bg p-3 rounded-xl border border-theme-border text-xs text-md3-gray font-medium border-l-4 border-l-pink-500">
+                                         Mapa znázorňuje nejčastější časová "okna". Větší bod = více konzumací v daný čas a den.
+                                      </div>
+                                   </>
+                                )}
+                             </motion.div>
+                          )}
                        </AnimatePresence>
                     </div>
                 </div>
@@ -857,6 +950,10 @@ export default function Predictions({ substances, doses, settings }: Predictions
                             <div className="bg-theme-bg rounded-xl border border-theme-border p-3 flex flex-col justify-between">
                                <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Kategorizace Vzorce</div>
                                <div className="text-sm font-bold text-theme-text leading-tight">{predictionMetrics.usePatternStr}</div>
+                            </div>
+                            <div className="bg-theme-bg rounded-xl border border-theme-border p-3 flex flex-col justify-between">
+                               <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1 flex items-center gap-1"><Droplet size={10} className="text-blue-500" /> Vyloučení látky z těla</div>
+                               <div className="text-sm font-bold text-theme-text leading-tight">{predictionMetrics.clearanceText}</div>
                             </div>
                             <div className="bg-theme-bg rounded-xl border border-theme-border p-3 flex flex-col justify-between">
                                <div className="text-[10px] font-black text-md3-gray uppercase tracking-widest mb-2 line-clamp-1">Vývoj Doby Užívání</div>
