@@ -125,7 +125,7 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
               }
             ],
             temperature: settings.aiTemperature ?? 0.1,
-            max_tokens: 500
+            max_tokens: settings.aiMaxTokens ?? 600
           })
         });
 
@@ -143,6 +143,13 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
         }
         
         const parsed = JSON.parse(content);
+        
+        // Aplikuj násobič rizikového skóre a peak intensity
+        const peakMult = settings.peakIntensityMultiplier ?? 1.0;
+        if (parsed.currentEstimatedBloodLevelPct !== undefined) {
+          parsed.currentEstimatedBloodLevelPct = Math.min(Math.round(parsed.currentEstimatedBloodLevelPct * peakMult), 100);
+        }
+
         setAiData(parsed as AiAnalysis);
       } catch (err) {
         setAiError('Chyba komunikace s Groq API nebo chybný formát JSON. Zkontrolujte API klíč.');

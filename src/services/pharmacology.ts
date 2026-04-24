@@ -100,15 +100,19 @@ export function calculateDoseLevel(
 
   const amount = dose.amount;
   const bioavailability = (substance.bioavailability / 100) * (dose.bioavailabilityMultiplier || 1);
-  const effectiveDose = amount * bioavailability;
+  
+  const intensityMult = settings?.peakIntensityMultiplier ?? 1.0;
+  const decayRate = settings?.doseDecayRate ?? 1.0;
+  
+  const effectiveDose = amount * bioavailability * intensityMult;
 
   const tolerance = precalculatedTolerance !== undefined ? precalculatedTolerance : calculateTolerance(substance.id, substances, doses, Date.now(), settings);
   const toleranceFactor = 1 - (tolerance / 100);
 
   const metabolismMult = getMetabolismMultiplier(settings);
   const halfLifeMult = getHalfLifeMultiplier(settings);
-  const tmax = (substance.tmax * (dose.tmaxMultiplier || 1)) / metabolismMult;
-  const halfLife = (substance.halfLife / metabolismMult) * halfLifeMult;
+  const tmax = ((substance.tmax * (dose.tmaxMultiplier || 1)) / metabolismMult) * decayRate;
+  const halfLife = ((substance.halfLife / metabolismMult) * halfLifeMult) * decayRate;
 
   const curveType = substance.metabolismCurve || 'standard';
   let level = 0;

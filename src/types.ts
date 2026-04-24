@@ -219,6 +219,7 @@ export interface UserSettings {
   aiModel?: string;
   aiContextLimit?: number;
   aiTemperature?: number;
+  aiMaxTokens?: number;
   aiGlobalPrompt?: string;
   aiPredictionPrompt?: string;
   aiSystemPrompt?: string;
@@ -228,6 +229,10 @@ export interface UserSettings {
   toleranceMultiplier?: number;
   metabolismMultiplier?: number;
   halfLifeMultiplier?: number;
+  riskScoreMultiplier?: number;
+  peakIntensityMultiplier?: number;
+  habitAnalysisSensitivity?: number;
+  doseDecayRate?: number;
 
   // Security
   pinCode?: string | null;

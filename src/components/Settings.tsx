@@ -52,6 +52,41 @@ interface SettingsProps {
 
 type Tab = 'profile' | 'appearance' | 'dashboard' | 'notifications' | 'ai' | 'security' | 'effects' | 'data' | 'developer' | 'about';
 
+const DEFAULT_SYSTEM_PROMPT = `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš POUZE striktním JSON formátem.`;
+
+const DEFAULT_GLOBAL_PROMPT = `Tvá analýza musí identifikovat vzorce v dlouhodobém (agregovaném) užívání ze všech látek klienta.
+Schéma odpovědi:
+{
+  "generalTrend": "Improving" | "Worsening" | "Stable",
+  "riskScore": (celé číslo 0-100, analyzující risk vyhoření/závislosti),
+  "keyTriggers": (pole 2-3 krátkých stringů, např. "Ráno v pracovní dny", "Při mixování látek", "O Víkendových nocích"),
+  "suggestedAction": (string, jedno jasné doporučení do 15 slov),
+  "radarScores": {
+    "frequency": (číslo 0-100, kde 100=extrémně časté užívání),
+    "amount": (číslo 0-100, kde 100=velké dávky),
+    "timing": (číslo 0-100, rizikovost načasování např pozdě v noci),
+    "combinations": (číslo 0-100, jak často se mixují látky / polydrug risk)
+  },
+  "habitAnalysis": (string, odstavec 20-30 slov o zjištěných návycích a psychologickém kontextu),
+  "weeklyDistribution": (pole 7 čísel udávající procentuální riziko nebo zátěž pro každý den v týdnu [Pondělí-Neděle], suma nemusí být 100),
+  "projectedRiskNextMonth": (číslo 0-100, extrapolace rizika do dalšího měsíce z aktuálního trendu),
+  "primaryReason": (string, předpokládaný důvod užívání na základě dat, do 5 slov)
+}
+Odpovídej POUZE striktně JSON objektem.`;
+
+const DEFAULT_PREDICTION_PROMPT = `Analyzuj historii dávek pro látku a predikuj budoucí vývoj.
+
+Schéma JSON odpovědi:
+{
+  "suggestedOptimalDose": (číslo - doporučená velikost dávky, např. tapering. V jednotkách látky),
+  "patternDetected": (krátký string česky popisující zjištěný vzorec, např. "Zvýšená frekvence o víkendech"),
+  "trajectory": (přesně jeden z těchto stringů: "escalating", "stable", "decreasing"),
+  "projectedUsageNext7Days": (pole 7 čísel udávající odhadované denní množství pro následujících 7 dní),
+  "currentEstimatedBloodLevelPct": (číslo 0-100 udávající hrubý odhad zůstatku aktivní látky v krvi právě teď, na základě poločasu rozpadu u této látky),
+  "intradayProbability": (pole přesně 24 čísel udávající procentuální pravděpodobnost užití v každou hodinu 0-23. Součet pole nemusí být 100, ale každé číslo reprezentuje pravděpodobnost v danou hodinu (0-100).)
+}
+Odpovídej POUZE platným formátem JSON.`;
+
 export default function Settings({ 
   settings, 
   customEffects, 
@@ -829,7 +864,7 @@ export default function Settings({
           {/* DEVELOPER TAB */}
           {activeTab === 'developer' && (
             <div className="space-y-6">
-              <div className="md3-card border border-red-500/20 bg-red-500/5 p-5 space-y-4">
+               <div className="md3-card border border-red-500/20 bg-red-500/5 p-5 space-y-4">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
                   <Terminal size={16} /> Vývojářský Režim
                 </h3>
@@ -837,11 +872,25 @@ export default function Settings({
                   Změňte základní výpočetní proměnné a upravte chování AI. Pouze pro experty, může rozbít aplikaci.
                 </p>
 
-                <div className="space-y-4">
+                <div className="space-y-4 mt-6">
+                  <div className="flex items-center justify-between border-b border-theme-border pb-2">
+                     <h4 className="text-xs font-bold text-red-400 uppercase tracking-widest">Pravidla Umělé Inteligence (Prompty)</h4>
+                     <button
+                        onClick={() => {
+                           updateSetting('aiSystemPrompt', DEFAULT_SYSTEM_PROMPT);
+                           updateSetting('aiGlobalPrompt', DEFAULT_GLOBAL_PROMPT);
+                           updateSetting('aiPredictionPrompt', DEFAULT_PREDICTION_PROMPT);
+                        }}
+                        className="text-[10px] bg-red-500/20 text-red-500 px-2 py-1 rounded"
+                     >
+                        Resetovat Prompty
+                     </button>
+                  </div>
+                  
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-md3-gray">Systémový Prompt pro AI (Přepis)</label>
                     <textarea 
-                      value={settings.aiSystemPrompt || ''}
+                      value={settings.aiSystemPrompt ?? DEFAULT_SYSTEM_PROMPT}
                       onChange={e => updateSetting('aiSystemPrompt', e.target.value)}
                       placeholder="Volitelně přepište roli AI..."
                       className="w-full md3-input h-24 font-mono text-xs"
@@ -851,56 +900,113 @@ export default function Settings({
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-md3-gray">AI Globální Analýza Prompt (Přepis JSON Schématu)</label>
                     <textarea 
-                      value={settings.aiGlobalPrompt || ''}
+                      value={settings.aiGlobalPrompt ?? DEFAULT_GLOBAL_PROMPT}
                       onChange={e => updateSetting('aiGlobalPrompt', e.target.value)}
                       placeholder="Custom format JSON..."
-                      className="w-full md3-input h-32 font-mono text-xs"
+                      className="w-full md3-input h-48 font-mono text-xs"
                     />
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-md3-gray">AI Predikční Prompt (Přepis JSON Schématu)</label>
                     <textarea 
-                      value={settings.aiPredictionPrompt || ''}
+                      value={settings.aiPredictionPrompt ?? DEFAULT_PREDICTION_PROMPT}
                       onChange={e => updateSetting('aiPredictionPrompt', e.target.value)}
                       placeholder="Custom format JSON..."
-                      className="w-full md3-input h-32 font-mono text-xs"
+                      className="w-full md3-input h-48 font-mono text-xs"
                     />
                   </div>
                   
-                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mt-6 mb-2 border-b border-theme-border pb-2">Matematický Model</h4>
-                  
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">Násobič Tolerance (default: 1.0)</label>
-                    <input 
-                      type="number"
-                      step="0.1"
-                      value={settings.toleranceMultiplier ?? 1.0}
-                      onChange={e => updateSetting('toleranceMultiplier', parseFloat(e.target.value) || 1.0)}
-                      className="w-full md3-input font-mono text-xs"
-                    />
+                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mt-6 mb-2 border-b border-theme-border pb-2">Parametry Modelu a Backend</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                     <div className="space-y-1">
+                       <label className="text-[10px] font-bold text-md3-gray">AI Max Tokens (default: 600)</label>
+                       <input 
+                         type="number"
+                         value={settings.aiMaxTokens ?? 600}
+                         onChange={e => updateSetting('aiMaxTokens', parseInt(e.target.value) || 600)}
+                         className="w-full md3-input font-mono text-xs"
+                       />
+                     </div>
+                     <div className="space-y-1">
+                       <label className="text-[10px] font-bold text-md3-gray">Habit Sensitivity (default: 1.0)</label>
+                       <input 
+                         type="number"
+                         step="0.1"
+                         value={settings.habitAnalysisSensitivity ?? 1.0}
+                         onChange={e => updateSetting('habitAnalysisSensitivity', parseFloat(e.target.value) || 1.0)}
+                         className="w-full md3-input font-mono text-xs"
+                       />
+                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">Násobič Rychlosti Metabolismu (default: 1.0)</label>
-                    <input 
-                      type="number"
-                      step="0.1"
-                      value={settings.metabolismMultiplier ?? 1.0}
-                      onChange={e => updateSetting('metabolismMultiplier', parseFloat(e.target.value) || 1.0)}
-                      className="w-full md3-input font-mono text-xs"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">Násobič Poločasu Rozpadu (default: 1.0)</label>
-                    <input 
-                      type="number"
-                      step="0.1"
-                      value={settings.halfLifeMultiplier ?? 1.0}
-                      onChange={e => updateSetting('halfLifeMultiplier', parseFloat(e.target.value) || 1.0)}
-                      className="w-full md3-input font-mono text-xs"
-                    />
+                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mt-6 mb-2 border-b border-theme-border pb-2">Farmakokinetika a Výpočty</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-md3-gray">Násobič Tolerance (default: 1.0)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={settings.toleranceMultiplier ?? 1.0}
+                        onChange={e => updateSetting('toleranceMultiplier', parseFloat(e.target.value) || 1.0)}
+                        className="w-full md3-input font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-md3-gray">Násobič Metabolismu (default: 1.0)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={settings.metabolismMultiplier ?? 1.0}
+                        onChange={e => updateSetting('metabolismMultiplier', parseFloat(e.target.value) || 1.0)}
+                        className="w-full md3-input font-mono text-xs"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-md3-gray">Násobič Poločasu Rozpadu (def: 1.0)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={settings.halfLifeMultiplier ?? 1.0}
+                        onChange={e => updateSetting('halfLifeMultiplier', parseFloat(e.target.value) || 1.0)}
+                        className="w-full md3-input font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-md3-gray">Decay Rate Dávky (default: 1.0)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={settings.doseDecayRate ?? 1.0}
+                        onChange={e => updateSetting('doseDecayRate', parseFloat(e.target.value) || 1.0)}
+                        className="w-full md3-input font-mono text-xs"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-md3-gray">Násobič Peak Intensity (default: 1.0)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={settings.peakIntensityMultiplier ?? 1.0}
+                        onChange={e => updateSetting('peakIntensityMultiplier', parseFloat(e.target.value) || 1.0)}
+                        className="w-full md3-input font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-md3-gray">Risk Score Násobič (default: 1.0)</label>
+                      <input 
+                        type="number"
+                        step="0.1"
+                        value={settings.riskScoreMultiplier ?? 1.0}
+                        onChange={e => updateSetting('riskScoreMultiplier', parseFloat(e.target.value) || 1.0)}
+                        className="w-full md3-input font-mono text-xs"
+                      />
+                    </div>
                   </div>
                   
                 </div>

@@ -285,7 +285,8 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
             messages: [
               {
                 role: 'system',
-                content: settings.aiSystemPrompt || `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.`
+                content: (settings.aiSystemPrompt || `Jsi expertní datový analytik závislostí a užívání látek. Odpovídáš striktně JSON formátem.`) + 
+                         `\nBER V ÚVAHU NASTAVENÍ: habitAnalysisSensitivity=${settings.habitAnalysisSensitivity ?? 1.0} (čím vyšší, tím víc detekuj skryté návyky a souvislosti).`
               },
               {
                 role: 'user',
@@ -311,7 +312,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               }
             ],
             temperature: settings.aiTemperature ?? 0.1,
-            max_tokens: 600
+            max_tokens: settings.aiMaxTokens ?? 600
           })
         });
 
@@ -323,6 +324,16 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
         if (match) content = match[0];
         
         const parsed = JSON.parse(content);
+        
+        // Aplikuj násobič rizikového skóre
+        const riskMult = settings.riskScoreMultiplier ?? 1.0;
+        if (parsed.riskScore !== undefined) {
+          parsed.riskScore = Math.min(Math.round(parsed.riskScore * riskMult), 100);
+        }
+        if (parsed.projectedRiskNextMonth !== undefined) {
+          parsed.projectedRiskNextMonth = Math.min(Math.round(parsed.projectedRiskNextMonth * riskMult), 100);
+        }
+
         setAiGlobalData(parsed as AiGlobalAnalysis);
       } catch (err) {
         setAiGlobalError('Nepodařilo se zpracovat komplexní AI analýzu. Zkuste to déle.');
