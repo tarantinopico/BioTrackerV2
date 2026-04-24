@@ -57,6 +57,8 @@ interface AiAnalysis {
   projectedUsageNext7Days: number[];
   currentEstimatedBloodLevelPct?: number; // Odhad procenta aktivní látky
   intradayProbability?: number[]; // [24] pole pravdepodobnosti pro kazdou hodinu (0-100)
+  weeklyRiskTrend?: number[]; // [7] pole predpovedi rizika (0-100) v 7 dnech
+  toleranceEstimatePct?: number; // Odhad procentualni tolerance (0-100)
 }
 
 export default function Predictions({ substances, doses, settings }: PredictionsProps) {
@@ -133,7 +135,9 @@ Schéma JSON odpovědi:
   "trajectory": (přesně jeden z těchto stringů: "escalating", "stable", "decreasing"),
   "projectedUsageNext7Days": (pole 7 čísel udávající odhadované denní množství pro následujících 7 dní),
   "currentEstimatedBloodLevelPct": (číslo 0-100 udávající hrubý odhad zůstatku aktivní látky v krvi právě teď, na základě poločasu rozpadu u této látky),
-  "intradayProbability": (pole přesně 24 čísel udávající procentuální pravděpodobnost užití v každou hodinu 0-23. Součet pole nemusí být 100, ale každé číslo reprezentuje pravděpodobnost v danou hodinu (0-100).)
+  "intradayProbability": (pole přesně 24 čísel udávající procentuální pravděpodobnost užití v každou hodinu 0-23. Součet pole nemusí být 100, ale každé číslo reprezentuje pravděpodobnost v danou hodinu (0-100).),
+  "weeklyRiskTrend": (pole přesně 7 čísel udávající odhadované riziko nebo craving v % pro dalších 7 dní),
+  "toleranceEstimatePct": (číslo 0-100 udávající odhadovanou toleranci na látku)
 }
 Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max ${limitCount} dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
                 }
@@ -828,7 +832,7 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
                         <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiError}</div>
                      ) : aiData ? (
                         <div className="space-y-4">
-                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                               <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Skóre Jistoty</div>
                                  <div className="text-2xl font-black text-theme-text">{aiData.confidenceScore ?? '?'}<span className="text-sm text-md3-gray">%</span></div>
@@ -845,6 +849,11 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1 relative z-10">Zůstatek (Odhad)</div>
                                  <div className="text-2xl font-black text-theme-text relative z-10">{aiData.currentEstimatedBloodLevelPct ?? '?'} <span className="text-sm text-md3-gray">%</span></div>
                                  <div className="absolute left-0 bottom-0 top-0 bg-red-500/10 transition-all opacity-50" style={{ width: `${aiData.currentEstimatedBloodLevelPct || 0}%`}} />
+                              </div>
+                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between relative overflow-hidden">
+                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1 relative z-10">AI Tolerance (Odhad)</div>
+                                 <div className="text-2xl font-black text-theme-text relative z-10">{aiData.toleranceEstimatePct ?? '?'} <span className="text-sm text-md3-gray">%</span></div>
+                                 <div className="absolute left-0 bottom-0 top-0 bg-orange-500/20 transition-all opacity-50" style={{ width: `${aiData.toleranceEstimatePct || 0}%`}} />
                               </div>
                            </div>
                            
@@ -883,6 +892,28 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
                                      <Tooltip cursor={{fill: 'var(--md3-border)', opacity: 0.5}} contentStyle={{backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '8px', fontSize: '10px'}} labelStyle={{display: 'none'}} formatter={(val: number) => [`${val} ${selectedSubstance.unit}`, 'Odhad AI']} />
                                      <Bar dataKey="val" fill="#a855f7" radius={[4,4,0,0]} opacity={0.8} />
                                   </BarChart>
+                                </ResponsiveContainer>
+                             </div>
+                           )}
+                           {aiData.weeklyRiskTrend && aiData.weeklyRiskTrend.length === 7 && (
+                             <div className="h-32 w-full mt-4">
+                                <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2 flex items-center justify-between">
+                                   <span>AI Predikce Rizika (Následujících 7 Dní)</span>
+                                   <span className="text-red-500 font-bold">{Math.round(aiData.weeklyRiskTrend[aiData.weeklyRiskTrend.length - 1])}%</span>
+                                </div>
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart data={aiData.weeklyRiskTrend.map((val, idx) => ({ day: `D+${idx+1}`, val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                                     <defs>
+                                       <linearGradient id="colorRiskTrend" x1="0" y1="0" x2="0" y2="1">
+                                         <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                                         <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                       </linearGradient>
+                                     </defs>
+                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                     <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#8e8e93', fontSize: 10, fontWeight: 800}} />
+                                     <Tooltip contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '8px', fontSize: '10px'}} labelStyle={{display: 'none'}} formatter={(val: number) => [`${val} %`, 'Odhadované Riziko / Craving']} />
+                                     <Area type="monotone" dataKey="val" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorRiskTrend)" />
+                                  </AreaChart>
                                 </ResponsiveContainer>
                              </div>
                            )}

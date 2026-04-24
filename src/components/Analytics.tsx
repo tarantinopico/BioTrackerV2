@@ -425,11 +425,11 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               },
               {
                 role: 'user',
-                content: `Látka: ${sub.name}\\nCíl/Prompt uživatele: ${taperPrompt || 'Vytvoř bezpečný plán postupného vysazení látky.'}\\n\\nHistorie užívání:\\n${doseHistory || 'Žádné dřívější dávky'}\\n\\nVytvoř detailní denní plán vysazování. Odpověz POUZE validním JSON.\\nSchéma:\\n{\\n "aiAdvice": "...",\\n "plan": [{ "day": 1, "recommendedAmount": číslo }, { "day": 2, "recommendedAmount": číslo }]\\n}`
+                content: `Látka: ${sub.name}\\nCíl/Prompt uživatele: ${taperPrompt || 'Vytvoř bezpečný plán postupného vysazení látky.'}\\n\\nHistorie užívání:\\n${doseHistory || 'Žádné dřívější dávky'}\\n\\nVytvoř detailní denní plán vysazování rozepsaný na dny a konkrétní denní dávky s časem. Odpověz POUZE validním JSON.\\n\\nSchéma:\\n{\\n "aiAdvice": "Tvé hodnocení...",\\n "plan": [\\n  {\\n   "day": 1,\\n   "totalRecommendedAmount": číslo,\\n   "doses": [{ "time": "08:00", "amount": číslo }, { "time": "20:00", "amount": číslo }]\\n  }\\n ]\\n}`
               }
             ],
             temperature: settings.aiTemperature ?? 0.2,
-            max_tokens: settings.aiMaxTokens ?? 1000
+            max_tokens: settings.aiMaxTokens ?? 1500
           })
         });
 
@@ -449,7 +449,8 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
         const startMs = Date.now() + 86400000; // Start tomorrow
         const mappedPlan = (parsed.plan || []).map((p: any) => ({
           day: p.day,
-          recommendedAmount: p.recommendedAmount,
+          totalRecommendedAmount: p.totalRecommendedAmount || p.recommendedAmount || 0,
+          doses: p.doses || [],
           date: new Date(startMs + (p.day - 1) * 86400000).toISOString().split('T')[0]
         }));
 
@@ -2587,9 +2588,39 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                               labelFormatter={(label) => `Den ${label}`}
                               formatter={(val: number) => [val, 'Doporučená Dávka']}
                             />
-                            <Line type="monotone" dataKey="recommendedAmount" stroke="#10b981" strokeWidth={3} dot={{ r: 3, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 6, fill: '#10b981' }} />
+                            <Line type="monotone" dataKey="totalRecommendedAmount" stroke="#10b981" strokeWidth={3} dot={{ r: 3, fill: "#10b981", strokeWidth: 0 }} activeDot={{ r: 6, fill: '#10b981' }} />
                          </LineChart>
                        </ResponsiveContainer>
+                     </div>
+                     
+                     <div className="mt-6 space-y-3">
+                       <h5 className="text-[10px] font-black tracking-widest uppercase text-md3-gray">Rozpis Dávek</h5>
+                       <div className="max-h-64 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                         {settings.activeTaperingPlan.plan.map((dayItem) => (
+                           <div key={dayItem.day} className="bg-emerald-500/5 rounded-lg p-3 border border-emerald-500/10 flex justify-between items-center">
+                             <div>
+                               <div className="text-xs font-bold text-theme-text">Den {dayItem.day} 
+                                 <span className="text-[10px] font-normal text-md3-gray ml-2 text-opacity-70">{new Date(dayItem.date).toLocaleDateString()}</span>
+                               </div>
+                               <div className="mt-2 space-y-1">
+                                 {dayItem.doses?.map((dose, i) => (
+                                   <div key={i} className="text-[10px] text-md3-gray flex items-center gap-2">
+                                     <span className="bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded font-mono">{dose.time}</span>
+                                     <span>{dose.amount}</span>
+                                   </div>
+                                 ))}
+                                 {(!dayItem.doses || dayItem.doses.length === 0) && (
+                                   <div className="text-[10px] text-md3-gray italic">Časy neurčeny (Cesta postupného snižování)</div>
+                                 )}
+                               </div>
+                             </div>
+                             <div className="text-right">
+                               <div className="text-[10px] uppercase text-emerald-500 font-bold">Celkem</div>
+                               <div className="text-sm font-black text-emerald-400">{dayItem.totalRecommendedAmount}</div>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
                      </div>
                    </div>
                    

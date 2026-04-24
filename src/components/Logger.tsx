@@ -246,7 +246,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
     if (!selectedSubstance) return list;
 
     // Too soon warning
-    const lastDose = doses.find(d => d.substanceId === selectedSubstanceId);
+    const lastDose = [...doses].filter(d => d.substanceId === selectedSubstanceId).sort((a,b) => b.timestamp - a.timestamp)[0];
     if (lastDose) {
       const minInterval = 2; // hours, could be substance specific
       const elapsed = (Date.now() - lastDose.timestamp) / 3600000;
@@ -342,7 +342,84 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
     }
 
     return list;
-  }, [selectedSubstanceId, doses, selectedSubstance, substances, amount]);
+  }, [selectedSubstanceId, doses, selectedSubstance, substances, amount, settings]);
+
+  const taperingGuidance = useMemo(() => {
+    if (!selectedSubstance || !settings.activeTaperingPlan || settings.activeTaperingPlan.substanceId !== selectedSubstanceId) return null;
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dayItem = settings.activeTaperingPlan.plan.find(p => p.date === todayStr);
+    
+    if (!dayItem) return null;
+
+    const plannedTotal = dayItem.totalRecommendedAmount;
+    
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayDoses = doses.filter(d => 
+      d.substanceId === selectedSubstanceId && 
+      d.timestamp >= todayStart.getTime()
+    );
+    const usedToday = todayDoses.reduce((sum, d) => sum + d.amount, 0);
+    const newTotal = usedToday + amount;
+    
+    let doseGuidance: any = null;
+    
+    const currentHour = new Date().getHours();
+    const currentMin = new Date().getMinutes();
+    const currentMins = currentHour * 60 + currentMin - timeOffset;
+
+    if (dayItem.doses && dayItem.doses.length > 0) {
+      let nearestDose: any = null;
+      let minDiff = Infinity;
+      
+      for (const d of dayItem.doses) {
+        if (!d.time || !d.time.includes(':')) continue;
+        const [h, m] = d.time.split(':').map(Number);
+        const doseMins = h * 60 + m;
+        const diff = Math.abs(currentMins - doseMins);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearestDose = { ...d, diffMins: diff, doseMins };
+        }
+      }
+      
+      if (nearestDose) {
+        const isRightTime = nearestDose.diffMins <= 60; // 1 hr diff allowed
+        let timeMsg = isRightTime ? 'Správný čas.' : (currentMins < nearestDose.doseMins ? `Nyní je moc brzy (-${Math.round(nearestDose.diffMins)} min). Plánováno v ${nearestDose.time}.` : `Zpoždění (+${Math.round(nearestDose.diffMins)} min). Plánováno bylo v ${nearestDose.time}.`);
+        
+        let amountMsg = amount <= nearestDose.amount ? `Dávka je OK.` : `Plánováno max ${nearestDose.amount} ${selectedSubstance.unit}.`;
+        
+        const lastDose = [...doses].filter(d => d.substanceId === selectedSubstanceId).sort((a,b) => b.timestamp - a.timestamp)[0];
+        let recentlyTook = false;
+        if (lastDose && (Date.now() - lastDose.timestamp) < 7200000) {
+           recentlyTook = true;
+        }
+
+        doseGuidance = {
+           nearestDose,
+           isRightTime,
+           timeMsg,
+           amountMsg,
+           isOverAmount: amount > nearestDose.amount,
+           isOverTotal: newTotal > plannedTotal,
+           recentlyTook,
+           plannedTotal,
+           usedToday,
+           newTotal
+        };
+      }
+    } else {
+      doseGuidance = {
+         isOverTotal: newTotal > plannedTotal,
+         plannedTotal,
+         usedToday,
+         newTotal
+      };
+    }
+    
+    return doseGuidance;
+  }, [selectedSubstance, settings.activeTaperingPlan, doses, amount, selectedSubstanceId, timeOffset]);
 
   const timeOptions = [
     { label: 'Nyní', value: 0 },
@@ -428,6 +505,55 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           </div>
         )}
       </div>
+
+      {/* Tapering Guidance */}
+      {taperingGuidance && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 mb-2 bg-theme-subtle border-2 rounded-[2rem] p-5 shadow-lg relative overflow-hidden flex flex-col gap-3"
+          style={{ 
+            borderColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef444455' : (taperingGuidance.isRightTime ? '#10b98155' : '#f59e0b55'),
+            backgroundColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef444410' : (taperingGuidance.isRightTime ? '#10b98110' : '#f59e0b10')
+          }}
+        >
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                style={{ backgroundColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef4444' : (taperingGuidance.isRightTime ? '#10b981' : '#f59e0b') }}
+             >
+                <Activity size={20} />
+             </div>
+             <div>
+                <h4 className="text-xs font-black uppercase tracking-widest text-theme-text mb-0.5"
+                  style={{ color: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef4444' : (taperingGuidance.isRightTime ? '#10b981' : '#f59e0b') }}
+                >
+                  Plánováno na Dnes
+                </h4>
+                <div className="text-[10px] font-bold text-md3-gray">
+                  Z plných {taperingGuidance.plannedTotal} {selectedSubstance?.unit} sis dnes dal {taperingGuidance.usedToday} {selectedSubstance?.unit}.
+                </div>
+             </div>
+          </div>
+          
+          {taperingGuidance.nearestDose && (
+            <div className="p-3 bg-theme-bg rounded-xl border border-theme-border flex justify-between items-center mt-2 shadow-inner">
+               <div>
+                  <div className="text-[10px] uppercase font-bold text-md3-gray mb-1">{taperingGuidance.timeMsg}</div>
+                  <div className="text-xs font-black text-theme-text">{taperingGuidance.amountMsg}</div>
+                  {taperingGuidance.recentlyTook && (
+                    <div className="text-[10px] text-red-500 font-bold mt-1">Nezapomeň, že dávku jsi už doložil před malou chvílí.</div>
+                  )}
+               </div>
+               <div className="text-right pl-3">
+                  <div className="text-2xl font-black">{taperingGuidance.nearestDose.time}</div>
+               </div>
+            </div>
+          )}
+          {!taperingGuidance.nearestDose && (
+             <div className="text-[10px] uppercase font-bold text-md3-gray mt-1">Dnešní plán nemá určené přesné časy.</div>
+          )}
+        </motion.div>
+      )}
 
       {/* Main Focus: Amount Control */}
       <section className="bg-theme-card/80 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-theme-border flex flex-col items-center relative overflow-hidden z-10 shadow-lg group mt-6">

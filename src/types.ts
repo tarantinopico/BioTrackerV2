@@ -147,10 +147,16 @@ export interface Dose {
   customFieldValues?: Record<string, any>;
 }
 
+export interface TaperingDose {
+  time: string; // HH:MM
+  amount: number;
+}
+
 export interface TaperingPlanItem {
   day: number;
   date: string;
-  recommendedAmount: number;
+  totalRecommendedAmount: number;
+  doses: TaperingDose[];
 }
 
 export interface TaperingPlan {
