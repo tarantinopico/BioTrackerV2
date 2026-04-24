@@ -805,6 +805,19 @@ export default function Settings({
                               <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-md3-gray transform rotate-90 pointer-events-none" />
                            </div>
                         </div>
+                        <div className="space-y-1">
+                           <label className="text-xs font-bold text-md3-gray">Počet záznamů historie (Kontext)</label>
+                           <input
+                             type="number"
+                             min="10"
+                             max="1000"
+                             value={settings.aiContextLimit || 50}
+                             onChange={(e) => updateSetting('aiContextLimit', parseInt(e.target.value) || 50)}
+                             className="w-full md3-input"
+                             placeholder="50"
+                           />
+                           <p className="text-[10px] text-md3-gray mt-1">Více záznamů = chytřejší, ale spotřebuje víc tokenů.</p>
+                        </div>
                         <div className="text-[10px] text-md3-gray">
                           API klíč je uložen pouze lokálně ve vašem zařízení. Nikomu se neposílá kromě požadavku přímo na Groq server pro zhodnocení predikcí.
                         </div>

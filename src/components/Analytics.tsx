@@ -265,8 +265,9 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
         const subMap: Record<string, string> = {};
         substances.forEach(s => subMap[s.id] = s.name);
         
-        // Use only the last 100 doses to keep token count low
-        const doseHistory = filteredDoses.slice(-100).map(d => `${new Date(d.timestamp).toISOString()}: ${subMap[d.substanceId] || 'Neznámá látka'} - ${d.amount}`).join('\n');
+        const limitCount = settings.aiContextLimit || 100;
+        // Use user defined limit
+        const doseHistory = filteredDoses.slice(-limitCount).map(d => `${new Date(d.timestamp).toISOString()}: ${subMap[d.substanceId] || 'Neznámá látka'} - ${d.amount}`).join('\n');
         
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -299,7 +300,7 @@ Odpovídej POUZE striktně JSON objektem.`
               },
               {
                 role: 'user',
-                content: `Historie (posledních max 100 logů):\n${doseHistory}`
+                content: `Historie (posledních max ${limitCount} logů):\n${doseHistory}`
               }
             ],
             temperature: 0.1,

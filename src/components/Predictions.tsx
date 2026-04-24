@@ -55,6 +55,8 @@ interface AiAnalysis {
   patternDetected: string;
   trajectory: 'escalating' | 'stable' | 'decreasing';
   projectedUsageNext7Days: number[];
+  currentEstimatedBloodLevelPct?: number; // Odhad procenta aktivní látky
+  intradayProbability?: number[]; // [24] pole pravdepodobnosti pro kazdou hodinu (0-100)
 }
 
 export default function Predictions({ substances, doses, settings }: PredictionsProps) {
@@ -87,7 +89,8 @@ export default function Predictions({ substances, doses, settings }: Predictions
       setIsAiLoading(true);
       setAiError(null);
       try {
-        const doseHistory = sDoses.slice(-50).map(d => `${new Date(d.timestamp).toISOString()}: ${d.amount} ${selectedSubstance.unit}`).join('\n');
+        const limitCount = settings.aiContextLimit || 50;
+        const doseHistory = sDoses.slice(-limitCount).map(d => `${new Date(d.timestamp).toISOString()}: ${d.amount} ${selectedSubstance.unit}`).join('\n');
         
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -111,13 +114,15 @@ Schéma JSON odpovědi:
   "suggestedOptimalDose": (číslo - doporučená velikost dávky, např. tapering. V jednotkách látky),
   "patternDetected": (krátký string česky popisující zjištěný vzorec, např. "Zvýšená frekvence o víkendech"),
   "trajectory": (přesně jeden z těchto stringů: "escalating", "stable", "decreasing"),
-  "projectedUsageNext7Days": (pole 7 čísel udávající odhadované denní množství pro následujících 7 dní)
+  "projectedUsageNext7Days": (pole 7 čísel udávající odhadované denní množství pro následujících 7 dní),
+  "currentEstimatedBloodLevelPct": (číslo 0-100 udávající hrubý odhad zůstatku aktivní látky v krvi právě teď, na základě poločasu rozpadu u této látky),
+  "intradayProbability": (pole přesně 24 čísel udávající procentuální pravděpodobnost užití v každou hodinu 0-23. Součet pole nemusí být 100, ale každé číslo reprezentuje pravděpodobnost v danou hodinu (0-100).)
 }
 Odpovídej POUZE platným formátem JSON.`
               },
               {
                 role: 'user',
-                content: `Zde je mých posledních max 50 dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
+                content: `Zde je mých posledních max ${limitCount} dávek:\n${doseHistory}\n\nAktualní čas je ${new Date().toISOString()}. Vytvoř JSON analýzu.`
               }
             ],
             temperature: 0.1,
@@ -806,11 +811,10 @@ Odpovídej POUZE platným formátem JSON.`
                                  <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Navrhovaná Dávka</div>
                                  <div className="text-2xl font-black text-cyan-500">{aiData.suggestedOptimalDose ?? '?'} <span className="text-sm text-md3-gray">{selectedSubstance.unit}</span></div>
                               </div>
-                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between">
-                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Vývoj (Trajektorie)</div>
-                                 <div className="text-sm font-black text-theme-text leading-tight uppercase">
-                                    {aiData.trajectory === 'escalating' ? 'Zrychlující ⚠️' : aiData.trajectory === 'decreasing' ? 'Klesající 📉' : 'Stabilní ⚖️'}
-                                 </div>
+                              <div className="bg-theme-bg p-3 rounded-xl border border-theme-border flex flex-col justify-between relative overflow-hidden">
+                                 <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1 relative z-10">Zůstatek (Odhad)</div>
+                                 <div className="text-2xl font-black text-theme-text relative z-10">{aiData.currentEstimatedBloodLevelPct ?? '?'} <span className="text-sm text-md3-gray">%</span></div>
+                                 <div className="absolute left-0 bottom-0 top-0 bg-red-500/10 transition-all opacity-50" style={{ width: `${aiData.currentEstimatedBloodLevelPct || 0}%`}} />
                               </div>
                            </div>
                            
@@ -818,6 +822,26 @@ Odpovídej POUZE platným formátem JSON.`
                               <div className="text-[10px] font-bold text-purple-500 uppercase tracking-widest mb-1">Pozorovaný Vzorec (LLM Insight)</div>
                               <div className="text-sm font-bold text-theme-text">{aiData.patternDetected}</div>
                            </div>
+
+                           {aiData.intradayProbability && aiData.intradayProbability.length === 24 && (
+                             <div className="h-32 w-full mt-4">
+                                <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2 flex items-center justify-between">
+                                  <span>AI Intraday Riziko (24H Hodinová Analýza)</span>
+                                </div>
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart data={aiData.intradayProbability.map((val, idx) => ({ hour: `${idx}:00`, val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
+                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                     <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fill: '#8e8e93', fontSize: 10, fontWeight: 800}} interval={2} />
+                                     <Tooltip cursor={{fill: 'var(--md3-border)', opacity: 0.5}} contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '8px', fontSize: '10px'}} labelStyle={{display: 'none'}} formatter={(val: number) => [`${val} %`, 'Riziko Užití']} />
+                                     <Bar dataKey="val" radius={[4,4,0,0]} opacity={0.8}>
+                                        {aiData.intradayProbability.map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={entry > 70 ? '#ef4444' : entry > 40 ? '#eab308' : '#a855f7'} />
+                                        ))}
+                                     </Bar>
+                                  </BarChart>
+                                </ResponsiveContainer>
+                             </div>
+                           )}
 
                            {aiData.projectedUsageNext7Days && aiData.projectedUsageNext7Days.length > 0 && (
                              <div className="h-32 w-full mt-4">

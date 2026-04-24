@@ -217,6 +217,7 @@ export interface UserSettings {
   // AI Integrations
   groqApiKey?: string;
   aiModel?: string;
+  aiContextLimit?: number;
 
   // Security
   pinCode?: string | null;
