@@ -33,7 +33,9 @@ import {
   Radar as Target,
   Database,
   Cpu,
-  Brain
+  Brain,
+  Dna,
+  Timer
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -1851,112 +1853,270 @@ export default function Analytics({ substances, doses, settings, onToggleTheme }
                  ? chunkedGaps[0].avgGapHours / Math.max(0.1, chunkedGaps[chunkedGaps.length - 1].avgGapHours)
                  : 1;
 
+              // Dose vs Gap Analysis (Scatter Plot)
+              // Normalizujeme dávky vůči jejich látce (100% = průměrná dávka), a k tomu přiřadíme následující rozestup
+              const substanceAverages: Record<string, number> = {};
+              substances.forEach(s => {
+                 const sDoses = sortedDocs.filter(d => d.substanceId === s.id);
+                 if (sDoses.length > 0) {
+                    const avg = sDoses.reduce((acc, sum) => acc + sum.amount, 0) / sDoses.length;
+                    substanceAverages[s.id] = avg;
+                 }
+              });
+
+              const doseVsGapData = [];
+              let correlationSum = 0;
+              let validDataPoints = 0;
+
+              for (let i = 0; i < sortedDocs.length - 1; i++) {
+                const current = sortedDocs[i];
+                const next = sortedDocs[i+1];
+                const gapHours = (next.timestamp - current.timestamp) / 3600000;
+                
+                // Zajímá nás jen plynulé užívání (rozestup max např. 3 dny)
+                if (gapHours <= 72 && gapHours > 0) {
+                   const avgDose = substanceAverages[current.substanceId];
+                   if (avgDose && avgDose > 0) {
+                      const relativeDose = Math.round((current.amount / avgDose) * 100);
+                      // Filtrujeme masivní extrémy v dávkách
+                      if (relativeDose <= 500) {
+                         const sub = substances.find(s => s.id === current.substanceId);
+                         doseVsGapData.push({
+                            id: current.id,
+                            relativeDose,
+                            gap: Number(gapHours.toFixed(1)),
+                            substanceName: sub?.name || 'Neznámé',
+                            color: sub?.color || '#0a84ff',
+                            originalAmount: current.amount,
+                            unit: sub?.unit || ''
+                         });
+                         correlationSum += relativeDose * gapHours;
+                         validDataPoints++;
+                      }
+                   }
+                }
+              }
+
               return (
                 <div className="space-y-6">
                   {/* Summary Metric Header */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div className="md3-card p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="md3-card p-5 relative overflow-hidden group">
+                        <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                           <Activity size={100} />
+                        </div>
                         <div className="flex items-center gap-2 mb-2">
                           <Activity size={16} className="text-md3-primary" />
-                          <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Průměrný Rozestup (Komplexně)</h3>
+                          <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Průměrný Rozestup</h3>
                         </div>
                         <div className="text-3xl font-black text-theme-text mb-1">{avgGap} <span className="text-sm text-md3-gray font-medium">Hodin</span></div>
-                        <div className="text-xs font-bold p-2 bg-theme-bg rounded border border-theme-border text-md3-gray">
-                           Dlouhodobý průměr napříč všemi substancemi bez ohledu na druh.
+                        <div className="text-[10px] font-bold text-md3-gray">
+                           Dlouhodobý průměr bez ohledu na látku.
                         </div>
                      </div>
-                     <div className="md3-card p-6">
+
+                     <div className="md3-card p-5 relative overflow-hidden group">
+                        <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                           <TrendingUp size={100} />
+                        </div>
                         <div className="flex items-center gap-2 mb-2">
                           <TrendingUp size={16} className={momentumRatio > 1.2 ? "text-red-500" : "text-emerald-500"} />
-                          <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Trajektorie Momentum</h3>
+                          <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Momentum Vzorce</h3>
                         </div>
-                        <div className="text-lg font-black text-theme-text mb-2 leading-tight">
-                           {momentumRatio > 1.2 ? "Zrychlování (Zkracování Pauz)" : momentumRatio < 0.8 ? "Zpomalování (Snižování Hustoty)" : "Konzistentní / Stabilní Vzorec"}
+                        <div className="text-xl font-black text-theme-text mb-1 leading-tight">
+                           {momentumRatio > 1.2 ? "Zkracování Pauz" : momentumRatio < 0.8 ? "Snižování Hustoty" : "Stabilní Vzorec"}
                         </div>
-                        <div className="text-xs font-bold p-2 bg-theme-bg rounded border border-theme-border text-md3-gray">
+                        <div className="text-[10px] font-bold text-md3-gray">
                            {momentumRatio > 1.2 
-                             ? "Vaše nedávné rozestupy jsou celkově kratší než dřívější průměry. Hustota narůstá." 
+                             ? "Vaše nedávné rozestupy jsou celkově kratší." 
                              : momentumRatio < 0.8
-                             ? "Daří se vám protahovat rozestupy mezi jednotlivými konzumacemi."
-                             : "Frekvence zůstává delší dobu beze změn (stabilní hustota)."}
+                             ? "Protahujete rozestupy mezi konzumacemi."
+                             : "Frekvence zůstává beze změn stabilní."}
+                        </div>
+                     </div>
+
+                     <div className="md3-card p-5 relative overflow-hidden group">
+                        <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                           <Timer size={100} />
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Timer size={16} className="text-purple-500" />
+                          <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Nejčastější Návaznost</h3>
+                        </div>
+                        <div className="text-xl font-black text-theme-text mb-1 leading-tight">
+                           {combinationInsights.length > 0 ? `${combinationInsights[0].sourceName} → ${combinationInsights[0].targetName}` : 'Izolované Užití'}
+                        </div>
+                        <div className="text-[10px] font-bold text-md3-gray">
+                           {combinationInsights.length > 0 ? `Výskyt v ${combinationInsights[0].count} případech do 6h.` : 'Žádné silné korelující sekvence.'}
                         </div>
                      </div>
                   </div>
 
-                  {/* Rozestupy v čase - graf */}
-                  <section className="md3-card p-6">
-                    <div className="flex items-center gap-2 mb-6">
-                      <Clock size={16} className="text-md3-primary" />
-                      <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Vývoj Průměrných Rozestupů Dávkování</h3>
-                    </div>
-                    <div className="h-48 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chunkedGaps} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="gapGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#0a84ff" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="#0a84ff" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
-                          <XAxis dataKey="segment" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
-                            formatter={(val: number) => [`${val} h`, 'Prům. pauza']}
-                            labelStyle={{ color: '#8e8e93', fontWeight: 800 }}
-                          />
-                          <Area type="monotone" dataKey="avgGapHours" name="Pauza / Doba bez účinku" stroke="#0a84ff" fill="url(#gapGrad)" strokeWidth={3} activeDot={{ r: 5, strokeWidth: 0, fill: '#0a84ff' }} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="mt-4 text-xs font-bold text-md3-gray bg-theme-bg p-3 rounded-xl border border-theme-border flex gap-2">
-                       <Lightbulb size={14} className="text-md3-gray shrink-0 mt-0.5" />
-                       Jedná se o agregační graf sledující výplň "hluchých míst". Čím je čára níž, tím častěji dávkujete bez ohledu na substanci. Vzrůstající křivka je naopak velice pozitivní indikátor (Tapering a delší prodlevy).
-                    </div>
-                  </section>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Rozestupy v čase - graf */}
+                    <section className="md3-card p-6 h-full flex flex-col">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Clock size={16} className="text-md3-primary" />
+                        <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Vývoj Průměrných Rozestupů Dávkování</h3>
+                      </div>
+                      <div className="h-56 w-full grow">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chunkedGaps} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="gapGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#0a84ff" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="#0a84ff" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                            <XAxis dataKey="segment" tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                            <Tooltip 
+                              contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                              formatter={(val: number) => [`${val} h`, 'Prům. pauza']}
+                              labelStyle={{ color: '#8e8e93', fontWeight: 800 }}
+                            />
+                            <Area type="monotone" dataKey="avgGapHours" name="Pauza / Doba bez účinku" stroke="#0a84ff" fill="url(#gapGrad)" strokeWidth={3} activeDot={{ r: 5, strokeWidth: 0, fill: '#0a84ff' }} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-4 text-[10px] font-bold text-md3-gray bg-theme-bg p-3 rounded-xl border border-theme-border flex gap-2">
+                         <Lightbulb size={12} className="text-md3-primary shrink-0 mt-0.5" />
+                         Agregační graf sledující výplň "hluchých míst". Čím je čára níž, tím častěji dávkujete bez ohledu na substanci. Vzrůstající křivka ukazuje taper a delší prodlevy.
+                      </div>
+                    </section>
 
-                  {/* Combinations Graph */}
-                  <section className="md3-card p-6">
-                    <div className="flex items-center gap-2 mb-6">
-                      <GitMerge size={16} className="text-purple-500" />
-                      <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Polydrug Spouštěče (Do 6 hodin od sebe)</h3>
-                    </div>
-                    
-                    {combinationInsights.length === 0 ? (
-                      <div className="text-center py-6 text-sm text-md3-gray font-bold italic">Nebyly s jistotou zaznamenány opakující se kombinace. Všechny vaše dávky jsou separované.</div>
-                    ) : (
-                      <div className="space-y-4">
-                         <div className="text-xs text-md3-gray font-medium mb-2">
-                            Analýza identifikovala sekvence látek, u nichž použití látky A velmi často spouští použití Látky B.
-                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {/* Vztah mezi velikostí dávky a následujícím rozestupem */}
+                    <section className="md3-card p-6 h-full flex flex-col">
+                      <div className="flex items-center gap-2 mb-6">
+                        <Dna size={16} className="text-emerald-500" />
+                        <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Korelace Dávky & Doby Trvání Zasycení</h3>
+                      </div>
+                      <div className="h-56 w-full grow">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" />
+                            <XAxis 
+                              type="number" 
+                              dataKey="relativeDose" 
+                              name="Relativní Dávka" 
+                              domain={['dataMin - 10', 'dataMax + 10']}
+                              tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              tickFormatter={(val) => `${val}%`}
+                            />
+                            <YAxis 
+                              type="number" 
+                              dataKey="gap" 
+                              name="Rozestup" 
+                              tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} 
+                              axisLine={false} 
+                              tickLine={false}
+                              tickFormatter={(val) => `${val}h`}
+                            />
+                            <Tooltip 
+                              cursor={{ strokeDasharray: '3 3' }}
+                              contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                              labelStyle={{ display: 'none' }}
+                              formatter={(value, name, props) => {
+                                 if (name === "Rozestup") return [`${value} h`, "Následující Pauza"];
+                                 if (name === "Relativní Dávka") return [`${value}% průměru (${props.payload.originalAmount} ${props.payload.unit})`, "Síla Dávky"];
+                                 return [value, name];
+                              }}
+                            />
+                            <ZAxis range={[30, 80]} />
+                            <Scatter data={doseVsGapData} fill="#10b981" opacity={0.7} />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-4 text-[10px] font-bold text-md3-gray bg-theme-bg p-3 rounded-xl border border-theme-border flex gap-2">
+                         <Lightbulb size={12} className="text-emerald-500 shrink-0 mt-0.5" />
+                         Graf ukazuje, jak velikost dávky zdrží další užití. Zjistíte tak, zda velká (nad 100%) dávka opravdu způsobuje delší pauzu, nebo zda užíváte nezávisle na velikosti.
+                      </div>
+                    </section>
+                  </div>
+
+                  {/* Přímé Rozestupy a Četnost */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                     <section className="lg:col-span-2 md3-card p-6">
+                       <div className="flex items-center gap-2 mb-6">
+                         <BarChart2 size={16} className="text-orange-500" />
+                         <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Přímá Sekvence Rozestupů</h3>
+                       </div>
+                       <div className="h-64 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={intervalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                               <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                               <XAxis dataKey="date" tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} axisLine={false} tickLine={false} interval="preserveStartEnd" minTickGap={20} />
+                               <YAxis tick={{ fill: '#8e8e93', fontSize: 9, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}h`} />
+                               <Tooltip 
+                                 cursor={{ fill: 'var(--md3-border)', opacity: 0.4 }}
+                                 contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                 formatter={(val: number) => [`${val} h`, 'Rozestup od minulé dávky']}
+                                 labelStyle={{ color: '#8e8e93', fontWeight: 800 }}
+                               />
+                               <Bar dataKey="gapHours" fill="#f97316" radius={[4, 4, 0, 0]} opacity={0.8}>
+                                 {intervalData.map((entry, index) => (
+                                   <Cell key={`cell-${index}`} fill={entry.gapHours < 4 ? '#ef4444' : entry.gapHours > 24 ? '#10b981' : '#f97316'} />
+                                 ))}
+                               </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                       </div>
+                       <div className="mt-4 flex flex-wrap gap-3">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-theme-text">
+                            <div className="w-2 h-2 rounded-full bg-red-500" /> &lt; 4h (Vysoká četnost)
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-theme-text">
+                            <div className="w-2 h-2 rounded-full bg-orange-500" /> Běžné rozestupy
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-theme-text">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500" /> &gt; 24h (Dlouhé pauzy)
+                          </div>
+                       </div>
+                     </section>
+
+                     {/* Combinations Info Panel */}
+                    <section className="md3-card p-6 flex flex-col">
+                      <div className="flex items-center gap-2 mb-6">
+                        <GitMerge size={16} className="text-purple-500" />
+                        <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Polydrug Spouštěče (Kaskády do 6h)</h3>
+                      </div>
+                      
+                      {combinationInsights.length === 0 ? (
+                        <div className="text-center py-10 flex-1 flex flex-col justify-center items-center">
+                           <GitMerge size={32} className="text-md3-gray opacity-30 mb-2" />
+                           <div className="text-sm text-md3-gray font-bold italic">Žádné zaznamenané kaskády. Udržujete separaci.</div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                           <div className="text-[10px] font-bold text-md3-gray bg-theme-bg p-2 rounded mb-3">
+                              Analýza detekovala "dominový efekt" u konkrétních látek:
+                           </div>
                            {combinationInsights.map((ci, idx) => (
-                             <div key={idx} className="flex flex-col bg-theme-bg rounded-xl border border-theme-border p-4 gap-3 relative overflow-hidden group">
+                             <div key={idx} className="flex flex-col bg-theme-bg rounded-xl border border-theme-border p-3 gap-2 relative overflow-hidden group">
                                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-transparent to-black/5 dark:to-white/5 transform translate-x-4 -translate-y-4 rounded-full pointer-events-none" />
                                <div className="flex items-center justify-between z-10">
                                   <div className="flex items-center gap-2 max-w-[70%]">
                                      <div className="flex items-center gap-1 min-w-0">
                                         <div className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ backgroundColor: ci.sourceColor }} />
-                                        <span className="text-xs font-bold text-theme-text truncate">{ci.sourceName}</span>
+                                        <span className="text-xs font-black text-theme-text truncate">{ci.sourceName}</span>
                                      </div>
                                      <ChevronRight size={14} className="text-md3-gray shrink-0" />
                                      <div className="flex items-center gap-1 min-w-0">
                                         <div className="w-2.5 h-2.5 shrink-0 rounded-full" style={{ backgroundColor: ci.targetColor }} />
-                                        <span className="text-xs font-bold text-theme-text truncate">{ci.targetName}</span>
+                                        <span className="text-xs font-black text-theme-text truncate">{ci.targetName}</span>
                                      </div>
                                   </div>
-                                  <div className="text-lg font-black text-theme-text whitespace-nowrap">{ci.count}x</div>
-                               </div>
-                               <div className="text-[9px] font-black text-md3-gray uppercase tracking-widest bg-theme-card/50 p-2 rounded z-10">
-                                  Látka <strong className="text-theme-text">{ci.sourceName}</strong> velmi pravděpodobně navodila potřebu následného užití látky <strong className="text-theme-text">{ci.targetName}</strong>.
+                                  <div className="text-sm font-black text-theme-text whitespace-nowrap bg-purple-500/10 text-purple-500 px-2 py-1 rounded">{ci.count}x</div>
                                </div>
                              </div>
                            ))}
-                         </div>
-                      </div>
-                    )}
-                  </section>
+                        </div>
+                      )}
+                    </section>
+                  </div>
                 </div>
               );
             })()}
