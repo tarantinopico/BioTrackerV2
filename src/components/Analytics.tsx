@@ -922,21 +922,21 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
   const renderOverview = () => (
     <div className="space-y-6 relative">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 relative z-10">
+      <div className="flex items-center justify-between px-3 relative z-10">
         <div>
-          <h1 className="text-3xl font-bold text-theme-text tracking-tight">Analýza</h1>
-          <p className="text-sm font-medium text-md3-gray">Přehled vašich dat</p>
+          <h1 className="text-3xl font-black text-theme-text tracking-tight drop-shadow-sm">Analýza</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-md3-gray/80 mt-1">Hluboký Přehled</p>
         </div>
-        <div className="flex bg-md3-secondary p-1 rounded-xl">
+        <div className="flex bg-white/5 dark:bg-black/20 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-sm">
           {[7, 30, 90, 365, 'all'].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p as Period)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                "px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                 period === p 
-                  ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-                  : "text-md3-gray hover:text-theme-text"
+                  ? "bg-theme-text text-theme-bg shadow-md" 
+                  : "text-md3-gray/70 hover:text-theme-text"
               )}
             >
               {p === 'all' ? 'VŠE' : `${p}D`}
@@ -946,91 +946,90 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
       </div>
 
       {/* Overview Tabs */}
-      <div className="flex bg-md3-secondary p-1 rounded-2xl relative z-10 overflow-x-auto scrollbar-hide">
+      <div className="flex bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-2 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative z-10 overflow-x-auto custom-scrollbar hide-scroll-indicator">
         <button
           onClick={() => setOverviewTab('overview')}
           className={cn(
-            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
             overviewTab === 'overview' 
-              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-              : "text-md3-gray hover:text-theme-text"
+              ? "bg-white/10 text-white shadow-inner" 
+              : "text-md3-gray/60 hover:text-md3-gray/90"
           )}
         >
-          <BarChart2 size={14} />
+          <BarChart2 size={16} />
           Přehled
         </button>
         <button
           onClick={() => setOverviewTab('day-view')}
           className={cn(
-            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
             overviewTab === 'day-view' 
-              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-              : "text-md3-gray hover:text-theme-text"
+              ? "bg-white/10 text-white shadow-inner" 
+              : "text-md3-gray/60 hover:text-md3-gray/90"
           )}
         >
-          <Calendar size={14} />
+          <Calendar size={16} />
           Denní
         </button>
         <button
           onClick={() => setOverviewTab('finance')}
           className={cn(
-            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
             overviewTab === 'finance' 
-              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-              : "text-md3-gray hover:text-theme-text"
+              ? "bg-white/10 text-white shadow-inner" 
+              : "text-md3-gray/60 hover:text-md3-gray/90"
           )}
         >
-          <DollarSign size={14} />
+          <DollarSign size={16} />
           Finance
         </button>
         <button
           onClick={() => setOverviewTab('insights')}
           className={cn(
-            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
             overviewTab === 'insights' 
-              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-              : "text-md3-gray hover:text-theme-text"
+              ? "bg-white/10 text-white shadow-inner" 
+              : "text-md3-gray/60 hover:text-md3-gray/90"
           )}
         >
-          <Lightbulb size={14} />
+          <Lightbulb size={16} />
           Pokročilé
         </button>
         <button
           onClick={() => setOverviewTab('patterns')}
           className={cn(
-            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
             overviewTab === 'patterns' 
-              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-              : "text-md3-gray hover:text-theme-text",
-            settings.insightEngine ? "text-cyan-primary" : ""
+              ? "bg-white/10 text-cyan-400 shadow-inner" 
+              : settings.insightEngine ? "text-cyan-600/70 hover:text-cyan-400/90" : "text-md3-gray/60 hover:text-md3-gray/90"
           )}
         >
-          <Brain size={14} className={settings.insightEngine ? "text-cyan-primary" : ""} />
+          <Brain size={16} />
           Vzorce & AI
         </button>
         <button
           onClick={() => setOverviewTab('habits')}
           className={cn(
-            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
             overviewTab === 'habits' 
-              ? "bg-theme-subtle-hover text-theme-text shadow-sm" 
-              : "text-md3-gray hover:text-theme-text"
+              ? "bg-white/10 text-white shadow-inner" 
+              : "text-md3-gray/60 hover:text-md3-gray/90"
           )}
         >
-          <Target size={14} />
+          <Target size={16} />
           Zvyky
         </button>
         {settings.taperingPlanEnabled && (
           <button
             onClick={() => setOverviewTab('taper')}
             className={cn(
-              "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
+              "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
               overviewTab === 'taper' 
-                ? "bg-theme-subtle-hover text-theme-text shadow-sm border border-emerald-500/20" 
-                : "text-md3-gray hover:text-theme-text"
+                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                : "text-md3-gray/60 hover:text-md3-gray/90"
             )}
           >
-            <Brain size={14} className="text-emerald-500" />
+            <Brain size={16} className={overviewTab === 'taper' ? 'text-emerald-400' : 'text-emerald-500'} />
             Taper Plán
           </button>
         )}
@@ -1043,208 +1042,243 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-6 relative z-10"
+            className="space-y-6 relative z-10 pb-24"
           >
             {/* Main Stats Grid */}
             <div className="grid grid-cols-2 gap-4 relative z-10">
-              <div className="md3-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-md3-primary/10 flex items-center justify-center text-md3-primary">
-              <DollarSign size={16} />
-            </div>
-            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Útrata ({numericPeriod}D)</span>
-          </div>
-          <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {settings.privacyMode ? '***' : totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
-          </div>
-        </div>
-        <div className="md3-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-md3-green/10 flex items-center justify-center text-md3-green">
-              <Wallet size={16} />
-            </div>
-            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Celkem</span>
-          </div>
-          <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {settings.privacyMode ? '***' : allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-medium text-md3-gray">{settings.currency || 'Kč'}</span>
-          </div>
-        </div>
-        <div className="md3-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
-              <TrendingUp size={16} />
-            </div>
-            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Série</span>
-          </div>
-          <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {stats.longestStreak} <span className="text-sm font-medium text-md3-gray">dní</span>
-          </div>
-        </div>
-        <div className="md3-card p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500">
-              <Calendar size={16} />
-            </div>
-            <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Čisté dny</span>
-          </div>
-          <div className="text-2xl font-bold text-theme-text tracking-tight">
-            {stats.cleanDays} <span className="text-sm font-medium text-md3-gray">/ {numericPeriod}</span>
-          </div>
-        </div>
-      </div>
+              <div className="bg-white/5 dark:bg-black/20 border border-white/10 rounded-[2rem] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors backdrop-blur-[40px]">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none transition-all group-hover:bg-blue-500/20" />
+                <div className="flex flex-col gap-1 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-blue-400 shadow-inner">
+                      <DollarSign size={16} strokeWidth={2.5}/>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.15em]">Útrata ({numericPeriod}D)</span>
+                </div>
+                <div className="text-3xl font-black text-theme-text tracking-tight drop-shadow-sm">
+                  {settings.privacyMode ? '***' : totalCost.toLocaleString('cs-CZ')} <span className="text-sm font-bold text-white/40">{settings.currency || 'Kč'}</span>
+                </div>
+              </div>
 
-      {/* Category Breakdown */}
-      {categoryData.length > 0 && (
-        <section className="md3-card p-6 relative z-10">
-          <div className="flex items-center gap-2 mb-6">
-            <PieChartIcon size={16} className="text-md3-primary" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-wider">Rozdělení podle kategorií</h2>
+              <div className="bg-white/5 dark:bg-black/20 border border-white/10 rounded-[2rem] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors backdrop-blur-[40px]">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 blur-[30px] rounded-full pointer-events-none transition-all group-hover:bg-emerald-500/20" />
+                <div className="flex flex-col gap-1 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-emerald-400 shadow-inner">
+                      <Wallet size={16} strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.15em]">Celkem (Vše)</span>
+                </div>
+                <div className="text-3xl font-black text-theme-text tracking-tight drop-shadow-sm">
+                  {settings.privacyMode ? '***' : allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm font-bold text-white/40">{settings.currency || 'Kč'}</span>
+                </div>
+              </div>
+
+              <div className="bg-white/5 dark:bg-black/20 border border-white/10 rounded-[2rem] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors backdrop-blur-[40px]">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 blur-[30px] rounded-full pointer-events-none transition-all group-hover:bg-orange-500/20" />
+                <div className="flex flex-col gap-1 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-orange-400 shadow-inner">
+                      <TrendingUp size={16} strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.15em]">Série</span>
+                </div>
+                <div className="text-3xl font-black text-theme-text tracking-tight drop-shadow-sm">
+                  {stats.longestStreak} <span className="text-sm font-bold text-white/40">dní</span>
+                </div>
+              </div>
+
+              <div className="bg-white/5 dark:bg-black/20 border border-white/10 rounded-[2rem] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors backdrop-blur-[40px]">
+                <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/10 blur-[30px] rounded-full pointer-events-none transition-all group-hover:bg-cyan-500/20" />
+                <div className="flex flex-col gap-1 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-cyan-400 shadow-inner">
+                      <Calendar size={16} strokeWidth={2.5} />
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.15em]">Čisté dny</span>
+                </div>
+                <div className="text-3xl font-black text-theme-text tracking-tight drop-shadow-sm">
+                  {stats.cleanDays} <span className="text-sm font-bold text-white/40">/ {numericPeriod}</span>
+                </div>
+              </div>
+            </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+        {/* Category Breakdown */}
+        {categoryData.length > 0 && (
+          <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors p-6 flex flex-col h-[380px]">
+            <div className="absolute right-0 top-0 w-32 h-32 bg-purple-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <div className="flex items-center gap-3 mb-6 relative z-10">
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-purple-400 shadow-inner">
+                 <PieChartIcon size={20} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Kategorie</h2>
+            </div>
+            <div className="flex-1 w-full relative z-10 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={6}
+                    dataKey="value"
+                    stroke="none"
+                    isAnimationActive={settings.chartAnimation}
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 700, color: '#8e8e93' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+        )}
+
+        {/* Trend Chart */}
+        <section className="col-span-1 md:col-span-2 lg:col-span-2 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors p-6 flex flex-col h-[380px]">
+          <div className="absolute right-0 top-0 w-40 h-40 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="flex items-center justify-between mb-6 relative z-10">
+             <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 shadow-inner">
+                <TrendingUp size={20} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Trend Výdajů</h2>
+            </div>
+            <div className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 shadow-inner">
+              <span className="text-[11px] font-black text-theme-text uppercase tracking-widest">{settings.privacyMode ? '***' : (totalCost / activeTrackingDays).toFixed(0)} <span className="text-white/50">{settings.currency || 'Kč'} / den</span></span>
+            </div>
           </div>
-          <div className="h-48 w-full">
+          <div className="flex-1 w-full relative z-10 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
+              <AreaChart data={trendData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}
+                  tickFormatter={(value) => `${value}`}
+                  width={45}
+                />
+                <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="cost" 
+                  name="Výdaje"
+                  stroke="#3b82f6" 
+                  strokeWidth={4}
+                  fillOpacity={1} 
+                  fill="url(#colorCost)" 
                   isAnimationActive={settings.chartAnimation}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 600, color: '#8e8e93' }} />
-              </PieChart>
+                  activeDot={settings.chartPoints ? { r: 6, strokeWidth: 2, stroke: "#1e1e24", fill: "#3b82f6" } : false}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </section>
-      )}
 
-      {/* Trend Chart */}
-      <section className="md3-card p-6 relative z-10">
-        <div className="flex items-center justify-between mb-6">
-           <div className="flex items-center gap-2">
-            <TrendingUp size={16} className="text-md3-primary" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-wider">Trend Výdajů</h2>
+        {/* Time of Day Chart */}
+        <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors p-6 flex flex-col h-[380px]">
+          <div className="absolute right-0 top-0 w-32 h-32 bg-amber-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="flex items-center gap-3 mb-6 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 shadow-inner">
+              <Clock size={20} strokeWidth={2.5} />
+            </div>
+            <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Denní doba</h2>
           </div>
-          <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">{settings.privacyMode ? '***' : (totalCost / activeTrackingDays).toFixed(0)} {settings.currency || 'Kč'} / den</span>
-        </div>
-        <div className="h-48 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData}>
-              <defs>
-                <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--md3-primary, #0a84ff)" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="var(--md3-primary, #0a84ff)" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-              <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                dy={10}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 600 }}
-                tickFormatter={(value) => `${value}`}
-                width={40}
-              />
-              <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
-              <Area 
-                type="monotone" 
-                dataKey="cost" 
-                name="Výdaje"
-                stroke="var(--md3-primary, #0a84ff)" 
-                strokeWidth={3}
-                fillOpacity={1} 
-                fill="url(#colorCost)" 
-                isAnimationActive={settings.chartAnimation}
-                activeDot={settings.chartPoints ? { r: 6, strokeWidth: 0, fill: "var(--md3-primary, #0a84ff)" } : false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      {/* Time of Day Chart */}
-      <section className="md3-card p-6 relative z-10">
-        <div className="flex items-center gap-2 mb-6">
-          <Clock size={16} className="text-md3-primary" />
-          <h2 className="text-sm font-bold text-theme-text uppercase tracking-wider">Denní doba užívání</h2>
-        </div>
-        <div className="h-48 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={usageByTimeOfDay}>
-              {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="var(--md3-border)" vertical={false} />}
-              <XAxis 
-                dataKey="hour" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: 'var(--md3-gray)', fontSize: 10, fontWeight: 600 }}
-                dy={10}
-                interval={3}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: 'var(--md3-gray)', fontSize: 10, fontWeight: 600 }}
-                width={30}
-              />
-              <Tooltip content={<CustomTooltip type="count" />} />
-              <Bar 
-                dataKey="count" 
-                name="Počet užití"
-                fill="var(--md3-primary)" 
-                radius={[4, 4, 0, 0]} 
-                isAnimationActive={settings.chartAnimation}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      {/* Activity & Predictions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-        <section className="md3-card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Calendar size={16} className="text-md3-green" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Aktivita</h2>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {activityHeatmap.map((day, i) => (
-              <div 
-                key={i} 
-                className="w-4 h-4 rounded-sm transition-all duration-300 hover:scale-125"
-                style={{ 
-                  backgroundColor: day.count > 0 ? `rgba(48, 209, 88, ${0.2 + (Math.min(day.count, 5) * 0.15)})` : 'rgba(255, 255, 255, 0.05)',
-                }}
-              />
-            ))}
+          <div className="flex-1 w-full relative z-10 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={usageByTimeOfDay} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                <XAxis 
+                  dataKey="hour" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}
+                  dy={10}
+                  interval={3}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 700 }}
+                  width={30}
+                />
+                <Tooltip content={<CustomTooltip type="count" />} />
+                <Bar 
+                  dataKey="count" 
+                  name="Počet užití"
+                  fill="#fbbf24" 
+                  radius={[6, 6, 0, 0]} 
+                  isAnimationActive={settings.chartAnimation}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </section>
 
-        <section className="md3-card p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Zap size={16} className="text-md3-orange" />
-            <h2 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce</h2>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {predictionData.map((p, i) => (
-              <div key={i} className="text-center p-3 rounded-2xl bg-theme-subtle">
-                <div className="text-xs text-md3-gray font-bold uppercase mb-1 tracking-wider">{p.name}</div>
-                <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} {settings.currency || 'Kč'}</div>
+        {/* Activity & Predictions */}
+        <section className="col-span-1 md:col-span-2 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors p-6 flex flex-col h-[380px]">
+          <div className="absolute right-0 top-0 w-40 h-40 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          <div className="flex flex-col md:flex-row gap-6 relative z-10 flex-1">
+            <div className="flex-1 flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400 shadow-inner">
+                  <Calendar size={20} strokeWidth={2.5} />
+                </div>
+                <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Aktivita</h2>
               </div>
-            ))}
+              <div className="flex flex-wrap gap-2 justify-center content-center flex-1">
+                {activityHeatmap.map((day, i) => (
+                  <div 
+                    key={i} 
+                    className="w-5 h-5 rounded-md transition-all duration-300 hover:scale-125 cursor-crosshair shadow-sm border border-white/5"
+                    style={{ 
+                      backgroundColor: day.count > 0 ? `rgba(48, 209, 88, ${0.3 + (Math.min(day.count, 5) * 0.14)})` : 'rgba(255, 255, 255, 0.03)',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="w-px bg-white/10 hidden md:block" />
+            <div className="w-full md:w-48 flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-cyan-400 shadow-inner">
+                  <Zap size={20} strokeWidth={2.5} />
+                </div>
+                <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Predikce</h2>
+              </div>
+              <div className="flex flex-col gap-3 justify-center flex-1">
+                {predictionData.map((p, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 shadow-inner">
+                    <div className="text-[10px] text-white/50 font-bold uppercase tracking-wider">{p.name}</div>
+                    <div className="text-sm font-black text-theme-text tracking-tight">{settings.privacyMode ? '***' : p.value.toFixed(0)} <span className="text-[10px] text-white/40">{settings.currency || 'Kč'}</span></div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -1272,7 +1306,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             <button 
               key={s.id}
               onClick={() => setSelectedSubstanceId(s.id)}
-              className="w-full md3-card p-4 flex items-center justify-between md3-button text-left"
+              className="w-full bg-white/5 dark:bg-black/30 backdrop-blur-md border border-white/5 rounded-[1.5rem] shadow-sm relative overflow-hidden group hover:bg-white/10 transition-colors p-4 flex items-center justify-between md3-button text-left"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-theme-subtle flex items-center justify-center relative">
@@ -1305,9 +1339,9 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-4 relative z-10"
+            className="space-y-4 relative z-10 pb-24"
           >
-            <section className="md3-card p-6">
+            <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Calendar size={16} className="text-md3-primary" />
@@ -1400,22 +1434,26 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 return (
                   <div className="space-y-6">
                     {/* Daily Summary */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Dávek</div>
-                        <div className="text-xl font-bold text-theme-text">{dayDoses.length}</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Dávek</div>
+                        <div className="text-2xl font-black text-theme-text drop-shadow-sm">{dayDoses.length}</div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Látek</div>
-                        <div className="text-xl font-bold text-theme-text">{uniqueSubstances.length}</div>
+                      <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Látek</div>
+                        <div className="text-2xl font-black text-theme-text drop-shadow-sm">{uniqueSubstances.length}</div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Útrata</div>
-                        <div className="text-xl font-bold text-theme-text">{settings.privacyMode ? '***' : dayCost.toFixed(0)} <span className="text-xs text-md3-gray">{settings.currency || 'Kč'}</span></div>
+                      <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Útrata</div>
+                        <div className="text-2xl font-black text-emerald-400 drop-shadow-sm">{settings.privacyMode ? '***' : dayCost.toFixed(0)} <span className="text-xs text-emerald-400/60 ml-1">{settings.currency || 'Kč'}</span></div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border text-center flex flex-col justify-center">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Rozpětí</div>
-                        <div className="text-sm font-bold text-theme-text">
+                      <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center flex flex-col justify-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                        <div className="absolute right-0 top-0 w-24 h-24 bg-orange-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Rozpětí</div>
+                        <div className="text-base font-black text-theme-text drop-shadow-sm">
                           {formatTime(dayDoses[0].timestamp, settings)} - {formatTime(dayDoses[dayDoses.length - 1].timestamp, settings)}
                         </div>
                       </div>
@@ -1423,18 +1461,18 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
 
                     {/* Interactions Warning */}
                     {activeInteractions.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {activeInteractions.map((interaction, idx) => (
                           <div key={idx} className={cn(
-                            "flex items-start gap-3 p-4 rounded-2xl border",
+                            "flex items-start gap-4 p-5 rounded-2xl border backdrop-blur-md shadow-sm",
                             interaction.severe 
-                              ? "bg-red-500/10 border-red-500/30 text-red-500" 
-                              : "bg-orange-500/10 border-orange-500/30 text-orange-500"
+                              ? "bg-red-500/10 border-red-500/20 text-red-500" 
+                              : "bg-orange-500/10 border-orange-500/20 text-orange-500"
                           )}>
-                            <ShieldAlert size={20} className="shrink-0 mt-0.5" />
+                            <ShieldAlert size={24} className="shrink-0 mt-0.5" strokeWidth={2.5} />
                             <div>
-                              <h4 className="text-sm font-bold">Interakce: {interaction.s1} + {interaction.s2}</h4>
-                              {interaction.msg && <p className="text-xs mt-1 opacity-90 leading-relaxed">{interaction.msg}</p>}
+                              <h4 className="text-sm font-black tracking-tight mb-1">Interakce: {interaction.s1} + {interaction.s2}</h4>
+                              {interaction.msg && <p className="text-[11px] font-bold uppercase tracking-wider opacity-80 leading-relaxed">{interaction.msg}</p>}
                             </div>
                           </div>
                         ))}
@@ -1442,7 +1480,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                     )}
 
                     {/* Hourly Chart */}
-                    <div className="h-32 w-full mt-4">
+                    <div className="h-40 w-full mt-6 bg-white/5 rounded-[1.5rem] border border-white/5 p-4 shadow-inner">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={hourlyData}>
                           {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
@@ -1556,51 +1594,58 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-4 relative z-10"
+            className="space-y-6 relative z-10 pb-24"
           >
-            <section className="md3-card p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <DollarSign size={16} className="text-md3-primary" />
-                <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Finanční přehled</h3>
+            {/* Top Finance Overview Array */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Útrata ({period}D)</div>
+                <div className="text-2xl font-black text-theme-text drop-shadow-sm">{settings.privacyMode ? '***' : totalCost.toLocaleString('cs-CZ')} <span className="text-xs text-white/40 ml-1">{settings.currency || 'Kč'}</span></div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Útrata ({period}D)</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : totalCost.toLocaleString('cs-CZ')} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
-                </div>
-                <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Celkem útrata</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : allTimeCost.toLocaleString('cs-CZ')} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
-                </div>
-                <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Aktivní dny</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{predictions.activeDays} <span className="text-sm text-md3-gray">dnů</span></div>
-                </div>
-                <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                  <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Průměr / aktivní den</div>
-                  <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : predictions.activeDayAverage.toFixed(0)} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
-                </div>
+              <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                <div className="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Celkem</div>
+                <div className="text-2xl font-black text-theme-text drop-shadow-sm">{settings.privacyMode ? '***' : allTimeCost.toLocaleString('cs-CZ')} <span className="text-xs text-white/40 ml-1">{settings.currency || 'Kč'}</span></div>
               </div>
+              <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Aktivní dny</div>
+                <div className="text-2xl font-black text-theme-text drop-shadow-sm">{predictions.activeDays} <span className="text-sm text-white/40 ml-1">dnů</span></div>
+              </div>
+              <div className="p-5 rounded-[1.5rem] bg-white/5 border border-white/5 shadow-inner text-center relative overflow-hidden group hover:bg-white/10 transition-colors">
+                <div className="absolute right-0 top-0 w-24 h-24 bg-cyan-500/10 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Denní průměr</div>
+                <div className="text-2xl font-black text-theme-text drop-shadow-sm">{settings.privacyMode ? '***' : predictions.activeDayAverage.toFixed(0)} <span className="text-xs text-white/40 ml-1">{settings.currency || 'Kč'}</span></div>
+              </div>
+            </div>
 
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest">Předpověď a trendy</h4>
-                
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                    <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Průměrná cena dávky</div>
-                    <div className="text-xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : predictions.costPerDose.toFixed(1)} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Trends and Predictions */}
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 group hover:bg-white/[0.08] transition-colors flex flex-col">
+                <div className="absolute right-0 top-0 w-40 h-40 bg-amber-500/10 blur-[50px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-amber-400 shadow-inner">
+                    <TrendingUp size={20} strokeWidth={2.5} />
                   </div>
-                  <div className="p-4 rounded-2xl bg-theme-subtle border border-theme-border">
-                    <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Trend (posledních 7 dní)</div>
+                  <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Předpověď a Trendy</h2>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4 relative z-10">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 shadow-inner flex flex-col justify-center">
+                    <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">Průměrná cena dávky</div>
+                    <div className="text-xl font-black text-theme-text tracking-tight drop-shadow-sm">{settings.privacyMode ? '***' : predictions.costPerDose.toFixed(1)} <span className="text-xs text-white/40">{settings.currency || 'Kč'}</span></div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 shadow-inner flex flex-col justify-center">
+                    <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest mb-1">Trend (posl. 7 dní)</div>
                     <div className="flex items-center gap-2">
-                      <div className="text-xl font-bold text-theme-text tracking-tight">
-                        {settings.privacyMode ? '***' : predictions.recentDaily.toFixed(0)} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}/den</span>
+                      <div className="text-xl font-black text-theme-text tracking-tight drop-shadow-sm">
+                        {settings.privacyMode ? '***' : predictions.recentDaily.toFixed(0)} <span className="text-xs text-white/40">{settings.currency || 'Kč'}/den</span>
                       </div>
                       <div className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-bold",
-                        predictions.trendPercentage > 0 ? "bg-red-500/10 text-red-500" : 
-                        predictions.trendPercentage < 0 ? "bg-green-500/10 text-green-500" : "bg-md3-gray/10 text-md3-gray"
+                        "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-inner",
+                        predictions.trendPercentage > 0 ? "bg-red-500/10 text-red-500 border border-red-500/20" : 
+                        predictions.trendPercentage < 0 ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-white/10 text-white/70 border border-white/10"
                       )}>
                         {predictions.trendPercentage > 0 ? '+' : ''}{predictions.trendPercentage.toFixed(1)}%
                       </div>
@@ -1608,55 +1653,69 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-3">
-                    <div className="text-xs text-md3-gray font-bold uppercase tracking-wider text-center">Dlouhodobý průměr</div>
-                    <div className="text-center p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="text-[10px] text-md3-gray font-bold uppercase mb-1">Měsíčně</div>
-                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : predictions.monthly.toFixed(0)} {settings.currency || 'Kč'}</div>
-                    </div>
-                    <div className="text-center p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="text-[10px] text-md3-gray font-bold uppercase mb-1">Ročně</div>
-                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : predictions.yearly.toFixed(0)} {settings.currency || 'Kč'}</div>
+                <div className="grid grid-cols-2 gap-4 relative z-10 flex-1">
+                  <div className="p-5 rounded-2xl bg-white/5 border border-white/5 shadow-inner flex flex-col justify-center">
+                    <div className="text-[11px] text-white/60 font-black uppercase tracking-widest text-center mb-4">Dlouhodobý průměr</div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-[10px] text-white/50 font-bold uppercase">Měsíčně</span>
+                        <span className="font-black text-theme-text">{settings.privacyMode ? '***' : predictions.monthly.toFixed(0)} <span className="text-[10px] text-white/40">{settings.currency || 'Kč'}</span></span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-white/50 font-bold uppercase">Ročně</span>
+                        <span className="font-black text-theme-text">{settings.privacyMode ? '***' : predictions.yearly.toFixed(0)} <span className="text-[10px] text-white/40">{settings.currency || 'Kč'}</span></span>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div className="text-xs text-md3-primary font-bold uppercase tracking-wider text-center">Odhad dle trendu</div>
-                    <div className="text-center p-3 rounded-xl bg-md3-primary/5 border border-md3-primary/20">
-                      <div className="text-[10px] text-md3-primary/80 font-bold uppercase mb-1">Měsíčně</div>
-                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : predictions.recentMonthly.toFixed(0)} {settings.currency || 'Kč'}</div>
-                    </div>
-                    <div className="text-center p-3 rounded-xl bg-md3-primary/5 border border-md3-primary/20">
-                      <div className="text-[10px] text-md3-primary/80 font-bold uppercase mb-1">Ročně</div>
-                      <div className="text-sm font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : predictions.recentYearly.toFixed(0)} {settings.currency || 'Kč'}</div>
+                  <div className="p-5 rounded-2xl bg-md3-primary/5 border border-md3-primary/20 shadow-inner flex flex-col justify-center">
+                    <div className="text-[11px] text-md3-primary/80 font-black uppercase tracking-widest text-center mb-4">Odhad dle trendu</div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center border-b border-md3-primary/10 pb-2">
+                        <span className="text-[10px] text-md3-primary/60 font-bold uppercase">Měsíčně</span>
+                        <span className="font-black text-theme-text">{settings.privacyMode ? '***' : predictions.recentMonthly.toFixed(0)} <span className="text-[10px] text-white/40">{settings.currency || 'Kč'}</span></span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-md3-primary/60 font-bold uppercase">Ročně</span>
+                        <span className="font-black text-theme-text">{settings.privacyMode ? '***' : predictions.recentYearly.toFixed(0)} <span className="text-[10px] text-white/40">{settings.currency || 'Kč'}</span></span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="mt-6">
-                <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-4">Vývoj útraty</h4>
-                <div className="h-48 w-full">
+              {/* Chart */}
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 group hover:bg-white/[0.08] transition-colors flex flex-col">
+                <div className="absolute right-0 top-0 w-40 h-40 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-blue-400 shadow-inner">
+                    <Activity size={20} strokeWidth={2.5} />
+                  </div>
+                  <h2 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Vývoj Útraty</h2>
+                </div>
+                <div className="flex-1 w-full relative z-10 min-h-0 bg-white/5 rounded-2xl border border-white/5 p-4 shadow-inner">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trendData} margin={{ left: -20, right: 0, top: 0, bottom: 0 }}>
-                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />}
-                      <XAxis dataKey="name" stroke="#8e8e93" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-                      <YAxis stroke="#8e8e93" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => settings.privacyMode ? '***' : `${val}`} width={40} />
+                    <BarChart data={trendData} margin={{ left: -20, right: 0, top: 10, bottom: 0 }}>
+                      {settings.chartGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />}
+                      <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={10} fontWeight={700} tickLine={false} axisLine={false} dy={10} />
+                      <YAxis stroke="rgba(255,255,255,0.4)" fontSize={10} fontWeight={700} tickLine={false} axisLine={false} tickFormatter={(val) => settings.privacyMode ? '***' : `${val}`} width={45} />
                       <Tooltip content={<CustomTooltip type="currency" currency={settings.currency} />} />
-                      <Bar dataKey="cost" name="Útrata" fill="var(--md3-primary, #0a84ff)" radius={[4, 4, 0, 0]} isAnimationActive={settings.chartAnimation} />
+                      <Bar dataKey="cost" name="Útrata" fill="#3b82f6" radius={[6, 6, 0, 0]} isAnimationActive={settings.chartAnimation} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
-            </section>
+              </section>
+            </div>
 
             {costBySubstance.length > 0 && (
-              <section className="md3-card p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <PieChartIcon size={16} className="text-md3-primary" />
-                  <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Útrata podle látek</h3>
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 group hover:bg-white/[0.08] transition-colors">
+                <div className="absolute right-0 top-0 w-32 h-32 bg-purple-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-purple-400 shadow-inner">
+                    <PieChartIcon size={20} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-[11px] font-bold text-white/70 uppercase tracking-[0.2em]">Útrata podle látek</h3>
                 </div>
-                <div className="h-48 w-full mb-6">
+                <div className="h-56 w-full mb-6 relative z-10">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -1702,7 +1761,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             className="space-y-4 relative z-10 pb-24"
           >
             {/* Radar: Circadian Rhythm */}
-            <section className="md3-card p-6">
+            <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
               <div className="flex items-center gap-2 mb-6">
                 <Target size={16} className="text-md3-primary" />
                 <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Cirkadiánní rytmus (Čas užívání)</h3>
@@ -1735,7 +1794,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             </section>
 
             {/* Global Routes of Administration */}
-            <section className="md3-card p-6">
+            <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
               <div className="flex items-center gap-2 mb-6">
                 <PieChartIcon size={16} className="text-md3-green" />
                 <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Způsoby administrace</h3>
@@ -1810,7 +1869,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             </section>
 
             {/* Active Ingredients Density Globally */}
-            <section className="md3-card p-6">
+            <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
               <div className="flex items-center gap-2 mb-6">
                 <FlaskConical size={16} className="text-md3-orange" />
                 <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Absolutní výtěžnost látek</h3>
@@ -1865,7 +1924,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             </section>
 
             {/* Top Global Combinations */}
-            <section className="md3-card p-6">
+            <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
               <div className="flex items-center gap-2 mb-6">
                 <GitMerge size={16} className="text-md3-primary" />
                 <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Nejčastější denní kombinace</h3>
@@ -1931,7 +1990,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
           >
             {/* Conditional Insight Engine message */}
             {!settings.insightEngine && (
-              <div className="md3-card p-4 border-dashed border-2 border-theme-border/50 bg-theme-bg flex flex-col items-center justify-center text-center">
+              <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-4 border-dashed border-2 border-theme-border/50 bg-theme-bg flex flex-col items-center justify-center text-center">
                 <Brain size={24} className="text-md3-gray mb-2 opacity-50" />
                 <h3 className="text-sm font-bold text-theme-text mb-1 tracking-widest uppercase">Insight Engine deaktivován</h3>
                 <p className="text-xs text-md3-gray">Zapněte Pokročilé analytiky a Insight Engine v Nastavení (Správa Dat) pro odemknutí automatického hledání vzorců chování.</p>
@@ -1939,79 +1998,82 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             )}
 
             {settings.insightEngine && settings.predictionAlgorithm === 'ai_groq' && (
-              <div className="md3-card p-5 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 border-cyan-500/20 shadow-inner">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
-                    <Brain size={18} className="text-cyan-500" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-[10px] uppercase font-black text-cyan-500 tracking-widest flex items-center gap-2">
-                      Globální AI Audit {isAiGlobalLoading && <Activity size={10} className="animate-pulse text-cyan-500" />}
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-cyan-500/20 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden group hover:bg-white/[0.08] transition-colors flex flex-col p-6">
+                <div className="absolute right-0 top-0 w-64 h-64 bg-cyan-500/10 blur-[60px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="flex items-center justify-between mb-8 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
+                      <Brain size={24} strokeWidth={2.5} />
                     </div>
-                    <div className="text-sm font-bold text-theme-text">
-                      {settings.aiModel || 'Llama 3'}
+                    <div>
+                      <div className="text-[11px] font-black text-cyan-400 uppercase tracking-[0.2em] flex items-center gap-2 mb-1">
+                        Globální AI Audit {isAiGlobalLoading && <Activity size={12} className="animate-pulse text-cyan-400" />}
+                      </div>
+                      <div className="text-base font-black text-theme-text">{settings.aiModel || 'Llama 3'}</div>
                     </div>
                   </div>
                 </div>
 
                 {isAiGlobalLoading ? (
-                  <div className="flex flex-col items-center justify-center py-10 gap-3">
-                    <Loader2 size={32} className="text-cyan-500 animate-spin" />
-                    <div className="text-sm font-bold text-md3-gray animate-pulse text-center">Analyzuji interakce, rizika a dlouhodobý vývoj...</div>
+                  <div className="flex flex-col items-center justify-center py-16 gap-4 relative z-10">
+                    <Loader2 size={40} className="text-cyan-500 animate-spin opacity-80" />
+                    <div className="text-sm font-bold text-cyan-500/70 uppercase tracking-widest animate-pulse text-center">Analyzuji interakce, rizika a dlouhodobý vývoj...</div>
                   </div>
                 ) : aiGlobalError ? (
-                  <div className="text-xs font-bold text-red-500 bg-red-500/10 p-3 rounded-xl">{aiGlobalError}</div>
+                  <div className="text-sm font-bold text-red-400 bg-red-400/10 border border-red-400/20 p-5 rounded-2xl relative z-10 shadow-inner">{aiGlobalError}</div>
                 ) : aiGlobalData ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                       <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Skóre Rizika</div>
-                          <div className="flex items-end gap-2">
-                             <div className={cn("text-4xl font-black leading-none", (aiGlobalData.riskScore || 0) > 75 ? "text-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "text-orange-500" : "text-emerald-500")}>{aiGlobalData.riskScore ?? '?'}</div>
-                             <div className="text-sm font-bold text-md3-gray mb-1">/ 100</div>
+                  <div className="space-y-6 relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                       <div className="bg-white/5 p-5 rounded-[1.5rem] border border-white/5 shadow-inner flex flex-col h-full justify-between relative overflow-hidden">
+                          <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Skóre Rizika</div>
+                          <div className="flex items-end gap-2 mb-4">
+                             <div className={cn("text-5xl font-black leading-none drop-shadow-sm", (aiGlobalData.riskScore || 0) > 75 ? "text-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "text-orange-500" : "text-emerald-500")}>{aiGlobalData.riskScore ?? '?'}</div>
+                             <div className="text-[10px] font-black text-white/40 mb-1.5 uppercase tracking-wider">/ 100</div>
                           </div>
-                          <div className="mt-2 w-full h-1.5 bg-theme-border rounded-full overflow-hidden">
-                             <div className={cn("h-full rounded-full transition-all", (aiGlobalData.riskScore || 0) > 75 ? "bg-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "bg-orange-500" : "bg-emerald-500")} style={{width: `${aiGlobalData.riskScore || 0}%`}} />
+                          <div className="mt-auto w-full h-2 bg-black/40 rounded-full overflow-hidden shadow-inner">
+                             <div className={cn("h-full rounded-full transition-all shadow-sm", (aiGlobalData.riskScore || 0) > 75 ? "bg-red-500" : (aiGlobalData.riskScore || 0) > 40 ? "bg-orange-500" : "bg-emerald-500")} style={{width: `${aiGlobalData.riskScore || 0}%`}} />
                           </div>
                        </div>
                        
-                       <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between">
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">Vývoj (Trend)</div>
-                          <div className="text-xl font-black text-theme-text mb-2">
-                             {aiGlobalData.generalTrend === 'Improving' ? <span className="text-emerald-500 flex items-center gap-1"><ArrowDownRight size={20}/> Zlepšující</span> : aiGlobalData.generalTrend === 'Worsening' ? <span className="text-red-500 flex items-center gap-1"><ArrowUpRight size={20}/> Zhoršující</span> : <span className="text-orange-500 flex items-center gap-1"><RefreshCw size={20}/> Stabilní</span>}
+                       <div className="bg-white/5 p-5 rounded-[1.5rem] border border-white/5 shadow-inner flex flex-col h-full justify-between relative overflow-hidden">
+                          <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-2">Vývoj (Trend)</div>
+                          <div className="text-xl font-black text-theme-text mb-4 drop-shadow-sm">
+                             {aiGlobalData.generalTrend === 'Improving' ? <span className="text-emerald-400 flex items-center gap-2"><ArrowDownRight size={24} strokeWidth={3}/> Zlepšující</span> : aiGlobalData.generalTrend === 'Worsening' ? <span className="text-red-400 flex items-center gap-2"><ArrowUpRight size={24} strokeWidth={3}/> Zhoršující</span> : <span className="text-orange-400 flex items-center gap-2"><RefreshCw size={24} strokeWidth={3}/> Stabilní</span>}
                           </div>
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto">Riziko M2</div>
-                          <div className="text-lg font-black text-theme-text">{aiGlobalData.projectedRiskNextMonth ?? '?'}<span className="text-xs text-md3-gray">%</span></div>
+                          <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mt-auto mb-1">Riziko M2</div>
+                          <div className="text-2xl font-black text-theme-text drop-shadow-sm">{aiGlobalData.projectedRiskNextMonth ?? '?'}<span className="text-xs text-white/40 ml-1">%</span></div>
                        </div>
 
-                       <div className="bg-theme-bg p-4 rounded-xl border border-theme-border flex flex-col h-full justify-between col-span-2">
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-1">AI Doporučení</div>
-                          <div className="text-sm font-bold text-theme-text leading-tight mb-2">{aiGlobalData.suggestedAction || 'Zatím nedefinováno'}</div>
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mt-auto mb-1">Hlavní Důvod</div>
-                          <div className="text-xs font-bold text-cyan-500 uppercase">{aiGlobalData.primaryReason || 'Neznámý'}</div>
+                       <div className="bg-white/5 p-5 rounded-[1.5rem] border border-white/5 shadow-inner flex flex-col h-full justify-between lg:col-span-2 relative overflow-hidden pb-6">
+                          <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                             <Lightbulb size={14} className="text-amber-400" /> AI Doporučení
+                          </div>
+                          <div className="text-base font-black text-theme-text leading-snug tracking-tight drop-shadow-sm mb-4">{aiGlobalData.suggestedAction || 'Zatím nedefinováno'}</div>
+                          <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mt-auto mb-2">Hlavní Důvod</div>
+                          <div className="text-xs font-black text-cyan-400 uppercase tracking-widest">{aiGlobalData.primaryReason || 'Neznámý'}</div>
                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Radar Chart for Multiple dimensions of risk */}
                       {aiGlobalData.radarScores && (
-                        <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
-                          <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Brain size={14} /> Dimenze Zátěže
+                        <div className="bg-white/5 p-5 rounded-[1.5rem] border border-white/5 shadow-inner">
+                          <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <Brain size={14} className="text-cyan-400" /> Dimenze Zátěže
                           </div>
-                          <div className="h-48 w-full mt-4">
+                          <div className="h-56 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={[
+                              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={[
                                 { subject: 'Frekvence', A: aiGlobalData.radarScores.frequency || 0, fullMark: 100 },
                                 { subject: 'Množství', A: aiGlobalData.radarScores.amount || 0, fullMark: 100 },
                                 { subject: 'Načasování', A: aiGlobalData.radarScores.timing || 0, fullMark: 100 },
                                 { subject: 'Kombinace', A: aiGlobalData.radarScores.combinations || 0, fullMark: 100 },
                               ]}>
-                                <PolarGrid stroke="rgba(150,150,150,0.2)" />
-                                <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--md3-gray)', fontSize: 10, fontWeight: 800 }} />
+                                <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                                <PolarAngleAxis dataKey="subject" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 10, fontWeight: 800 }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                <Radar name="Zátěž" dataKey="A" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.4} />
-                                <Tooltip contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '8px', fontSize: '10px'}} />
+                                <Radar name="Zátěž" dataKey="A" stroke="#06b6d4" strokeWidth={2} fill="#06b6d4" fillOpacity={0.3} />
+                                <Tooltip contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold'}} />
                               </RadarChart>
                             </ResponsiveContainer>
                           </div>
@@ -2019,17 +2081,20 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                       )}
 
                       <div className="space-y-4">
-                        <div className="bg-cyan-500/10 p-4 rounded-xl border border-cyan-500/20 h-full flex flex-col">
-                          <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        <div className="bg-cyan-500/10 p-5 rounded-[1.5rem] border border-cyan-500/20 shadow-inner h-full flex flex-col relative overflow-hidden">
+                          <div className="absolute right-0 top-0 w-32 h-32 bg-cyan-500/20 blur-[40px] rounded-full pointer-events-none" />
+                          <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2 relative z-10">
                             <Zap size={14} /> Detekované Spouštěče
                           </div>
-                          <div className="flex flex-wrap gap-2 mb-4">
+                          <div className="flex flex-wrap gap-2 mb-6 relative z-10">
                             {(aiGlobalData.keyTriggers || []).map((t, i) => (
-                               <span key={i} className="px-3 py-1.5 bg-black/20 dark:bg-white/10 rounded-lg text-[11px] font-bold text-theme-text">{t}</span>
+                               <span key={i} className="px-3 py-1.5 bg-black/40 border border-white/5 rounded-xl text-[11px] font-black uppercase tracking-wider text-theme-text shadow-sm">{t}</span>
                             ))}
                           </div>
-                          <div className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mb-1 mt-auto">Psychologický Kontext</div>
-                          <p className="text-xs text-theme-text leading-relaxed">
+                          <div className="text-[10px] font-bold text-cyan-400 uppercase tracking-[0.2em] mb-2 mt-auto relative z-10 flex items-center gap-2">
+                             <Dna size={14} /> Psychologický Kontext
+                          </div>
+                          <p className="text-xs font-medium text-white/80 leading-relaxed relative z-10">
                             {aiGlobalData.habitAnalysis || "Nedostatek dat pro hlubší analýzu návyků."}
                           </p>
                         </div>
@@ -2037,11 +2102,11 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                     </div>
 
                     {aiGlobalData.weeklyDistribution && aiGlobalData.weeklyDistribution.length === 7 && (
-                      <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
-                         <div className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Activity size={14} /> Týdenní Mapa Rizika (Pondělí - Neděle)
+                      <div className="bg-white/5 p-5 rounded-[1.5rem] border border-white/5 shadow-inner">
+                         <div className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <Activity size={14} className="text-red-400" /> Týdenní Mapa Rizika
                          </div>
-                         <div className="h-32 w-full mt-4">
+                         <div className="h-40 w-full mt-2">
                             <ResponsiveContainer width="100%" height="100%">
                               <AreaChart data={aiGlobalData.weeklyDistribution.map((val, idx) => ({ day: ['Po','Út','St','Čt','Pá','So','Ne'][idx], val }))} margin={{top: 10, right: 10, left: -20, bottom: 0}}>
                                  <defs>
@@ -2050,10 +2115,10 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                                    </linearGradient>
                                  </defs>
-                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
-                                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: '#8e8e93', fontSize: 10, fontWeight: 800}} />
-                                 <Tooltip cursor={{stroke: 'var(--md3-border)', strokeWidth: 2}} contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '8px', fontSize: '10px'}} formatter={(val: number) => [`${val}%`, 'Riziko']} />
-                                 <Area type="monotone" dataKey="val" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorRisk)" />
+                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 800}} dy={10} />
+                                 <Tooltip cursor={{stroke: 'rgba(255,255,255,0.1)', strokeWidth: 2}} contentStyle={{backgroundColor: 'var(--theme-card)', borderColor: 'var(--theme-border)', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold'}} formatter={(val: number) => [`${val}%`, 'Riziko']} />
+                                 <Area type="monotone" dataKey="val" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorRisk)" activeDot={{ r: 6, fill: '#ef4444', stroke: '#1e1e24', strokeWidth: 2 }} />
                               </AreaChart>
                             </ResponsiveContainer>
                          </div>
@@ -2061,9 +2126,9 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                     )}
                   </div>
                 ) : (
-                  <div className="text-sm font-bold text-md3-gray italic text-center py-6">Zaznamenejte první dávky pro AI analýzu.</div>
+                  <div className="text-sm font-bold text-white/40 uppercase tracking-widest text-center py-12 relative z-10">Zaznamenejte první dávky pro AI analýzu.</div>
                 )}
-              </div>
+              </section>
             )}
 
             {settings.insightEngine && (() => {
@@ -2138,7 +2203,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                     {/* Vzorce chování */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {/* Víkendový profil */}
-                       <div className="md3-card p-5">
+                       <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                           <div className="flex items-center gap-2 mb-3">
                              <Calendar size={16} className="text-md3-primary" />
                              <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Týdenní Distribuce</span>
@@ -2153,7 +2218,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                        </div>
 
                        {/* Denní doba */}
-                       <div className="md3-card p-5">
+                       <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                           <div className="flex items-center gap-2 mb-3">
                              <Clock size={16} className="text-md3-primary" />
                              <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Cirkadiánní Profil</span>
@@ -2176,7 +2241,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
 
                     {/* Eskalace a Riziko */}
                     {freqInsights && (
-                       <div className="md3-card p-5">
+                       <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                           <div className="flex items-center gap-2 mb-3">
                              <Activity size={16} className={riskColor} />
                              <span className="text-xs font-bold text-md3-gray uppercase tracking-wider">Rozpoznáno: Eskalace vzorce</span>
@@ -2206,7 +2271,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             {(() => {
               if (doses.length < 5) {
                 return (
-                  <div className="md3-card p-6 border-dashed border-2 border-theme-border/50 text-center">
+                  <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 border-dashed border-2 border-theme-border/50 text-center">
                     <Target size={24} className="mx-auto text-md3-gray mb-3" />
                     <h3 className="text-sm font-bold text-theme-text mb-1">Příliš málo dat</h3>
                     <p className="text-xs text-md3-gray">Pro hloubkovou analýzu zvyků je potřeba více záznamů o dávkování.</p>
@@ -2327,7 +2392,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 <div className="space-y-6">
                   {/* Summary Metric Header */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <div className="md3-card p-5 relative overflow-hidden group">
+                     <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5 relative overflow-hidden group">
                         <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                            <Activity size={100} />
                         </div>
@@ -2341,7 +2406,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                         </div>
                      </div>
 
-                     <div className="md3-card p-5 relative overflow-hidden group">
+                     <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5 relative overflow-hidden group">
                         <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                            <TrendingUp size={100} />
                         </div>
@@ -2361,7 +2426,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                         </div>
                      </div>
 
-                     <div className="md3-card p-5 relative overflow-hidden group">
+                     <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5 relative overflow-hidden group">
                         <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
                            <Timer size={100} />
                         </div>
@@ -2380,7 +2445,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     {/* Rozestupy v čase - graf */}
-                    <section className="md3-card p-6 h-full flex flex-col">
+                    <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 h-full flex flex-col">
                       <div className="flex items-center gap-2 mb-6">
                         <Clock size={16} className="text-md3-primary" />
                         <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Vývoj Průměrných Rozestupů Dávkování</h3>
@@ -2413,7 +2478,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                     </section>
 
                     {/* Vztah mezi velikostí dávky a následujícím rozestupem */}
-                    <section className="md3-card p-6 h-full flex flex-col">
+                    <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 h-full flex flex-col">
                       <div className="flex items-center gap-2 mb-6">
                         <Dna size={16} className="text-emerald-500" />
                         <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Korelace Dávky & Doby Trvání Zasycení</h3>
@@ -2465,7 +2530,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
 
                   {/* Přímé Rozestupy a Četnost */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                     <section className="lg:col-span-2 md3-card p-6">
+                     <section className="lg:col-span-2 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                        <div className="flex items-center gap-2 mb-6">
                          <BarChart2 size={16} className="text-orange-500" />
                          <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Přímá Sekvence Rozestupů</h3>
@@ -2504,7 +2569,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                      </section>
 
                      {/* Combinations Info Panel */}
-                    <section className="md3-card p-6 flex flex-col">
+                    <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 flex flex-col">
                       <div className="flex items-center gap-2 mb-6">
                         <GitMerge size={16} className="text-purple-500" />
                         <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Polydrug Spouštěče (Kaskády do 6h)</h3>
@@ -2555,9 +2620,9 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-6"
+            className="space-y-6 relative z-10 pb-24"
           >
-            <div className="md3-card p-6">
+            <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-500/20 text-emerald-500">
                      <Brain size={20} />
@@ -2805,11 +2870,11 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               className="space-y-4 relative z-10"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Tolerance</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">{tolerance.toFixed(0)}%</div>
                 </div>
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celkem</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {formatAmount(totalAmount, substance.unit, 1)}
@@ -2823,7 +2888,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <section className="md3-card p-4">
+                <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp size={14} className="text-md3-primary" />
                     <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Množství za den</h3>
@@ -2868,7 +2933,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                   </div>
                 </section>
 
-                <section className="md3-card p-4">
+                <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp size={14} className="text-md3-primary" />
                     <h3 className="text-[10px] font-black text-theme-text uppercase tracking-widest">Kumulativní spotřeba</h3>
@@ -2924,7 +2989,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Clock size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kdy užívám nejvíc (Hodiny)</h3>
@@ -2959,7 +3024,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               </section>
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Calendar size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Dny v týdnu (Množství)</h3>
@@ -2994,7 +3059,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               </section>
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Activity size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Hustota užívání (Den a Čas)</h3>
@@ -3071,7 +3136,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <GitMerge size={16} className="text-md3-primary-container" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Distribuce velikosti dávek</h3>
@@ -3107,7 +3172,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               </section>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <section className="md3-card p-6">
+                <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                   <div className="flex items-center gap-2 mb-6">
                     <PieChartIcon size={16} className="text-md3-primary" />
                     <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Způsob užití</h3>
@@ -3151,7 +3216,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                   })()}
                 </section>
                 
-                <section className="md3-card p-6">
+                <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                   <div className="flex items-center gap-2 mb-6">
                     <PieChartIcon size={16} className="text-md3-primary" />
                     <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Účel použití</h3>
@@ -3211,7 +3276,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               className="space-y-4 relative z-10"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměrná dávka</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {sDoses.length > 0 ? (totalAmount / sDoses.length).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
@@ -3228,7 +3293,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                     );
                   })()}
                 </div>
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Maximální dávka</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">
                     {sDoses.length > 0 ? Math.max(...sDoses.map(d => d.amount)).toFixed(1) : 0} <span className="text-sm font-medium text-md3-gray">{substance.unit}</span>
@@ -3250,7 +3315,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               </div>
 
               {substance.dosage && (
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-4">Orientační dávkování</div>
                   <div className="grid grid-cols-5 gap-2 text-center">
                     <div className="space-y-1">
@@ -3277,7 +3342,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               )}
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <BarChart2 size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Doplňující statistiky</h3>
@@ -3389,7 +3454,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               </section>
               
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Měsíční srovnání (Spotřeba)</h3>
@@ -3466,7 +3531,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Layers size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Přehled podle druhů</h3>
@@ -3527,7 +3592,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Activity size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Kombinováno s</h3>
@@ -3597,7 +3662,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Smile size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Detailní statistiky parametrů</h3>
@@ -3769,7 +3834,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <FlaskConical size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Analýza účinných látek</h3>
@@ -3880,7 +3945,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 
                 if (values.length === 0) {
                   return (
-                    <section key={field.id} className="md3-card p-6 opacity-60">
+                    <section key={field.id} className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6 opacity-60">
                       <div className="flex items-center gap-2 mb-2">
                         <Database size={16} className="text-md3-gray" />
                         <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">{field.name}</h3>
@@ -3891,7 +3956,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 }
 
                 return (
-                  <section key={field.id} className="md3-card p-6">
+                  <section key={field.id} className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                     <div className="flex flex-col mb-6">
                       <div className="flex items-center gap-2">
                         <Database size={16} className="text-md3-primary" />
@@ -4045,25 +4110,25 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               className="space-y-4 relative z-10"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Celková útrata</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : cost.toLocaleString('cs-CZ')} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
                 </div>
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměr/dávka</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : (cost / (sDoses.length || 1)).toFixed(0)} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
                 </div>
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Aktivní dny</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">{substancePredictions.activeDays} <span className="text-sm text-md3-gray">dnů</span></div>
                 </div>
-                <div className="md3-card p-5">
+                <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-5">
                   <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-2">Průměr/aktivní den</div>
                   <div className="text-2xl font-bold text-theme-text tracking-tight">{settings.privacyMode ? '***' : substancePredictions.activeDayAverage.toFixed(0)} <span className="text-sm text-md3-gray">{settings.currency || 'Kč'}</span></div>
                 </div>
               </div>
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <Zap size={16} className="text-md3-orange" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Predikce výdajů</h3>
@@ -4098,7 +4163,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               </section>
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Vývoj útraty</h3>
@@ -4160,7 +4225,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               </section>
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <DollarSign size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Cena za dávku (posledních 30)</h3>
@@ -4209,7 +4274,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                 </div>
               </section>
 
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <PieChartIcon size={16} className="text-md3-primary" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Útrata podle způsobu užití</h3>
@@ -4280,7 +4345,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center gap-2 mb-6">
                   <History size={16} className="text-md3-gray" />
                   <h3 className="text-sm font-bold text-theme-text uppercase tracking-widest">Historie po dnech</h3>
@@ -4380,7 +4445,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4 relative z-10"
             >
-              <section className="md3-card p-6">
+              <section className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] relative overflow-hidden p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <Calendar size={16} className="text-md3-primary" />

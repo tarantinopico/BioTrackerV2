@@ -451,23 +451,23 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                 key={s.id}
                 onClick={() => setSelectedSubstanceId(s.id)}
                 className={cn(
-                  "flex items-center gap-2.5 px-5 py-3.5 rounded-2xl border transition-all whitespace-nowrap justify-center relative overflow-hidden shadow-sm shrink-0 snap-start",
+                  "flex items-center gap-2.5 px-5 py-3.5 rounded-[1.2rem] border transition-all whitespace-nowrap justify-center relative overflow-hidden shadow-sm shrink-0 snap-start active:scale-95",
                   isActive 
-                    ? "border-transparent text-theme-bg font-black scale-105" 
-                    : "bg-theme-card/80 backdrop-blur-md border-theme-border text-md3-gray hover:bg-theme-subtle hover:border-theme-border"
+                    ? "border-transparent text-white font-black scale-[1.02]" 
+                    : "bg-theme-bg/60 backdrop-blur-md text-md3-gray border-theme-border/30 hover:bg-theme-bg/80 hover:text-theme-text"
                 )}
-                style={isActive ? { backgroundColor: s.color || '#00d1ff', boxShadow: `0 8px 25px ${s.color}44` } : {}}
+                style={isActive ? { backgroundColor: s.color || '#00d1ff', boxShadow: `0 8px 25px ${s.color}66` } : {}}
               >
                 {isActive && (
                   <motion.div 
                     layoutId="activeSubstanceGlow"
-                    className="absolute inset-0 bg-white/20 blur-md rounded-full"
+                    className="absolute inset-0 bg-white/20 blur-md rounded-full pointer-events-none"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   />
                 )}
-                <Icon size={20} strokeWidth={isActive ? 3 : 2} className="relative z-10" />
-                <span className="text-xs uppercase tracking-wider relative z-10 leading-none">{s.name}</span>
+                <Icon size={18} strokeWidth={isActive ? 3 : 2.5} className="relative z-10" />
+                <span className="text-[11px] font-bold tracking-widest relative z-10 leading-none drop-shadow-sm">{s.name}</span>
               </button>
             );
           })}
@@ -556,15 +556,15 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       )}
 
       {/* Main Focus: Amount Control */}
-      <section className="bg-theme-card/80 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-theme-border flex flex-col items-center relative overflow-hidden z-10 shadow-lg group mt-6">
+      <section className="bg-theme-card/30 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-theme-border/30 flex flex-col items-center relative overflow-hidden z-10 shadow-sm group mt-6">
         <div 
-          className="absolute inset-0 opacity-10 pointer-events-none transition-opacity group-hover:opacity-20" 
+          className="absolute inset-0 opacity-[0.03] pointer-events-none transition-opacity group-hover:opacity-[0.06]" 
           style={{ background: `radial-gradient(circle at center, ${currentStrain?.color || selectedSubstance?.color || '#00d1ff'}, transparent 70%)` }}
         />
         
         {selectedSubstance?.stash !== undefined && (
-          <div className="absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest text-md3-gray bg-theme-subtle px-3 py-1.5 rounded-lg border border-theme-border shadow-sm">
-            Zásoba: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{formatAmount(selectedSubstance.stash, selectedSubstance.unit, 1)}</span>
+          <div className="absolute top-4 right-4 text-[9px] font-bold uppercase tracking-widest text-md3-gray bg-theme-bg/50 px-2 py-1 rounded-md border border-theme-border/20 shadow-sm backdrop-blur-md">
+            Zásoba: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }} className="font-black drop-shadow-sm">{formatAmount(selectedSubstance.stash, selectedSubstance.unit, 1)}</span>
           </div>
         )}
 
@@ -572,9 +572,9 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         <div className="flex items-center justify-between w-full max-w-[320px] relative z-10 mt-6">
           <button 
             onClick={() => handleAdjust(-1)}
-            className="w-16 h-16 rounded-full flex items-center justify-center bg-theme-subtle border border-theme-border text-md3-gray active:scale-90 transition-all hover:bg-theme-subtle-hover shadow-md"
+            className="w-14 h-14 rounded-[1.2rem] flex items-center justify-center bg-theme-bg/60 border border-theme-border/20 text-md3-gray active:scale-90 transition-all hover:bg-theme-bg/80 shadow-[0_2px_10px_rgba(0,0,0,0.05)] backdrop-blur-md"
           >
-            <Minus size={24} strokeWidth={2.5} />
+            <Minus size={22} strokeWidth={2.5} />
           </button>
           
           <div className="flex flex-col items-center">
@@ -583,20 +583,20 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                 type="number"
                 value={amount || ''}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="text-7xl font-black tracking-tighter tabular-nums bg-transparent border-none outline-none text-center w-32 leading-none py-0 placeholder:text-theme-border"
+                className="text-7xl font-black tracking-tighter tabular-nums bg-transparent border-none outline-none text-center w-32 leading-none py-0 placeholder:text-theme-border/30"
                 placeholder="0"
-                style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff', filter: `drop-shadow(0 0 16px ${currentStrain?.color || selectedSubstance?.color}66)` }}
+                style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff', filter: `drop-shadow(0 0 16px ${currentStrain?.color || selectedSubstance?.color}44)` }}
               />
-              <span className="font-black text-lg uppercase tracking-widest opacity-80" style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{selectedSubstance?.unit || 'g'}</span>
+              <span className="font-bold text-lg uppercase tracking-widest opacity-80" style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{selectedSubstance?.unit || 'g'}</span>
             </div>
           </div>
           
           <button 
             onClick={() => handleAdjust(1)}
-            className="w-16 h-16 rounded-full flex items-center justify-center text-theme-bg active:scale-90 transition-all hover:scale-105 shadow-xl"
-            style={{ backgroundColor: currentStrain?.color || selectedSubstance?.color || '#00d1ff', boxShadow: `0 6px 20px ${currentStrain?.color || selectedSubstance?.color}66` }}
+            className="w-14 h-14 rounded-[1.2rem] flex items-center justify-center text-white active:scale-90 transition-all hover:scale-[1.05]"
+            style={{ backgroundColor: currentStrain?.color || selectedSubstance?.color || '#00d1ff', boxShadow: `0 6px 20px ${currentStrain?.color || selectedSubstance?.color}55` }}
           >
-            <Plus size={24} strokeWidth={3} />
+            <Plus size={22} strokeWidth={3} />
           </button>
         </div>
 
@@ -605,10 +605,10 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           const actives = currentStrain?.activeIngredients || selectedSubstance?.activeIngredients || [];
           if (actives.length > 0) {
             return (
-              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-w-full">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-w-full relative z-10">
                 {actives.map((ai, idx) => (
-                  <div key={idx} className="text-[9px] font-black uppercase tracking-widest text-md3-gray bg-theme-subtle px-2 py-0.5 rounded-md border border-theme-border/50">
-                    <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>
+                  <div key={idx} className="text-[8px] font-bold uppercase tracking-widest text-md3-gray bg-theme-bg/40 px-2 py-0.5 rounded-md border border-theme-border/20 shadow-sm backdrop-blur-md">
+                    <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }} className="font-black drop-shadow-sm">
                       {formatAmount(((amount * ai.percentage) / 100), selectedSubstance?.unit || 'g', 2)}
                     </span> {ai.name}
                   </div>
@@ -617,8 +617,8 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
             );
           } else if (selectedSubstance?.activeIngredientName && (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage)) {
             return (
-              <div className="text-[9px] font-black uppercase tracking-widest text-md3-gray mt-2 bg-theme-subtle px-2 py-0.5 rounded-md border border-theme-border/50">
-                 ÚČ. LÁTKA: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }}>{formatAmount(((amount * (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage || 0)) / 100), selectedSubstance?.unit || 'g', 2)}</span> {selectedSubstance.activeIngredientName}
+              <div className="text-[8px] font-bold uppercase tracking-widest text-md3-gray mt-2 bg-theme-bg/40 px-2 py-0.5 rounded-md border border-theme-border/20 shadow-sm backdrop-blur-md relative z-10">
+                 ÚČ. LÁTKA: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }} className="font-black drop-shadow-sm">{formatAmount(((amount * (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage || 0)) / 100), selectedSubstance?.unit || 'g', 2)}</span> {selectedSubstance.activeIngredientName}
               </div>
             );
           }
@@ -626,19 +626,19 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         })()}
 
         {/* Quick Amount Presets */}
-        <div className="flex gap-2 mt-6 relative z-10 overflow-x-auto no-scrollbar w-full pb-1 justify-center">
+        <div className="flex gap-2 mt-6 relative z-10 overflow-x-auto no-scrollbar w-full pb-1 justify-center px-1">
           {[1, 5, 10, 25, 50].map(val => (
             <button
               key={val}
               onClick={() => setAmount(val)}
-              className="flex-1 min-w-[56px] py-3 rounded-2xl bg-theme-subtle border text-[13px] font-black text-md3-gray transition-all uppercase tracking-widest active:scale-95 shadow-sm flex items-center justify-center gap-0.5"
+              className="flex-1 min-w-[50px] py-2.5 rounded-[1rem] border text-[11px] font-bold text-md3-gray transition-all uppercase tracking-widest active:scale-95 shadow-[0_2px_10px_rgba(0,0,0,0.05)] flex items-center justify-center gap-0.5 backdrop-blur-sm"
               style={{ 
                 borderColor: amount === val ? (currentStrain?.color || selectedSubstance?.color) : 'var(--theme-border)', 
                 color: amount === val ? (currentStrain?.color || selectedSubstance?.color) : undefined,
-                backgroundColor: amount === val ? `${currentStrain?.color || selectedSubstance?.color}11` : undefined
+                backgroundColor: amount === val ? `${currentStrain?.color || selectedSubstance?.color}15` : 'var(--theme-bg)'
               }}
             >
-              +{val}<span className="text-[10px] opacity-70 ml-0.5">{selectedSubstance?.unit}</span>
+              +{val}<span className="text-[9px] opacity-70 ml-0.5">{selectedSubstance?.unit}</span>
             </button>
           ))}
         </div>
@@ -846,17 +846,17 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       </section>
 
       {/* Modern Submit Row (Notes + Button) */}
-      <div className="mt-8 flex flex-col gap-4 relative z-10 pb-8">
+      <div className="mt-8 flex flex-col gap-4 relative z-10 pb-8 px-1">
         <div className="relative group w-full">
           <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-            <Fingerprint size={18} className="text-md3-gray group-focus-within:text-[var(--theme-text)] transition-colors" />
+            <Fingerprint size={16} className="text-md3-gray group-focus-within:text-[var(--theme-text)] transition-colors" />
           </div>
           <input 
             type="text" 
             value={note}
             onChange={e => setNote(e.target.value)}
-            placeholder="Připojte poznámku..."
-            className="w-full bg-theme-bg/90 backdrop-blur-3xl border border-theme-border rounded-2xl py-5 pl-14 pr-5 text-sm font-black tracking-widest outline-none focus:border-md3-primary/50 focus:ring-2 focus:ring-md3-primary/20 transition-all text-theme-text shadow-sm placeholder:text-theme-border"
+            placeholder="PŘIPOJTE POZNÁMKU"
+            className="w-full bg-theme-bg/60 backdrop-blur-3xl border border-theme-border/30 rounded-2xl py-4 pl-[3.25rem] pr-5 text-[11px] font-bold tracking-[0.2em] outline-none focus:border-md3-primary/50 focus:ring-2 focus:ring-md3-primary/20 transition-all text-theme-text shadow-sm placeholder:text-theme-border/50 uppercase"
           />
         </div>
 
@@ -864,21 +864,21 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           onClick={handleSubmit}
           disabled={isLoggedState}
           className={cn(
-            "w-full py-5 rounded-2xl font-black text-sm md:text-base flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] transition-all uppercase tracking-[0.3em] relative overflow-hidden group border",
-            isLoggedState ? "bg-emerald-500 scale-[1.02] border-emerald-400" : "border-black/5 dark:border-white/5"
+            "w-full py-5 rounded-[1.2rem] font-black text-[13px] md:text-sm flex items-center justify-center gap-3 shadow-[0_4px_25px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all uppercase tracking-[0.3em] relative overflow-hidden group border",
+            isLoggedState ? "bg-emerald-500 scale-[1.02] border-emerald-400" : "border-white/20"
           )}
-          style={isLoggedState ? { color: '#000' } : { backgroundColor: selectedSubstance?.color || '#fff', color: '#000', boxShadow: `0 10px 40px ${selectedSubstance?.color || '#fff'}44` }}
+          style={isLoggedState ? { color: '#000' } : { backgroundColor: currentStrain?.color || selectedSubstance?.color || '#fff', color: '#000', boxShadow: `0 10px 40px ${currentStrain?.color || selectedSubstance?.color || '#fff'}66` }}
         >
-          <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
           {isLoggedState ? (
             <>
-               <Check size={24} className="relative z-10" />
-               <span className="relative z-10">ZAPSÁNO</span>
+               <Check size={20} strokeWidth={3} className="relative z-10" />
+               <span className="relative z-10 drop-shadow-sm">Log Přidán</span>
             </>
           ) : (
             <>
-               <Fingerprint size={24} className="relative z-10 opacity-70 group-hover:opacity-100 transition-opacity" />
-               <span className="relative z-10">ZAPSAT DÁVKU</span>
+               <Fingerprint size={20} strokeWidth={2.5} className="relative z-10 drop-shadow-sm group-hover:scale-110 transition-transform" />
+               <span className="relative z-10 drop-shadow-sm">Zapsat Interakci</span>
             </>
           )}
         </button>

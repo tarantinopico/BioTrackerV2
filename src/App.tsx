@@ -595,23 +595,30 @@ export default function App() {
         {/* Ambient Background */}
         {settings.ambientBackground !== false && (
           <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1] will-change-transform transform-gpu">
-            <div className="absolute inset-0 blur-[100px] opacity-[0.25] mix-blend-screen dark:mix-blend-color-dodge">
+            <div className="absolute inset-0 bg-theme-bg" />
+            <div className="absolute inset-0 blur-[130px] opacity-[0.4] mix-blend-screen dark:mix-blend-color-dodge">
               <div className={cn(
-                "absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full",
-                "bg-md3-primary",
+                "absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-[100%] scale-y-[1.5] rotate-[-15deg]",
+                "bg-md3-primary/80",
                 settings.animations !== false && "animate-blob"
               )} />
               <div className={cn(
-                "absolute top-[20%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-80",
-                "bg-cyan-primary",
+                "absolute top-[10%] right-[-30%] w-[80%] h-[100%] rounded-[100%] scale-x-[1.2] rotate-[20deg] opacity-70",
+                "bg-cyan-primary/70",
                 settings.animations !== false && "animate-blob animation-delay-2000"
               )} />
               <div className={cn(
-                "absolute bottom-[-20%] left-[20%] w-[70%] h-[70%] rounded-full opacity-60",
-                "bg-md3-primary-container",
+                "absolute bottom-[-30%] left-[10%] w-[90%] h-[80%] rounded-[100%] scale-y-[0.8] rotate-[-5deg] opacity-60",
+                "bg-purple-600/70",
                 settings.animations !== false && "animate-blob animation-delay-4000"
               )} />
+              {/* Additional artistic high-frequency light streak */}
+              <div className={cn(
+                "absolute inset-x-0 top-1/3 h-[20%] bg-white/20 rounded-full blur-[80px] rotate-[-30deg]",
+              )} />
             </div>
+            {/* Soft artistic grain overlay (CSS representation of abstract noise) */}
+            <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }} />
           </div>
         )}
 
@@ -708,51 +715,52 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation - Material 3 Style */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-theme-bg/95 backdrop-blur-3xl border-t border-theme-border flex justify-around items-center z-50 pb-safe will-change-transform transform-gpu px-1 shadow-[0_-5px_20px_-10px_rgba(0,0,0,0.5)]" style={{ height: '64px' }}>
-        {[
-          { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
-          { id: 'logger', icon: PlusCircle, label: 'Zapsat' },
-          { id: 'substances', icon: Database, label: 'Látky' },
-          { id: 'history', icon: History, label: 'Historie' },
-          { id: 'analytics', icon: BarChart2, label: 'Analýza' },
-          { id: 'predictions', icon: Lightbulb, label: 'Predikce' },
-          { id: 'settings', icon: SettingsIcon, label: 'Nastavení' },
-        ].map((item) => {
-          const isActive = view === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                if (navigator.vibrate) navigator.vibrate(10); // Subtle haptic feedback
-                setView(item.id as ViewType);
-              }}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full active:scale-95 transition-transform",
-                isActive ? 'text-md3-text' : 'text-md3-gray'
-              )}
-            >
-              <div className={cn(
-                "w-12 h-8 rounded-xl transition-all duration-300 relative flex items-center justify-center mb-1",
-                isActive ? "bg-md3-primary/20 text-md3-primary" : "bg-transparent text-md3-gray",
-              )}>
-                {isActive && (
-                  <motion.div 
-                    layoutId="activeTabBadge" 
-                    className="absolute inset-0 bg-md3-primary/20 rounded-xl" 
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
+      {/* Bottom Navigation - Premium Abstract Floating Dock */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 z-50 pointer-events-none pb-safe">
+        <nav className="mx-auto max-w-[380px] bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2.5rem] flex justify-between items-center px-3 py-3 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] pointer-events-auto overflow-x-auto custom-scrollbar hide-scroll-indicator">
+          {[
+            { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
+            { id: 'logger', icon: PlusCircle, label: 'Zapsat' },
+            { id: 'substances', icon: Database, label: 'Látky' },
+            { id: 'history', icon: History, label: 'Historie' },
+            { id: 'analytics', icon: BarChart2, label: 'Analýza' },
+            { id: 'predictions', icon: Lightbulb, label: 'Predikce' },
+            { id: 'settings', icon: SettingsIcon, label: 'Nastavení' },
+          ].map((item) => {
+            const isActive = view === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (navigator.vibrate) navigator.vibrate(10); // Subtle haptic feedback
+                  setView(item.id as ViewType);
+                }}
+                className={cn(
+                  "flex flex-col items-center justify-center min-w-[50px] h-12 active:scale-95 transition-all duration-300 relative group rounded-full",
+                  isActive ? 'text-theme-text' : 'text-md3-gray/70 hover:text-theme-text/90'
                 )}
-                {item.id === 'settings' && settings.privacyMode && !isActive && (
-                    <div className="absolute top-1 right-2 w-2 h-2 bg-md3-primary rounded-full border-2 border-theme-bg shadow-sm" />
-                )}
-                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
-              </div>
-              <span className={cn("text-[9px] font-black uppercase tracking-wider transition-all scale-90", isActive ? "text-md3-primary" : "opacity-70")}>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
+              >
+                <div className={cn(
+                  "w-11 h-11 rounded-[1.2rem] transition-all duration-500 relative flex items-center justify-center",
+                  isActive ? "bg-white/10 text-white shadow-[0_4px_25px_rgba(255,255,255,0.1)] border border-white/20" : "bg-transparent text-md3-gray/80 group-hover:bg-white/5",
+                )}>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="activeTabBadge" 
+                      className="absolute inset-0 bg-md3-primary/30 rounded-[1.2rem] blur-[8px]" 
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  {item.id === 'settings' && settings.privacyMode && !isActive && (
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
+                  )}
+                  <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className="relative z-10 drop-shadow-sm" />
+                </div>
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Modals */}
       <SubstanceEditor 

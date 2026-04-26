@@ -68,9 +68,9 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-2">
-        <h3 className="text-[11px] font-black text-md3-gray/80 uppercase tracking-widest leading-none flex items-center gap-2">
-          <Zap size={12} className="text-md3-primary/80" /> Rychlé akce
+      <div className="flex items-center justify-between px-3">
+        <h3 className="text-[11px] font-bold text-md3-gray/80 uppercase tracking-[0.2em] leading-none flex items-center gap-2 drop-shadow-sm">
+          <Zap size={14} className="text-md3-primary/90" strokeWidth={2.5} /> Rychlé Akce
         </h3>
         <button 
           onClick={() => {
@@ -78,13 +78,13 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             setNewShortcut({ name: '', amount: 0, substanceId: '', strainId: null, route: 'oral', color: '#0a84ff' });
             setIsAdding(true);
           }}
-          className="w-7 h-7 flex items-center justify-center rounded-xl bg-theme-bg/40 border border-theme-border/30 text-md3-primary hover:bg-theme-bg/80 transition-all shadow-sm backdrop-blur-md active:scale-95"
+          className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 dark:bg-black/20 border border-white/10 text-md3-primary hover:bg-white/10 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.05)] backdrop-blur-md active:scale-95 group"
         >
-          <Plus size={14} strokeWidth={2.5} />
+          <Plus size={16} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
         </button>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
         <AnimatePresence mode="popLayout">
           {shortcuts.map((shortcut) => (
             <motion.div
@@ -97,52 +97,52 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             >
               <button
                 onClick={() => onUseShortcut(shortcut)}
-                className="w-full flex flex-col justify-between items-start p-2.5 bg-theme-bg/30 border border-theme-border/20 rounded-[1.2rem] text-left relative overflow-hidden active:scale-95 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:bg-theme-bg/50 backdrop-blur-xl h-[68px]"
+                className="w-full flex flex-col justify-between items-start p-3 bg-white/5 dark:bg-black/20 border border-white/10 rounded-[1.4rem] text-left relative overflow-hidden active:scale-95 transition-all shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:bg-white/10 dark:hover:bg-black/30 backdrop-blur-2xl h-[78px]"
               >
                 {/* Glow drop */}
-                <div className="absolute -top-6 -right-6 w-16 h-16 rounded-full blur-[20px] opacity-20 pointer-events-none" style={{ backgroundColor: shortcut.color }} />
+                <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-[25px] pointer-events-none opacity-[0.15]" style={{ backgroundColor: shortcut.color }} />
                 
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 shadow-inner bg-theme-bg/80 relative z-10" style={{ color: shortcut.color, border: `1px solid ${shortcut.color}15` }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-inner bg-theme-bg/60 border border-white/5 relative z-10 backdrop-blur-md" style={{ color: shortcut.color }}>
                   {(() => {
                     const substance = substances.find(s => s.id === shortcut.substanceId);
                     const IconComponent = getIconComponent(substance?.icon);
-                    return <IconComponent size={14} strokeWidth={2.5}/>;
+                    return <IconComponent size={16} strokeWidth={2.5}/>;
                   })()}
                 </div>
                 
-                <div className="flex flex-col mt-auto w-full relative z-10 min-w-0 pt-1">
-                  <div className="text-[10px] font-bold text-theme-text truncate w-full leading-tight mb-0.5 tracking-wide shadow-sm">
+                <div className="flex flex-col mt-auto w-full relative z-10 min-w-0 pt-2">
+                  <div className="text-[11px] font-bold text-theme-text/90 truncate w-full leading-tight mb-0.5 tracking-tight drop-shadow-sm">
                     {shortcut.name}
                   </div>
-                  <div className="flex items-baseline gap-[2px] truncate">
-                    <span className="text-[11px] font-black tabular-nums leading-none tracking-tight shadow-sm" style={{ color: shortcut.color }}>
+                  <div className="flex items-baseline gap-[2px] truncate drop-shadow-sm">
+                    <span className="text-[13px] font-black tabular-nums leading-none tracking-tight" style={{ color: shortcut.color }}>
                       {shortcut.amount}
                     </span>
-                    <span className="text-[9px] font-bold text-md3-gray/80 leading-none truncate ml-0.5">
+                    <span className="text-[9px] font-bold text-md3-gray/80 leading-none truncate ml-0.5 uppercase tracking-wide">
                       {substances.find(s => s.id === shortcut.substanceId)?.unit || ''}
                     </span>
                   </div>
                 </div>
               </button>
               
-              <div className="absolute -top-1.5 -right-1.5 flex gap-0.5 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+              <div className="absolute -top-2 -right-2 flex gap-1 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEdit(shortcut);
                   }}
-                  className="w-4 h-4 rounded-md bg-theme-bg/90 border border-theme-border/50 text-md3-primary flex items-center justify-center shadow-md active:scale-90"
+                  className="w-6 h-6 rounded-lg bg-theme-bg/90 border border-theme-border/30 text-md3-primary flex items-center justify-center shadow-md active:scale-90"
                 >
-                  <Edit2 size={8} strokeWidth={3} />
+                  <Edit2 size={10} strokeWidth={2.5} />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemoveShortcut(shortcut.id);
                   }}
-                  className="w-4 h-4 rounded-md bg-theme-bg/90 border border-theme-border/50 text-red-500 flex items-center justify-center shadow-md active:scale-90"
+                  className="w-6 h-6 rounded-lg bg-theme-bg/90 border border-theme-border/30 text-red-500 flex items-center justify-center shadow-md active:scale-90"
                 >
-                  <Trash2 size={8} strokeWidth={3} />
+                  <Trash2 size={10} strokeWidth={2.5} />
                 </button>
               </div>
             </motion.div>

@@ -143,7 +143,7 @@ export default function Settings({
   ];
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-32">
       {isSettingPin && (
         <PinLock 
           correctPin=""
