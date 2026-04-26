@@ -43,7 +43,8 @@ import {
   Sunrise,
   Sunset,
   MoonStar,
-  Cpu
+  Cpu,
+  PiggyBank
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -419,76 +420,81 @@ export default function Dashboard({
   }, [activeSubstanceDetails.length, systemLoad.label]);
 
   return (
-    <div className="flex flex-col gap-2 relative h-full pb-2">
-      <div className="px-1 flex items-center justify-between mb-0.5">
+    <div className="flex flex-col gap-3 relative h-full pb-8 overflow-x-hidden overflow-y-auto custom-scrollbar">
+      {/* Header */}
+      <div className="px-3 pt-2 flex items-center justify-between shrink-0 relative z-20">
         <div>
-          <h2 className="text-[14px] font-black text-md3-text flex items-center gap-1.5 leading-none tracking-tight">
-            {greeting.text} <greeting.Icon className={cn("ml-0.5", greeting.color)} size={14} strokeWidth={2.5} />
+          <h2 className="text-[20px] font-black text-theme-text flex items-center gap-1.5 leading-none tracking-tight">
+            {greeting.text} <greeting.Icon className={cn("ml-1 drop-shadow-sm", greeting.color)} size={20} strokeWidth={2.5} />
           </h2>
-          <p className="text-[9px] text-md3-gray mt-0.5 font-black uppercase tracking-widest leading-none">
+          <p className="text-[10px] text-md3-gray/80 mt-1.5 font-bold uppercase tracking-wider leading-none">
             {dailyMessage}
           </p>
         </div>
-        <div className={cn("text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-md border", systemLoad.color, systemLoad.bg, systemLoad.color.replace('text-', 'border-').replace('400', '400/30').replace('500', '500/30'))}>
-          {systemLoad.label}
+        <div className={cn("text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-2xl border shadow-sm backdrop-blur-md", systemLoad.color, systemLoad.bg, systemLoad.color.replace('text-', 'border-').replace('400', '400/20').replace('500', '500/20'))}>
+           <div className="flex items-center gap-1.5">
+             <systemLoad.icon size={12} className={systemLoad.pulse ? "animate-pulse" : ""} />
+             {systemLoad.label}
+           </div>
         </div>
       </div>
 
-      {/* Hero Chart - Abstract with Info Pills */}
-      <section className="bg-theme-card/80 backdrop-blur-md rounded-[2rem] border border-theme-border shadow-sm relative overflow-hidden flex-1 shrink-0 min-h-[220px]">
+      {/* Hero Chart - Integrated Background style */}
+      <section className="relative flex-1 shrink min-h-[180px] flex flex-col -mx-4 z-0 pointer-events-none">
         
-        {/* Floating Abstract Pills inside Chart */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
-          <div className="bg-theme-bg/80 backdrop-blur-sm border border-theme-border px-3 py-2 rounded-xl flex flex-col shadow-sm">
-            <span className="text-[9px] font-black text-md3-gray uppercase tracking-widest leading-none mb-1">Tělo / Zátěž</span>
-            <span className="text-sm font-black text-theme-text">{cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}</span>
+        {/* Floating Abstract Pills inside Chart Layer */}
+        <div className="absolute top-4 left-6 flex flex-col gap-2.5 z-20 pointer-events-auto">
+          <div className="bg-theme-bg/30 backdrop-blur-3xl border border-theme-border/20 px-3.5 py-2.5 rounded-2xl flex flex-col shadow-sm">
+            <span className="text-[9px] font-bold text-md3-gray/90 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5"><Brain size={10} className="text-md3-primary/70"/> Čas od čistoty</span>
+            <span className="text-[16px] font-black tracking-tight text-theme-text leading-none">{cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}</span>
           </div>
           {settings.dashboardWidgets?.budget !== false && (
-             <div className="bg-theme-bg/80 backdrop-blur-sm border border-theme-border px-3 py-2 rounded-xl flex flex-col mt-1 shadow-sm">
-              <span className="text-[9px] font-black text-md3-green uppercase tracking-widest leading-none mb-1">Útrata / Dnes</span>
-              <span className="text-sm font-black text-theme-text leading-none">{settings.privacyMode ? '***' : dailyCost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}</span>
+             <div className="bg-theme-bg/30 backdrop-blur-3xl border border-theme-border/20 px-3.5 py-2.5 rounded-2xl flex flex-col shadow-sm">
+              <span className="text-[9px] font-bold text-md3-green/90 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5"><PiggyBank size={10} className="text-md3-green/70"/> Útrata Dnes</span>
+              <span className="text-[16px] font-black tracking-tight text-theme-text leading-none">{settings.privacyMode ? '***' : dailyCost.toLocaleString('cs-CZ')} <span className="text-[11px] text-md3-gray/70 font-bold ml-0.5">{settings.currency || 'Kč'}</span></span>
             </div>
           )}
         </div>
 
-        <div className="absolute top-4 right-4 z-10">
-          <div className="flex bg-theme-bg/80 backdrop-blur-sm p-1 rounded-xl border border-theme-border shadow-sm">
+        <div className="absolute top-4 right-6 z-20 pointer-events-auto">
+          <div className="flex bg-theme-bg/20 backdrop-blur-3xl p-1 rounded-2xl border border-theme-border/10 shadow-sm">
             <button 
               onClick={() => setChartType('kinetic')}
-              className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", chartType === 'kinetic' ? "bg-md3-primary text-white shadow-md" : "text-md3-gray hover:text-theme-text")}
+              className={cn("px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", chartType === 'kinetic' ? "bg-md3-primary/90 text-white shadow-md backdrop-blur-md" : "text-md3-gray hover:text-theme-text")}
             >
               Kinetika
             </button>
             <button 
               onClick={() => setChartType('effects')}
-              className={cn("px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all", chartType === 'effects' ? "bg-[#ff9f0a] text-white shadow-md" : "text-md3-gray hover:text-theme-text")}
+              className={cn("px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", chartType === 'effects' ? "bg-[#ff9f0a]/90 text-white shadow-md backdrop-blur-md" : "text-md3-gray hover:text-theme-text")}
             >
               Účinky
             </button>
           </div>
         </div>
         
-        <div className="absolute inset-x-0 bottom-0 top-[40px] w-full">
+        {/* Soft elegant mask for the chart - starts lower to avoid overlapping with header buttons */}
+        <div className="absolute inset-x-0 bottom-0 top-[20px] w-full opacity-[0.85] transition-opacity duration-1000 -z-10" style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 70%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 70%, transparent 100%)' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ left: -25, right: -10, top: 20, bottom: -10 }}>
+            <AreaChart data={chartData} margin={{ left: -25, right: -10, top: 40, bottom: -20 }}>
               <defs>
                 {chartType === 'kinetic' ? (
                   substances.map(s => (
                     <linearGradient key={s.id} id={`color-${s.id}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={s.color || CATEGORY_COLORS[s.category] || '#0a84ff'} stopOpacity={0.4}/>
+                      <stop offset="5%" stopColor={s.color || CATEGORY_COLORS[s.category] || '#0a84ff'} stopOpacity={0.5}/>
                       <stop offset="95%" stopColor={s.color || CATEGORY_COLORS[s.category] || '#0a84ff'} stopOpacity={0}/>
                     </linearGradient>
                   ))
                 ) : (
                   Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
                     <linearGradient key={type} id={`color-effect-${type}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0.4}/>
+                      <stop offset="5%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0.5}/>
                       <stop offset="95%" stopColor={EFFECT_COLORS[type] || '#ff9f0a'} stopOpacity={0}/>
                     </linearGradient>
                   ))
                 )}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--md3-border)" vertical={false} opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--md3-border)" vertical={false} opacity={0.2} />
               <XAxis 
                 dataKey="time" 
                 type="number" 
@@ -506,7 +512,7 @@ export default function Dashboard({
                 width={0}
               />
               <Tooltip 
-                contentStyle={{ backgroundColor: 'var(--md3-card)', border: '1px solid var(--md3-border)', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: '9px', color: 'var(--md3-text)', fontWeight: '900', padding: '4px' }}
+                contentStyle={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.8)', backdropFilter: 'blur(10px)', border: '1px solid var(--md3-border)', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: '9px', color: 'var(--md3-text)', fontWeight: '900', padding: '6px' }}
                 itemStyle={{ padding: '0' }}
                 labelFormatter={(time) => formatTime(time, settings)}
                 formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
@@ -540,101 +546,83 @@ export default function Dashboard({
         </div>
       </section>
 
-      <div className="flex flex-col gap-3 mt-3">
-        {/* Insight Engine Mini */}
-        {settings.insightEngine && (() => {
-          if (doses.length < 5) return null;
-          const sortedDosesDesc = [...doses].sort((a, b) => b.timestamp - a.timestamp);
-          const recentDoses = sortedDosesDesc.slice(0, Math.min(10, doses.length));
-          
-          let insightMessage = "Všechny vitální funkce systému i vzorce užívání se zdají stabilní.";
-          let alertColor = "text-md3-gray";
-          let alertBg = "bg-theme-subtle";
-          let borderColor = "border-theme-border";
-          let IconCmp = Cpu;
-          
-          if (recentDoses.length >= 5) {
-             const span = recentDoses[0].timestamp - recentDoses[recentDoses.length - 1].timestamp;
-             if (span > 0) {
-                const hourRate = recentDoses.length / (span / 3600000);
-                if (hourRate > 1) { 
-                   insightMessage = "Rozpoznána zvýšená zátěž! Intervaly mezi dávkami jsou extrémně krátké.";
-                   alertColor = "text-red-500";
-                   alertBg = "bg-red-500/10";
-                   borderColor = "border-red-500/30";
-                   IconCmp = AlertCircle;
-                } else if (hourRate > 0.4) {
-                   insightMessage = "Zvýšená frekvence užívání. Dejte tělu čas na zpracování.";
-                   alertColor = "text-amber-500";
-                   alertBg = "bg-amber-500/10";
-                   borderColor = "border-amber-500/30";
-                   IconCmp = Activity;
-                }
-             }
-          }
+      {/* Insight Engine Mini */}
+      {settings.insightEngine && (() => {
+        if (doses.length < 5) return null;
+        const sortedDosesDesc = [...doses].sort((a, b) => b.timestamp - a.timestamp);
+        const recentDoses = sortedDosesDesc.slice(0, Math.min(10, doses.length));
+        
+        let insightMessage = "Všechny vitální funkce systému i vzorce užívání se zdají stabilní.";
+        let alertColor = "text-md3-gray";
+        let alertBg = "bg-theme-subtle/50";
+        let borderColor = "border-theme-border/50";
+        let IconCmp = Cpu;
+        
+        if (recentDoses.length >= 5) {
+           const span = recentDoses[0].timestamp - recentDoses[recentDoses.length - 1].timestamp;
+           if (span > 0) {
+              const hourRate = recentDoses.length / (span / 3600000);
+              if (hourRate > 1) { 
+                 insightMessage = "Rozpoznána zvýšená zátěž! Intervaly mezi dávkami jsou extrémně krátké.";
+                 alertColor = "text-red-500";
+                 alertBg = "bg-red-500/10";
+                 borderColor = "border-red-500/30";
+                 IconCmp = AlertCircle;
+              } else if (hourRate > 0.4) {
+                 insightMessage = "Zvýšená frekvence užívání. Dejte tělu čas na zpracování.";
+                 alertColor = "text-amber-500";
+                 alertBg = "bg-amber-500/10";
+                 borderColor = "border-amber-500/30";
+                 IconCmp = Activity;
+              }
+           }
+        }
 
-          const cleanHours = Math.floor((currentTime.getTime() - (sortedDosesDesc[0]?.timestamp || 0)) / 3600000);
+        const cleanHours = Math.floor((currentTime.getTime() - (sortedDosesDesc[0]?.timestamp || 0)) / 3600000);
 
-          if (activeSubstanceDetails.length === 0 && cleanHours > 48) {
-              insightMessage = `Tělo přes ${cleanHours}h na perfektní vyčištění. Neurotransmitery obnoveny.`;
-              alertColor = "text-emerald-500";
-              alertBg = "bg-emerald-500/10";
-              borderColor = "border-emerald-500/30";
-              IconCmp = Sparkles;
-          } else if (activeSubstanceDetails.length === 0 && cleanHours > 24) {
-              insightMessage = "Systém odpočívá. 24h cyklus dokončen, doporučena hydratace.";
-              alertColor = "text-cyan-primary";
-              alertBg = "bg-cyan-primary/10";
-              borderColor = "border-cyan-primary/30";
-              IconCmp = Brain;
-          }
-          
-          return (
-             <div className={cn("rounded-[1rem] p-3 flex gap-3 items-center w-full min-h-[48px] shadow-sm border", alertBg, borderColor)}>
-               <IconCmp size={16} className={alertColor} />
-               <div className="text-[10px] sm:text-xs font-bold text-theme-text leading-tight w-full flex justify-between items-center">
-                 <span>{insightMessage}</span>
+        if (activeSubstanceDetails.length === 0 && cleanHours > 48) {
+            insightMessage = `Tělo přes ${cleanHours}h čisté. Neurotransmitery obnoveny.`;
+            alertColor = "text-emerald-500";
+            alertBg = "bg-emerald-500/10";
+            borderColor = "border-emerald-500/30";
+            IconCmp = Sparkles;
+        } else if (activeSubstanceDetails.length === 0 && cleanHours > 24) {
+            insightMessage = "Systém odpočívá. Doporučena hydratace.";
+            alertColor = "text-cyan-primary";
+            alertBg = "bg-cyan-primary/10";
+            borderColor = "border-cyan-primary/30";
+            IconCmp = Brain;
+        }
+        
+        return (
+           <div className={cn("shrink-0 rounded-3xl py-3 px-4 flex gap-3.5 items-center w-full shadow-sm border backdrop-blur-xl transition-all relative overflow-hidden group", alertBg, borderColor)}>
+             <div className="absolute inset-0 bg-gradient-to-r from-white/[0.03] to-transparent pointer-events-none group-hover:from-white/[0.06] transition-colors" />
+             <div className={cn("p-2 rounded-2xl shrink-0 shadow-inner relative z-10", alertBg.replace('/10', '/30').replace('/50', '/40'))}>
+                <IconCmp size={18} className={alertColor} strokeWidth={2.5} />
+             </div>
+             <div className="flex flex-col relative z-10 w-full min-w-0">
+               <span className="text-[9px] font-bold text-md3-gray uppercase tracking-widest leading-none mb-1">Insight Engine</span>
+               <div className="text-[12px] font-semibold text-theme-text leading-tight w-full truncate">
+                 {insightMessage}
                </div>
              </div>
-          );
-        })()}
+           </div>
+        );
+      })()}
 
-        {/* Today's Stats per Substance */}
-        {dailyStats.length > 0 && (
-          <div className="bg-theme-bg/80 backdrop-blur-md rounded-[1.5rem] border border-theme-border p-3 shadow-sm flex gap-2 overflow-x-auto custom-scrollbar snap-x snap-mandatory hide-scroll-indicator">
-            {dailyStats.map((stat, idx) => {
-              const IconComp = SUBSTANCE_ICONS[stat.icon] || Pill;
-              return (
-                <div key={idx} className="bg-theme-card border border-theme-border rounded-xl p-3 min-w-[140px] flex-shrink-0 snap-center flex flex-col justify-between shadow-sm relative overflow-hidden" style={{ borderLeftColor: stat.color, borderLeftWidth: '3px' }}>
-                  <div className="flex gap-2 items-center mb-2 relative z-10">
-                    <div className="w-6 h-6 rounded-md flex justify-center items-center opacity-80" style={{ backgroundColor: stat.color + '20', color: stat.color }}>
-                      <IconComp size={12} strokeWidth={2.5}/>
-                    </div>
-                    <span className="text-[10px] uppercase tracking-widest font-black text-md3-gray truncate">{stat.name}</span>
-                  </div>
-                  <div className="relative z-10">
-                    <div className="text-xl font-black text-theme-text leading-none">{stat.amount} {stat.unit}</div>
-                    {!settings.privacyMode && stat.cost > 0 && (
-                      <div className="text-[10px] font-bold text-md3-green mt-1">Dnes: {stat.cost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}</div>
-                    )}
-                  </div>
-                  <div className="absolute right-0 bottom-0 opacity-5" style={{ color: stat.color }}>
-                    <IconComp size={64} style={{ transform: 'translate(20%, 20%)' }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        
+      {/* Dynamic Compact Display Row */}
+      <div className="flex gap-2.5 shrink-0 w-full relative z-10 px-0.5">
         {/* Active Substance Monitor & Recent */}
         {settings.dashboardWidgets?.activeEffects !== false && (
-          <section className="bg-theme-card/80 backdrop-blur-md rounded-[1.5rem] border border-theme-border p-3.5 shadow-sm w-full">
-            <div className="flex items-center justify-between mb-2.5 opacity-90">
-              <span className="text-[11px] font-black text-md3-gray uppercase tracking-widest pl-1">V Krvi / Nedávné</span>
-              <span className="text-[11px] font-black text-md3-primary bg-md3-primary/10 px-2.5 py-0.5 rounded-md">{activeSubstanceDetails.length}</span>
+          <section className="bg-theme-card/30 backdrop-blur-2xl rounded-[1.8rem] border border-theme-border/30 shadow-sm w-1/2 flex flex-col relative group hover:bg-theme-card/40 transition-colors">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none rounded-[1.8rem]" />
+            <div className="flex items-center justify-between opacity-90 px-3.5 pt-3 mb-2 shrink-0 z-10">
+              <span className="text-[10px] font-bold text-md3-gray uppercase tracking-widest flex items-center gap-1.5">
+                <Activity size={12} className="text-md3-primary/80" /> Historie
+              </span>
+              <span className="text-[10px] font-black tabular-nums text-md3-primary bg-md3-primary/15 px-2 py-0.5 rounded-lg text-center min-w-[24px] tracking-wide">{activeSubstanceDetails.length}</span>
             </div>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2 px-2.5 pb-2.5 z-10">
               {(() => {
                 // Combine active substances and recently used inactive substances (last 48hours)
                 const now = currentTime.getTime();
@@ -662,9 +650,9 @@ export default function Dashboard({
 
                 if (displayItems.length === 0) {
                   return (
-                    <div className="bg-theme-subtle border border-theme-border/50 rounded-xl p-4 flex flex-row justify-center items-center gap-2 opacity-70">
-                      <Activity size={18} className="text-md3-gray" />
-                      <span className="text-xs uppercase font-black tracking-widest text-md3-gray">Žádná historie</span>
+                    <div className="bg-theme-bg/30 border border-theme-border/20 rounded-2xl p-2 flex flex-col justify-center items-center gap-1.5 opacity-60 h-full mt-1">
+                      <ShieldCheck size={16} className="text-emerald-400/70" />
+                      <span className="text-[10px] font-semibold tracking-wider text-md3-gray">Systém čistý</span>
                     </div>
                   );
                 }
@@ -673,7 +661,6 @@ export default function Dashboard({
                   const Icon = SUBSTANCE_ICONS[substance!.icon] || Zap;
                   const color = inactive ? '#8e8e93' : (substance!.color || CATEGORY_COLORS[substance!.category] || '#0a84ff');
                   
-                  // Find last used dose for this substance
                   const lastDose = doses.filter(d => d.substanceId === substance!.id).sort((a,b) => b.timestamp - a.timestamp)[0];
                   const lastDoseDate = lastDose ? new Date(lastDose.timestamp) : null;
                   let lastUsedText = '';
@@ -683,7 +670,7 @@ export default function Dashboard({
                      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                      if (diffHrs === 0) lastUsedText = `${diffMins}m`;
                      else if (diffHrs < 24) lastUsedText = `${diffHrs}h ${diffMins}m`;
-                     else lastUsedText = `${lastDoseDate.getDate()}.${lastDoseDate.getMonth() + 1}. v ${lastDoseDate.getHours()}:${lastDoseDate.getMinutes().toString().padStart(2, '0')}`;
+                     else lastUsedText = `${diffHrs}h`;
                   }
 
                   return (
@@ -692,32 +679,21 @@ export default function Dashboard({
                       onClick={() => !inactive && setSelectedDetailsId(substance!.id)}
                       disabled={inactive}
                       className={cn(
-                        "flex flex-col border border-theme-border/50 rounded-[14px] p-3 w-full transition-colors shadow-sm group",
-                        inactive ? "bg-theme-bg/30 opacity-70" : "bg-theme-subtle hover:bg-theme-subtle-hover"
+                        "flex items-center gap-2.5 border border-theme-border/30 rounded-xl p-2 w-full transition-all shadow-sm group relative overflow-hidden shrink-0",
+                        inactive ? "bg-theme-bg/10 opacity-70" : "bg-theme-subtle hover:bg-theme-bg"
                       )}
                     >
-                      <div className="flex items-center gap-3 w-full">
-                        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-theme-bg shrink-0 shadow-inner group-hover:scale-[1.03] transition-transform relative overflow-hidden">
-                          <div className="absolute inset-0 opacity-10" style={{ backgroundColor: color }} />
-                          <Icon size={20} style={{ color }} />
-                        </div>
-                        <div className="flex flex-col flex-1 text-left justify-center">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className={cn("text-[13px] font-black uppercase tracking-wider", inactive ? "text-md3-gray" : "text-theme-text")}>{substance!.name}</span>
-                            {!inactive && <span className="text-xs font-black tabular-nums bg-theme-bg px-2 py-0.5 rounded shadow-sm" style={{ color }}>{level.toFixed(0)}%</span>}
-                            {inactive && <span className="text-[9px] font-black uppercase tracking-widest text-md3-gray px-2 py-0.5">Nulová hladina</span>}
-                          </div>
-                          <span className="text-[10px] font-bold text-md3-gray uppercase tracking-widest leading-none">
-                            {lastUsedText && `Užito: ${lastUsedText}`}
-                          </span>
-                        </div>
+                      {!inactive && <div className="absolute left-0 bottom-0 top-0 opacity-[0.08]" style={{backgroundColor: color, width: `${level}%`}} />}
+                      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-theme-bg shrink-0 shadow-inner group-hover:scale-[1.05] transition-transform relative z-10 backdrop-blur-sm border border-white/5">
+                        <Icon size={14} style={{ color }} strokeWidth={2} />
                       </div>
-                      {/* Level Bar */}
-                      {!inactive && (
-                        <div className="w-full h-2 bg-theme-bg/50 rounded-full overflow-hidden shadow-inner mt-3">
-                          <motion.div animate={{ width: `${level}%` }} className="h-full rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 10px ${color}` }} transition={{ duration: 1 }} />
+                      <div className="flex flex-col flex-1 text-left justify-center overflow-hidden relative z-10">
+                        <div className="flex justify-between items-center w-full">
+                           <span className={cn("text-[11px] font-bold tracking-wide truncate mr-1", inactive ? "text-md3-gray" : "text-theme-text")}>{substance!.name}</span>
+                           {!inactive && <span className="text-[10px] font-bold tabular-nums leading-none ml-1 px-1.5 py-0.5 rounded bg-theme-bg/50 backdrop-blur-md" style={{ color }}>{level.toFixed(0)}%</span>}
                         </div>
-                      )}
+                        {inactive && <span className="text-[9px] font-medium text-md3-gray leading-none mt-1 truncate">{lastUsedText && `Poslední: ${lastUsedText}`}</span>}
+                      </div>
                     </button>
                   );
                 });
@@ -726,20 +702,64 @@ export default function Dashboard({
           </section>
         )}
 
-        {/* Quick Actions */}
-        {settings.dashboardWidgets?.quickAdd !== false && (
-          <section className="w-full bg-theme-card/80 backdrop-blur-md rounded-[1.5rem] border border-theme-border p-3 shadow-sm mb-2">
-            <QuickActions 
-              shortcuts={shortcuts}
-              substances={substances}
-              onUseShortcut={onUseShortcut}
-              onAddShortcut={onAddShortcut}
-              onRemoveShortcut={onRemoveShortcut}
-              onUpdateShortcut={onUpdateShortcut}
-            />
-          </section>
-        )}
+        {/* Today's Stats per Substance */}
+        <section className="bg-theme-card/30 backdrop-blur-2xl rounded-[1.8rem] border border-theme-border/30 shadow-sm flex flex-col w-1/2 relative group hover:bg-theme-card/40 transition-colors">
+          <div className="absolute inset-0 bg-gradient-to-bl from-white/[0.03] to-transparent pointer-events-none rounded-[1.8rem]" />
+          <div className="flex items-center justify-between opacity-90 px-3.5 pt-3 mb-2 shrink-0 z-10">
+            <span className="text-[10px] font-bold text-md3-gray uppercase tracking-widest flex items-center gap-1.5">
+              <Pill size={12} className="text-md3-primary/80" /> Denní Souhrn
+            </span>
+          </div>
+          <div className="flex flex-col gap-2 px-2.5 pb-2.5 z-10">
+            {dailyStats.length > 0 ? (
+              dailyStats.map((stat, idx) => {
+                const IconComp = SUBSTANCE_ICONS[stat.icon] || Pill;
+                return (
+                  <div key={idx} className="bg-theme-bg/30 border border-theme-border/30 rounded-xl p-2 flex items-center shadow-sm relative overflow-hidden shrink-0" style={{ borderLeftColor: stat.color, borderLeftWidth: '3px' }}>
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none" style={{ color: stat.color }}>
+                       <IconComp size={48} />
+                    </div>
+                    <div className="w-8 h-8 rounded-lg flex justify-center items-center opacity-90 shrink-0 mr-2.5 z-10 backdrop-blur-md" style={{ backgroundColor: stat.color + '15', color: stat.color }}>
+                      <IconComp size={14} strokeWidth={2}/>
+                    </div>
+                    <div className="flex flex-col overflow-hidden z-10 w-full justify-center">
+                      <div className="flex justify-between items-center w-full">
+                        <span className="text-[10px] font-bold tracking-wide text-md3-gray truncate mr-1">{stat.name}</span>
+                        <span className="text-[11px] font-bold text-theme-text leading-none whitespace-nowrap ml-1">{stat.amount}<span className="text-[9px] text-md3-gray ml-0.5">{stat.unit}</span></span>
+                      </div>
+                      {!settings.privacyMode && stat.cost > 0 && (
+                        <div className="text-[9px] font-semibold text-md3-green mt-1 truncate tracking-wide">{stat.cost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+               <div className="bg-theme-bg/30 border border-theme-border/20 rounded-2xl p-4 flex flex-col justify-center items-center opacity-60 mt-1 min-h-[80px]">
+                  <Coffee size={16} className="text-md3-gray mb-1.5" />
+                  <span className="text-[10px] font-semibold tracking-wider text-md3-gray text-center leading-tight">Dnes zatím<br/>žádné dávky</span>
+               </div>
+            )}
+          </div>
+        </section>
       </div>
+      
+      {/* Quick Actions */}
+      {settings.dashboardWidgets?.quickAdd !== false && (
+        <section className="w-full shrink-0 relative z-20 mt-2 mb-4 px-1">
+          <QuickActions 
+            shortcuts={shortcuts}
+            substances={substances}
+            onUseShortcut={onUseShortcut}
+            onAddShortcut={onAddShortcut}
+            onRemoveShortcut={onRemoveShortcut}
+            onUpdateShortcut={onUpdateShortcut}
+          />
+        </section>
+      )}
+      
+      {/* Keep the padding at the bottom of the column for spacing */}
+      <div className="h-2 shrink-0"></div>
 
       {/* Substance Details Modal - Glassmorphism */}
       <AnimatePresence>
@@ -770,8 +790,8 @@ export default function Dashboard({
                           <Activity size={24} style={{ color: substance!.color || '#00d1ff' }} />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold text-theme-text">{substance!.name}</h3>
-                          <div className="text-xs text-md3-gray font-bold uppercase tracking-widest">Biometrická Analýza</div>
+                          <h3 className="text-xl font-bold tracking-tight text-theme-text">{substance!.name}</h3>
+                          <div className="text-[10px] text-md3-gray font-semibold uppercase tracking-wider mt-0.5">Biometrická Analýza</div>
                         </div>
                       </div>
                       <button 
@@ -783,13 +803,15 @@ export default function Dashboard({
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-6">
-                      <div className="bg-theme-subtle rounded-2xl p-4 border border-theme-border">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Hladina</div>
-                        <div className="text-xl font-bold text-md3-primary">{level.toFixed(2)}%</div>
+                      <div className="bg-theme-bg/30 rounded-3xl p-5 border border-theme-border/50 relative overflow-hidden group">
+                        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-md3-primary/10 rounded-full blur-2xl group-hover:bg-md3-primary/20 transition-colors"></div>
+                        <div className="text-[10px] font-semibold text-md3-gray uppercase tracking-wider mb-2 relative z-10">Hladina</div>
+                        <div className="text-3xl font-bold text-md3-primary tracking-tight relative z-10">{level.toFixed(2)}<span className="text-lg opacity-80">%</span></div>
                       </div>
-                      <div className="bg-theme-subtle rounded-2xl p-4 border border-theme-border">
-                        <div className="text-xs font-bold text-md3-gray uppercase tracking-widest mb-1">Tolerance</div>
-                        <div className="text-xl font-bold text-md3-orange">{tolerance.toFixed(2)}%</div>
+                      <div className="bg-theme-bg/30 rounded-3xl p-5 border border-theme-border/50 relative overflow-hidden group">
+                        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-md3-orange/10 rounded-full blur-2xl group-hover:bg-md3-orange/20 transition-colors"></div>
+                        <div className="text-[10px] font-semibold text-md3-gray uppercase tracking-wider mb-2 relative z-10">Tolerance</div>
+                        <div className="text-3xl font-bold text-md3-orange tracking-tight relative z-10">{tolerance.toFixed(2)}<span className="text-lg opacity-80">%</span></div>
                       </div>
                     </div>
 
@@ -799,12 +821,12 @@ export default function Dashboard({
                         { icon: Zap, label: 'Nástup účinku', value: `${substance!.onset}m` },
                         { icon: Activity, label: 'Doba trvání', value: `${substance!.duration}h` }
                       ].map((row, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-theme-subtle rounded-xl border border-theme-border">
-                          <div className="flex items-center gap-2">
-                            <row.icon size={14} className="text-md3-gray" />
-                            <span className="text-xs font-bold text-md3-gray">{row.label}</span>
+                        <div key={i} className="flex items-center justify-between px-4 py-3 bg-theme-bg/30 rounded-2xl border border-theme-border/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-2.5">
+                            <row.icon size={16} className="text-md3-gray/70" />
+                            <span className="text-sm font-medium text-md3-gray">{row.label}</span>
                           </div>
-                          <span className="text-xs font-bold text-theme-text">{row.value}</span>
+                          <span className="text-sm font-semibold tracking-wide text-theme-text">{row.value}</span>
                         </div>
                       ))}
                     </div>
