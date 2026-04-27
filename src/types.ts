@@ -233,6 +233,7 @@ export interface UserSettings {
   predictiveAnalytics?: boolean;
   insightEngine?: boolean;
   correlationSensitivity?: number;
+  correlationBinCount?: number;
   predictionAlgorithm?: 'basic' | 'exponential' | 'ml_simulated' | 'ai_groq';
   taperingPlanEnabled?: boolean;
   activeTaperingPlan?: TaperingPlan | null;

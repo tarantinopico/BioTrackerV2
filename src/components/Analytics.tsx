@@ -2768,7 +2768,7 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
             {(() => {
               const getSubName = (sid: string) => substances.find(s => s.id === sid)?.name || sid;
               const getSubUnit = (sid: string) => substances.find(s => s.id === sid)?.unit || '';
-              const correlationData = generateCorrelations(filteredDoses, getSubName, getSubUnit, settings.correlationSensitivity);
+              const correlationData = generateCorrelations(filteredDoses, getSubName, getSubUnit, settings.correlationSensitivity, settings.correlationBinCount || 5);
               const coords = correlationData.substanceCorrelations;
               const crossCoords = correlationData.crossCorrelations;
               
@@ -2845,12 +2845,12 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                         )}
                         
                         {corr.firstDoseVsDailyTotalBins.length > 0 && (
-                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border lg:col-span-2">
-                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Velikost 1. Denní Dávky vs. Celková Spotřeba (Dne)</h4>
-                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-theme-text">
-                               {corr.trendFirstDose === 'positive' && <span className="text-red-500">↗ Větší ranní dávka = Větší celková denní útrata</span>}
-                               {corr.trendFirstDose === 'negative' && <span className="text-emerald-500">↘ Větší ranní dávka = Menší celková denní útrata</span>}
-                               {corr.trendFirstDose === 'neutral' && <span className="text-md3-gray">→ Žádná silná korelace</span>}
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">1. Denní Dávka vs. Celková Spotřeba denní</h4>
+                            <div className="flex items-center gap-2 mb-4 text-[10px] font-bold text-theme-text">
+                               {corr.trendFirstDose === 'positive' && <span className="text-red-500">↗ Větší první dávka = Větší celková útrata</span>}
+                               {corr.trendFirstDose === 'negative' && <span className="text-emerald-500">↘ Větší první dávka = Menší celková útrata</span>}
+                               {corr.trendFirstDose === 'neutral' && <span className="text-md3-gray">→ Žádná korelace</span>}
                             </div>
                             <div className="h-40 w-full">
                               <ResponsiveContainer width="100%" height="100%">
@@ -2863,7 +2863,97 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                                     contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
                                     formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná celková denní spotřeba']}
                                   />
-                                  <Bar dataKey="avgY" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={60} />
+                                  <Bar dataKey="avgY" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+
+                        {corr.streakVsDoseBins && corr.streakVsDoseBins.length > 0 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Délka Série vs Denní Spotřeba</h4>
+                            <div className="flex items-center gap-2 mb-4 text-[10px] font-bold text-theme-text">
+                               <span className="text-blue-500">Vizualizace vývoje tolerance v sérii.</span>
+                            </div>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={corr.streakVsDoseBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}${corr.unit || ''}`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná spotřeba po X dnech v serií']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+
+                        {corr.intraDayDoseIndexBins && corr.intraDayDoseIndexBins.length > 0 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Vývoj tolerance v průběhu dne</h4>
+                            <div className="flex items-center gap-2 mb-4 text-[10px] font-bold text-theme-text">
+                               <span className="text-purple-500">Pořadí dávky vs Její velikost.</span>
+                            </div>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={corr.intraDayDoseIndexBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}${corr.unit || ''}`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná dávka']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#9333ea" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+
+                        {corr.timeOfDayVsDoseBins && corr.timeOfDayVsDoseBins.length > 0 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border lg:col-span-2">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Denní doba vs Velikost jedné dávky</h4>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={corr.timeOfDayVsDoseBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}${corr.unit || ''}`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná velikost dávky']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {corr.dayOfWeekVsTotalBins && corr.dayOfWeekVsTotalBins.length > 0 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border lg:col-span-2">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Dny v týdnu vs Celková denní spotřeba</h4>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={corr.dayOfWeekVsTotalBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}${corr.unit || ''}`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná spotřeba v tento den']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#14b8a6" radius={[4, 4, 0, 0]} barSize={40} />
                                 </BarChart>
                               </ResponsiveContainer>
                             </div>

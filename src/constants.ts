@@ -799,6 +799,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   "predictiveAnalytics": true,
   "insightEngine": false,
   "correlationSensitivity": 50,
+  "correlationBinCount": 5,
   "interactionWarnings": true,
   "doseWarnings": true,
   "reminders": false,

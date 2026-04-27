@@ -32,7 +32,8 @@ import {
   Brain,
   Code,
   Terminal,
-  Sliders
+  Sliders,
+  BarChart2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -788,6 +789,23 @@ export default function Settings({
                         className="flex-1 accent-md3-primary"
                       />
                       <div className="text-sm font-black text-md3-primary min-w-[3rem] text-right">{settings.correlationSensitivity ?? 50}%</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mt-4 pt-4 border-t border-theme-border">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1 flex items-center gap-2">
+                       <BarChart2 size={14} className="text-md3-primary" /> Detail grafů korelací
+                    </label>
+                    <p className="text-[10px] text-md3-gray ml-1 mb-2">Jak moc podrobné rozdělení sloupců v grafech korelací (2 až 10 skupin).</p>
+                    <div className="flex items-center gap-4 bg-theme-subtle p-4 rounded-xl border border-theme-border">
+                      <input 
+                        type="range" 
+                        min="2" max="10" step="1"
+                        value={settings.correlationBinCount ?? 5} 
+                        onChange={e => updateSetting('correlationBinCount', parseInt(e.target.value))}
+                        className="flex-1 accent-md3-primary"
+                      />
+                      <div className="text-sm font-black text-md3-primary min-w-[3rem] text-right">{settings.correlationBinCount ?? 5} skupin</div>
                     </div>
                   </div>
 
