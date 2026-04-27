@@ -36,8 +36,10 @@ import {
   Brain,
   Dna,
   Timer,
-  Loader2
+  Loader2,
+  Network
 } from 'lucide-react';
+import { generateCorrelations } from '../lib/correlationAnalytics';
 import { 
   BarChart, 
   Bar, 
@@ -1018,6 +1020,18 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
         >
           <Target size={16} />
           Zvyky
+        </button>
+        <button
+          onClick={() => setOverviewTab('correlations')}
+          className={cn(
+            "flex-1 min-w-max flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all whitespace-nowrap",
+            overviewTab === 'correlations' 
+              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" 
+              : "text-md3-gray/60 hover:text-md3-gray/90"
+          )}
+        >
+          <Network size={16} className={overviewTab === 'correlations' ? 'text-purple-400' : 'text-purple-500'} />
+          Korelace
         </button>
         {settings.taperingPlanEnabled && (
           <button
@@ -2740,6 +2754,142 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                  </div>
                )}
             </div>
+          </motion.div>
+        )}
+
+        {overviewTab === 'correlations' && (
+          <motion.div
+            key="correlations"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="space-y-6 relative z-10 pb-24"
+          >
+            {(() => {
+              const getSubName = (sid: string) => substances.find(s => s.id === sid)?.name || sid;
+              const correlationData = generateCorrelations(filteredDoses, getSubName, settings.correlationSensitivity);
+              const coords = correlationData.substanceCorrelations;
+              const crossCoords = correlationData.crossCorrelations;
+              
+              if (coords.length === 0 && crossCoords.length === 0) {
+                 return (
+                    <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-6 text-center text-md3-gray">
+                      Nemám dostatek posobných dat pro výpočet korelací.
+                    </div>
+                 );
+              }
+
+              return (
+                <div className="space-y-6">
+                  {coords.map(corr => (
+                    <section key={corr.substanceId} className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-6 relative overflow-hidden">
+                      <div className="absolute right-0 top-0 w-32 h-32 bg-purple-500/10 blur-[40px] rounded-full pointer-events-none" />
+                      
+                      <div className="flex flex-col gap-2 mb-6 border-b border-theme-border/50 pb-4 relative z-10">
+                        <h3 className="text-sm font-black text-theme-text uppercase tracking-widest">{corr.substanceName}</h3>
+                        <p className="text-[10px] uppercase font-bold text-md3-gray">Přiřazené Korelační Modely</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
+                        {corr.gapVsDoseSize.length > 2 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Vliv Délky Pauzy Na Velikost Dávky</h4>
+                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-theme-text">
+                               {corr.trendGapVsDose === 'positive' && <span className="text-red-500">↗ Delší pauza = Větší dávka</span>}
+                               {corr.trendGapVsDose === 'negative' && <span className="text-emerald-500">↘ Delší pauza = Menší dávka</span>}
+                               {corr.trendGapVsDose === 'neutral' && <span className="text-md3-gray">→ Žádná silná korelace</span>}
+                            </div>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis type="number" dataKey="x" name="Pauza" unit="h" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis type="number" dataKey="y" name="Dávka" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <ZAxis range={[30, 150]} />
+                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
+                                  <Scatter name="Záznam" data={corr.gapVsDoseSize} fill="#8b5cf6" />
+                                </ScatterChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+
+                        {corr.doseSizeVsNextGap.length > 2 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Vliv Velikosti Dávky Na Následnou Pauzu</h4>
+                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-theme-text">
+                               {corr.trendDoseVsNextGap === 'positive' && <span className="text-emerald-500">↗ Větší dávka = Delší zotavení (Pauza)</span>}
+                               {corr.trendDoseVsNextGap === 'negative' && <span className="text-red-500">↘ Větší dávka = Rychlá potřeba repete</span>}
+                               {corr.trendDoseVsNextGap === 'neutral' && <span className="text-md3-gray">→ Bez významné změny</span>}
+                            </div>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis type="number" dataKey="x" name="Dávka" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis type="number" dataKey="y" name="Následná pauza" unit="h" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <ZAxis range={[30, 150]} />
+                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
+                                  <Scatter name="Záznam" data={corr.doseSizeVsNextGap} fill="#10b981" />
+                                </ScatterChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {corr.firstDoseVsDailyTotal.length > 2 && (
+                          <div className="bg-theme-bg p-4 rounded-xl border border-theme-border lg:col-span-2">
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Velikost 1. Dení Dávky vs. Celková Spotřeba (Dne)</h4>
+                            <div className="h-40 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis type="number" dataKey="x" name="První dávka" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis type="number" dataKey="y" name="Následná pauza" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <ZAxis range={[40, 200]} />
+                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(val: number) => val} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
+                                  <Scatter name="Záznam denní konzumace" data={corr.firstDoseVsDailyTotal} fill="#f59e0b" />
+                                </ScatterChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  ))}
+
+                  {crossCoords.length > 0 && (
+                    <div className="space-y-6 mt-8">
+                       <h3 className="text-sm font-black text-theme-text uppercase tracking-widest pl-2 border-l-4 border-purple-500">Mezilátkové Interakce (Substituce / Křížové užívání)</h3>
+                       {crossCoords.map((cc, i) => (
+                         <section key={i} className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.12)] p-6 relative overflow-hidden">
+                           <div className="absolute right-0 top-0 w-32 h-32 bg-orange-500/10 blur-[40px] rounded-full pointer-events-none" />
+                           <div className="flex flex-col gap-2 mb-4 relative z-10">
+                              <h4 className="text-sm font-bold text-theme-text uppercase tracking-widest">{cc.substanceNameA} vs. {cc.substanceNameB}</h4>
+                              <div className="flex items-center gap-2 text-xs font-bold text-theme-text">
+                                 {cc.trend === 'positive' && <span className="text-emerald-500">↗ Společné užívání (Více = Více)</span>}
+                                 {cc.trend === 'negative' && <span className="text-blue-500">↘ Substituce (Více A = Méně B)</span>}
+                              </div>
+                           </div>
+                           <div className="h-48 w-full relative z-10">
+                             <ResponsiveContainer width="100%" height="100%">
+                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
+                                  <XAxis type="number" dataKey="x" name={cc.substanceNameA} tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis type="number" dataKey="y" name={cc.substanceNameB} tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <ZAxis range={[30, 150]} />
+                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(val: number) => val} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
+                                  <Scatter name="Denní užité množství" data={cc.points} fill="#f97316" />
+                                </ScatterChart>
+                             </ResponsiveContainer>
+                           </div>
+                         </section>
+                       ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </motion.div>
         )}
       </AnimatePresence>

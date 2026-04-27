@@ -773,6 +773,24 @@ export default function Settings({
                       </div>
                     </button>
                   ))}
+
+                  <div className="space-y-2 mt-6 pt-4 border-t border-theme-border">
+                    <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1 flex items-center gap-2">
+                       <Activity size={14} className="text-md3-primary" /> Citlivost Korelací (Non-AI Analytika)
+                    </label>
+                    <p className="text-[10px] text-md3-gray ml-1 mb-2">Nastavte citlivost pro zobrazení vzorců dávkování a pauz (0 = jen nejsilnější vazby, 100 = i velmi slabé korelace).</p>
+                    <div className="flex items-center gap-4 bg-theme-subtle p-4 rounded-xl border border-theme-border">
+                      <input 
+                        type="range" 
+                        min="1" max="100" step="1"
+                        value={settings.correlationSensitivity ?? 50} 
+                        onChange={e => updateSetting('correlationSensitivity', parseInt(e.target.value))}
+                        className="flex-1 accent-md3-primary"
+                      />
+                      <div className="text-sm font-black text-md3-primary min-w-[3rem] text-right">{settings.correlationSensitivity ?? 50}%</div>
+                    </div>
+                  </div>
+
                   <div className="space-y-2 mt-4 pt-4 border-t border-theme-border">
                     <label className="text-xs font-bold uppercase tracking-wider text-md3-gray ml-1">Predikční Algoritmus</label>
                     <div className="relative">

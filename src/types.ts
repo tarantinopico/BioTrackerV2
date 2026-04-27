@@ -232,6 +232,7 @@ export interface UserSettings {
   smartPredictions?: boolean;
   predictiveAnalytics?: boolean;
   insightEngine?: boolean;
+  correlationSensitivity?: number;
   predictionAlgorithm?: 'basic' | 'exponential' | 'ml_simulated' | 'ai_groq';
   taperingPlanEnabled?: boolean;
   activeTaperingPlan?: TaperingPlan | null;
