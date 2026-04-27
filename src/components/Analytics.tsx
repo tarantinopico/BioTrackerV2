@@ -2767,7 +2767,8 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
           >
             {(() => {
               const getSubName = (sid: string) => substances.find(s => s.id === sid)?.name || sid;
-              const correlationData = generateCorrelations(filteredDoses, getSubName, settings.correlationSensitivity);
+              const getSubUnit = (sid: string) => substances.find(s => s.id === sid)?.unit || '';
+              const correlationData = generateCorrelations(filteredDoses, getSubName, getSubUnit, settings.correlationSensitivity);
               const coords = correlationData.substanceCorrelations;
               const crossCoords = correlationData.crossCorrelations;
               
@@ -2791,30 +2792,33 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
-                        {corr.gapVsDoseSize.length > 2 && (
+                        {corr.gapVsDoseBins.length > 0 && (
                           <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
                             <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Vliv Délky Pauzy Na Velikost Dávky</h4>
                             <div className="flex items-center gap-2 mb-4 text-xs font-bold text-theme-text">
-                               {corr.trendGapVsDose === 'positive' && <span className="text-red-500">↗ Delší pauza = Větší dávka</span>}
+                               {corr.trendGapVsDose === 'positive' && <span className="text-red-500">↗ Delší pauza = Větší dávka (Ztráta tolerance)</span>}
                                {corr.trendGapVsDose === 'negative' && <span className="text-emerald-500">↘ Delší pauza = Menší dávka</span>}
                                {corr.trendGapVsDose === 'neutral' && <span className="text-md3-gray">→ Žádná silná korelace</span>}
                             </div>
                             <div className="h-40 w-full">
                               <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                <BarChart data={corr.gapVsDoseBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
-                                  <XAxis type="number" dataKey="x" name="Pauza" unit="h" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <YAxis type="number" dataKey="y" name="Dávka" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <ZAxis range={[30, 150]} />
-                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
-                                  <Scatter name="Záznam" data={corr.gapVsDoseSize} fill="#8b5cf6" />
-                                </ScatterChart>
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}${corr.unit || ''}`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná další dávka']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
                               </ResponsiveContainer>
                             </div>
                           </div>
                         )}
 
-                        {corr.doseSizeVsNextGap.length > 2 && (
+                        {corr.doseVsNextGapBins.length > 0 && (
                           <div className="bg-theme-bg p-4 rounded-xl border border-theme-border">
                             <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Vliv Velikosti Dávky Na Následnou Pauzu</h4>
                             <div className="flex items-center gap-2 mb-4 text-xs font-bold text-theme-text">
@@ -2824,32 +2828,43 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                             </div>
                             <div className="h-40 w-full">
                               <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                <BarChart data={corr.doseVsNextGapBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
-                                  <XAxis type="number" dataKey="x" name="Dávka" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <YAxis type="number" dataKey="y" name="Následná pauza" unit="h" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <ZAxis range={[30, 150]} />
-                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
-                                  <Scatter name="Záznam" data={corr.doseSizeVsNextGap} fill="#10b981" />
-                                </ScatterChart>
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}h`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} hodin`, 'Průměrná následná pauza']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+                                </BarChart>
                               </ResponsiveContainer>
                             </div>
                           </div>
                         )}
                         
-                        {corr.firstDoseVsDailyTotal.length > 2 && (
+                        {corr.firstDoseVsDailyTotalBins.length > 0 && (
                           <div className="bg-theme-bg p-4 rounded-xl border border-theme-border lg:col-span-2">
-                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Velikost 1. Dení Dávky vs. Celková Spotřeba (Dne)</h4>
+                            <h4 className="text-[10px] font-bold text-md3-gray uppercase tracking-widest mb-3">Velikost 1. Denní Dávky vs. Celková Spotřeba (Dne)</h4>
+                            <div className="flex items-center gap-2 mb-4 text-xs font-bold text-theme-text">
+                               {corr.trendFirstDose === 'positive' && <span className="text-red-500">↗ Větší ranní dávka = Větší celková denní útrata</span>}
+                               {corr.trendFirstDose === 'negative' && <span className="text-emerald-500">↘ Větší ranní dávka = Menší celková denní útrata</span>}
+                               {corr.trendFirstDose === 'neutral' && <span className="text-md3-gray">→ Žádná silná korelace</span>}
+                            </div>
                             <div className="h-40 w-full">
                               <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                <BarChart data={corr.firstDoseVsDailyTotalBins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
-                                  <XAxis type="number" dataKey="x" name="První dávka" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <YAxis type="number" dataKey="y" name="Následná pauza" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <ZAxis range={[40, 200]} />
-                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(val: number) => val} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
-                                  <Scatter name="Záznam denní konzumace" data={corr.firstDoseVsDailyTotal} fill="#f59e0b" />
-                                </ScatterChart>
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}${corr.unit || ''}`} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)} ${corr.unit || ''}`, 'Průměrná celková denní spotřeba']}
+                                  />
+                                  <Bar dataKey="avgY" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={60} />
+                                </BarChart>
                               </ResponsiveContainer>
                             </div>
                           </div>
@@ -2873,14 +2888,17 @@ Odpovídej POUZE striktně JSON objektem.`) + `\n\nHistorie (posledních max ${l
                            </div>
                            <div className="h-48 w-full relative z-10">
                              <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                                <BarChart data={cc.bins} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
                                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
-                                  <XAxis type="number" dataKey="x" name={cc.substanceNameA} tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <YAxis type="number" dataKey="y" name={cc.substanceNameB} tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
-                                  <ZAxis range={[30, 150]} />
-                                  <Tooltip cursor={{ strokeDasharray: '3 3' }} formatter={(val: number) => val} contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }} />
-                                  <Scatter name="Denní užité množství" data={cc.points} fill="#f97316" />
-                                </ScatterChart>
+                                  <XAxis dataKey="label" tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <YAxis tick={{ fill: '#8e8e93', fontSize: 10, fontWeight: 800 }} axisLine={false} tickLine={false} />
+                                  <Tooltip 
+                                    cursor={{ fill: 'rgba(150,150,150,0.05)' }} 
+                                    contentStyle={{ backgroundColor: 'var(--md3-card)', borderColor: 'var(--md3-border)', borderRadius: '12px', fontSize: '10px' }}
+                                    formatter={(value: number) => [`${value.toFixed(1)}`, `Průměrné užití ${cc.substanceNameB}`]}
+                                  />
+                                  <Bar dataKey="avgY" fill="#f97316" radius={[4, 4, 0, 0]} barSize={50} />
+                                </BarChart>
                              </ResponsiveContainer>
                            </div>
                          </section>
