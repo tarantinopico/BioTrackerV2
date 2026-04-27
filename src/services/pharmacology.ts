@@ -99,7 +99,8 @@ export function calculateDoseLevel(
   if (hoursSinceDose < 0) return 0;
 
   const amount = dose.amount;
-  const bioavailability = (substance.bioavailability / 100) * (dose.bioavailabilityMultiplier || 1);
+  const globalBio = settings?.bioavailabilityGlobalMultiplier ?? 1.0;
+  const bioavailability = (substance.bioavailability / 100) * (dose.bioavailabilityMultiplier || 1) * globalBio;
   
   const intensityMult = settings?.peakIntensityMultiplier ?? 1.0;
   const decayRate = settings?.doseDecayRate ?? 1.0;
@@ -111,7 +112,9 @@ export function calculateDoseLevel(
 
   const metabolismMult = getMetabolismMultiplier(settings);
   const halfLifeMult = getHalfLifeMultiplier(settings);
-  const tmax = ((substance.tmax * (dose.tmaxMultiplier || 1)) / metabolismMult) * decayRate;
+  
+  const globalTmax = settings?.tmaxGlobalMultiplier ?? 1.0;
+  const tmax = ((substance.tmax * (dose.tmaxMultiplier || 1) * globalTmax) / metabolismMult) * decayRate;
   const halfLife = ((substance.halfLife / metabolismMult) * halfLifeMult) * decayRate;
 
   const curveType = substance.metabolismCurve || 'standard';

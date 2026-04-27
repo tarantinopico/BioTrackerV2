@@ -420,49 +420,63 @@ export default function App() {
     showToast('CSV exportováno', 'success');
   };
 
+  const handleExportText = () => {
+    const data = { substances, doses, settings, customEffects, exportDate: new Date().toISOString(), version: '2.0' };
+    return JSON.stringify(data);
+  };
+
+  const processImportData = (rawText: string) => {
+    try {
+      const data = JSON.parse(rawText);
+      if (data.substances) setSubstances(data.substances);
+      if (data.doses) {
+        const migratedDoses = data.doses.map((d: any) => {
+          let ts = d.timestamp;
+          if (typeof ts === 'string') {
+            if (/^\d+$/.test(ts)) {
+              ts = parseInt(ts, 10);
+            } else {
+              ts = new Date(ts).getTime();
+            }
+          } else if (ts instanceof Date) {
+            ts = ts.getTime();
+          }
+          if (typeof ts !== 'number' || isNaN(ts)) {
+            ts = Date.now();
+          }
+          
+          let subId = d.substanceId;
+          if (subId === 'kratom') subId = 'substance_1774623139275';
+          if (subId === 'nikotin' || subId === 'nicotine') subId = 'substance_1774626436230';
+
+          return { 
+            ...d, 
+            substanceId: subId,
+            timestamp: ts,
+            amount: typeof d.amount === 'string' ? parseFloat(d.amount) : (d.amount || 0)
+          };
+        });
+        setDoses(migratedDoses);
+      }
+      if (data.settings) setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
+      if (data.customEffects) setCustomEffects(data.customEffects);
+      showToast('Data byla úspěšně obnovena', 'success');
+    } catch (err) {
+      console.error('Import error:', err);
+      showToast('Chyba při čtení dat', 'error');
+    }
+  };
+
+  const handleImportText = (text: string) => {
+    processImportData(text);
+  };
+
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
-      try {
-        const data = JSON.parse(event.target?.result as string);
-        if (data.substances) setSubstances(data.substances);
-        if (data.doses) {
-          const migratedDoses = data.doses.map((d: any) => {
-            let ts = d.timestamp;
-            if (typeof ts === 'string') {
-              if (/^\d+$/.test(ts)) {
-                ts = parseInt(ts, 10);
-              } else {
-                ts = new Date(ts).getTime();
-              }
-            } else if (ts instanceof Date) {
-              ts = ts.getTime();
-            }
-            if (typeof ts !== 'number' || isNaN(ts)) {
-              ts = Date.now();
-            }
-            
-            let subId = d.substanceId;
-            if (subId === 'kratom') subId = 'substance_1774623139275';
-            if (subId === 'nikotin' || subId === 'nicotine') subId = 'substance_1774626436230';
-
-            return { 
-              ...d, 
-              substanceId: subId,
-              timestamp: ts,
-              amount: typeof d.amount === 'string' ? parseFloat(d.amount) : (d.amount || 0)
-            };
-          });
-          setDoses(migratedDoses);
-        }
-        if (data.settings) setSettings({ ...DEFAULT_SETTINGS, ...data.settings });
-        if (data.customEffects) setCustomEffects(data.customEffects);
-        showToast('Data importována', 'success');
-      } catch (err) {
-        showToast('Chyba při importu', 'error');
-      }
+      processImportData(event.target?.result as string);
     };
     reader.readAsText(file);
   };
@@ -709,6 +723,8 @@ export default function App() {
                 onImport={handleImport}
                 onExport={handleExport}
                 onExportCSV={handleExportCSV}
+                onExportText={handleExportText}
+                onImportText={handleImportText}
               />
             )}
           </motion.div>

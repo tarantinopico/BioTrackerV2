@@ -261,7 +261,15 @@ export interface UserSettings {
   riskScoreMultiplier?: number;
   peakIntensityMultiplier?: number;
   habitAnalysisSensitivity?: number;
+  staleDataWeightMultiplier?: number;
+  withdrawalSeverityMultiplier?: number;
+  baseRiskThreshold?: number;
   doseDecayRate?: number;
+  bioavailabilityGlobalMultiplier?: number;
+  tmaxGlobalMultiplier?: number;
+  interactionRiskMultiplier?: number;
+  comedownSeverityMultiplier?: number;
+  addictionPotentialMultiplier?: number;
   debugMode?: boolean;
 
   // Security

@@ -33,7 +33,14 @@ import {
   Code,
   Terminal,
   Sliders,
-  BarChart2
+  BarChart2,
+  Thermometer,
+  Gauge,
+  HeartPulse,
+  BatteryCharging,
+  Droplets,
+  ZapOff,
+  RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -49,6 +56,8 @@ interface SettingsProps {
   onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onExport: () => void;
   onExportCSV?: () => void;
+  onExportText?: () => string;
+  onImportText?: (text: string) => void;
 }
 
 type Tab = 'profile' | 'appearance' | 'dashboard' | 'notifications' | 'ai' | 'security' | 'effects' | 'data' | 'developer' | 'about';
@@ -98,12 +107,16 @@ export default function Settings({
   onClearData,
   onImport,
   onExport,
-  onExportCSV
+  onExportCSV,
+  onExportText,
+  onImportText
 }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
   const [newEffectName, setNewEffectName] = useState('');
   const [newEffectType, setNewEffectType] = useState<Valence>('positive');
   const [isSettingPin, setIsSettingPin] = useState(false);
+  const [showTextImport, setShowTextImport] = useState(false);
+  const [importTextValue, setImportTextValue] = useState('');
 
   // Auto-save wrapper
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
@@ -948,174 +961,343 @@ export default function Settings({
 
           {/* DEVELOPER TAB */}
           {activeTab === 'developer' && (
-            <div className="space-y-6">
-               <div className="md3-card border border-red-500/20 bg-red-500/5 p-5 space-y-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-red-500 flex items-center gap-2">
-                  <Terminal size={16} /> Vývojářský Režim
-                </h3>
-                <p className="text-xs text-md3-gray leading-relaxed mb-4">
-                  Změňte základní výpočetní proměnné a upravte chování AI. Pouze pro experty, může rozbít aplikaci.
-                </p>
-
-                <div className="space-y-4 mt-6">
-                  <div className="flex items-center justify-between border-b border-theme-border pb-2">
-                     <h4 className="text-xs font-bold text-red-400 uppercase tracking-widest">Pravidla Umělé Inteligence (Prompty)</h4>
-                        <button
-                        onClick={() => {
-                           updateSetting('aiSystemPrompt', DEFAULT_SYSTEM_PROMPT);
-                           updateSetting('aiGlobalPrompt', DEFAULT_GLOBAL_PROMPT);
-                           updateSetting('aiPredictionPrompt', DEFAULT_PREDICTION_PROMPT);
-                           updateSetting('aiTaperingSystemPrompt', DEFAULT_TAPERING_PROMPT);
-                        }}
-                        className="text-[10px] bg-red-500/20 text-red-500 px-2 py-1 rounded"
-                     >
-                        Resetovat Prompty
-                     </button>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">Systémový Prompt pro AI (Přepis)</label>
-                    <textarea 
-                      value={settings.aiSystemPrompt ?? DEFAULT_SYSTEM_PROMPT}
-                      onChange={e => updateSetting('aiSystemPrompt', e.target.value)}
-                      placeholder="Volitelně přepište roli AI..."
-                      className="w-full md3-input h-24 font-mono text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">Systémový Prompt pro Tapering</label>
-                    <textarea 
-                      value={settings.aiTaperingSystemPrompt ?? DEFAULT_TAPERING_PROMPT}
-                      onChange={e => updateSetting('aiTaperingSystemPrompt', e.target.value)}
-                      placeholder="Role AI pro tapering..."
-                      className="w-full md3-input h-24 font-mono text-xs"
-                    />
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">AI Globální Analýza Prompt (Přepis JSON Schématu)</label>
-                    <textarea 
-                      value={settings.aiGlobalPrompt ?? DEFAULT_GLOBAL_PROMPT}
-                      onChange={e => updateSetting('aiGlobalPrompt', e.target.value)}
-                      placeholder="Custom format JSON..."
-                      className="w-full md3-input h-48 font-mono text-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-md3-gray">AI Predikční Prompt (Přepis JSON Schématu)</label>
-                    <textarea 
-                      value={settings.aiPredictionPrompt ?? DEFAULT_PREDICTION_PROMPT}
-                      onChange={e => updateSetting('aiPredictionPrompt', e.target.value)}
-                      placeholder="Custom format JSON..."
-                      className="w-full md3-input h-48 font-mono text-xs"
-                    />
-                  </div>
-                  
-                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mt-6 mb-2 border-b border-theme-border pb-2">Parametry Modelu a Backend</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                     <div className="space-y-1">
-                       <label className="text-[10px] font-bold text-md3-gray">AI Max Tokens (default: 600)</label>
-                       <input 
-                         type="number"
-                         value={settings.aiMaxTokens ?? 600}
-                         onChange={e => updateSetting('aiMaxTokens', parseInt(e.target.value) || 600)}
-                         className="w-full md3-input font-mono text-xs"
-                       />
-                     </div>
-                     <div className="space-y-1">
-                       <label className="text-[10px] font-bold text-md3-gray">AI Max Retries (default: 2)</label>
-                       <input 
-                         type="number"
-                         value={settings.aiMaxRetries ?? 2}
-                         onChange={e => updateSetting('aiMaxRetries', parseInt(e.target.value) || 2)}
-                         className="w-full md3-input font-mono text-xs"
-                       />
-                     </div>
-                     <div className="space-y-1">
-                       <label className="text-[10px] font-bold text-md3-gray">Habit Sensitivity (default: 1.0)</label>
-                       <input 
-                         type="number"
-                         step="0.1"
-                         value={settings.habitAnalysisSensitivity ?? 1.0}
-                         onChange={e => updateSetting('habitAnalysisSensitivity', parseFloat(e.target.value) || 1.0)}
-                         className="w-full md3-input font-mono text-xs"
-                       />
-                     </div>
-                  </div>
-
-                  <h4 className="text-xs font-bold text-md3-gray uppercase tracking-widest mt-6 mb-2 border-b border-theme-border pb-2">Farmakokinetika a Výpočty</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-md3-gray">Násobič Tolerance (default: 1.0)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={settings.toleranceMultiplier ?? 1.0}
-                        onChange={e => updateSetting('toleranceMultiplier', parseFloat(e.target.value) || 1.0)}
-                        className="w-full md3-input font-mono text-xs"
-                      />
+            <div className="space-y-6 pb-8">
+               <div className="relative overflow-hidden rounded-[2rem] bg-[#111] border border-red-500/20 p-4 sm:p-8 shadow-2xl group">
+                 <div className="absolute top-[-50%] right-[-10%] w-[80%] h-[150%] bg-gradient-to-l from-red-500/10 to-purple-500/0 blur-[80px] pointer-events-none" />
+                 
+                 <div className="relative z-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 shrink-0 rounded-[1.25rem] bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                           <Terminal size={28} className="text-red-500" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none mb-1">Konzole Vývojáře</h3>
+                          <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest leading-none">God Mode Expertní Nastavení</p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-md3-gray">Násobič Metabolismu (default: 1.0)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={settings.metabolismMultiplier ?? 1.0}
-                        onChange={e => updateSetting('metabolismMultiplier', parseFloat(e.target.value) || 1.0)}
-                        className="w-full md3-input font-mono text-xs"
-                      />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-md3-gray">Násobič Poločasu Rozpadu (def: 1.0)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={settings.halfLifeMultiplier ?? 1.0}
-                        onChange={e => updateSetting('halfLifeMultiplier', parseFloat(e.target.value) || 1.0)}
-                        className="w-full md3-input font-mono text-xs"
-                      />
-                    </div>
+                    <p className="text-xs text-white/50 leading-relaxed max-w-2xl mb-8">
+                      Zde můžete přepsat nízkoúrovňové proměnné celého farmakokinetického enginu, AI parametrů a vnitřní logiky aplikace. 
+                      <span className="text-red-400 font-bold ml-1">Změny mohou fatálně ovlivnit výpočty rizik.</span>
+                    </p>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-md3-gray">Decay Rate Dávky (default: 1.0)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={settings.doseDecayRate ?? 1.0}
-                        onChange={e => updateSetting('doseDecayRate', parseFloat(e.target.value) || 1.0)}
-                        className="w-full md3-input font-mono text-xs"
-                      />
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-md3-gray">Násobič Peak Intensity (default: 1.0)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={settings.peakIntensityMultiplier ?? 1.0}
-                        onChange={e => updateSetting('peakIntensityMultiplier', parseFloat(e.target.value) || 1.0)}
-                        className="w-full md3-input font-mono text-xs"
-                      />
-                    </div>
+                    <div className="grid grid-cols-1 gap-8">
+                        {/* KINETIKA */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                             <Activity size={14} className="text-emerald-500" /> Farmakologická Kinetika & Absorpce
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-emerald-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Activity size={14} className="text-emerald-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Metabolismus</label>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-1.5 py-0.5 rounded">{(settings.metabolismMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Násobí rychlost odbourávání látek. Hodnoty &gt; 1 = rychlejší clearance.</p>
+                               <input type="range" min="0.1" max="5.0" step="0.1" value={settings.metabolismMultiplier ?? 1.0} onChange={e => updateSetting('metabolismMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full accent-emerald-500 h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-md3-gray">Risk Score Násobič (default: 1.0)</label>
-                      <input 
-                        type="number"
-                        step="0.1"
-                        value={settings.riskScoreMultiplier ?? 1.0}
-                        onChange={e => updateSetting('riskScoreMultiplier', parseFloat(e.target.value) || 1.0)}
-                        className="w-full md3-input font-mono text-xs"
-                      />
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-orange-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Thermometer size={14} className="text-orange-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Úroveň Tolerance</label>
+                                  </div>
+                                  <span className="text-[10px] text-orange-400 font-mono bg-orange-500/10 px-1.5 py-0.5 rounded">{(settings.toleranceMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Agresivita budování tolerance po každé dávce.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.toleranceMultiplier ?? 1.0} onChange={e => updateSetting('toleranceMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full accent-orange-500 h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-blue-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Zap size={14} className="text-blue-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">CMax (Peak)</label>
+                                  </div>
+                                  <span className="text-[10px] text-blue-400 font-mono bg-blue-500/10 px-1.5 py-0.5 rounded">{(settings.peakIntensityMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Plošný násobič teoretické maximální plazmatické koncentrace.</p>
+                               <input type="range" min="0.1" max="2.0" step="0.1" value={settings.peakIntensityMultiplier ?? 1.0} onChange={e => updateSetting('peakIntensityMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full accent-blue-500 h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-purple-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Clock size={14} className="text-purple-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Poločas Rozpadu</label>
+                                  </div>
+                                  <span className="text-[10px] text-purple-400 font-mono bg-purple-500/10 px-1.5 py-0.5 rounded">{(settings.halfLifeMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Globální prodloužení nebo zkrácení eliminačního poločasu.</p>
+                               <input type="range" min="0.1" max="5.0" step="0.1" value={settings.halfLifeMultiplier ?? 1.0} onChange={e => updateSetting('halfLifeMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-cyan-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Droplets size={14} className="text-cyan-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Vstřebatelnost</label>
+                                  </div>
+                                  <span className="text-[10px] text-cyan-400 font-mono bg-cyan-500/10 px-1.5 py-0.5 rounded">{(settings.bioavailabilityGlobalMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Úprava celkové míry absorbce účinné látky z GI traktu.</p>
+                               <input type="range" min="0.1" max="2.0" step="0.1" value={settings.bioavailabilityGlobalMultiplier ?? 1.0} onChange={e => updateSetting('bioavailabilityGlobalMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-cyan-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-indigo-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Gauge size={14} className="text-indigo-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">TMax Shift</label>
+                                  </div>
+                                  <span className="text-[10px] text-indigo-400 font-mono bg-indigo-500/10 px-1.5 py-0.5 rounded">{(settings.tmaxGlobalMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Zpoždění nástupu teoretického peaku napříč všemi substancemi.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.tmaxGlobalMultiplier ?? 1.0} onChange={e => updateSetting('tmaxGlobalMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* RIZIKA A ALERT SYSTÉMY */}
+                        <div className="space-y-4 pt-2">
+                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                             <ShieldAlert size={14} className="text-red-500" /> Analýza Rizik & Neurotoxicita
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-red-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <ShieldAlert size={14} className="text-red-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Báze Rizika</label>
+                                  </div>
+                                  <span className="text-[10px] text-red-400 font-mono bg-red-500/10 px-1.5 py-0.5 rounded">{(settings.riskScoreMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Agresivita alertů u vysokých dávek a extrémním tempu užívání.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.riskScoreMultiplier ?? 1.0} onChange={e => updateSetting('riskScoreMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-rose-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Activity size={14} className="text-rose-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Interakce</label>
+                                  </div>
+                                  <span className="text-[10px] text-rose-400 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded">{(settings.interactionRiskMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Zesilovač varování pro synergie a kontraidikace. Nižší = benevolentnější.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.interactionRiskMultiplier ?? 1.0} onChange={e => updateSetting('interactionRiskMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-rose-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-red-400/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <ZapOff size={14} className="text-red-400" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Základní Práh (Threshold)</label>
+                                  </div>
+                                  <span className="text-[10px] text-red-300 font-mono bg-red-400/10 px-1.5 py-0.5 rounded">{(settings.baseRiskThreshold ?? 5.0).toFixed(1)}</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Minimální hodnota teoretické koncentrace vzbuzující high-level varování.</p>
+                               <input type="range" min="1.0" max="20.0" step="0.5" value={settings.baseRiskThreshold ?? 5.0} onChange={e => updateSetting('baseRiskThreshold', parseFloat(e.target.value) || 5.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-red-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-yellow-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <BatteryCharging size={14} className="text-yellow-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Odvykací Stav</label>
+                                  </div>
+                                  <span className="text-[10px] text-yellow-400 font-mono bg-yellow-500/10 px-1.5 py-0.5 rounded">{(settings.withdrawalSeverityMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Penalizace AI skóre pro taperingové modely a zohlednění diskomfortu (craving).</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.withdrawalSeverityMultiplier ?? 1.0} onChange={e => updateSetting('withdrawalSeverityMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-yellow-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-teal-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <HeartPulse size={14} className="text-teal-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Comedown Efekt</label>
+                                  </div>
+                                  <span className="text-[10px] text-teal-400 font-mono bg-teal-500/10 px-1.5 py-0.5 rounded">{(settings.comedownSeverityMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Dopamin/Serotonin deplece - ovlivňuje odhady energetické propasti v AI analýze.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.comedownSeverityMultiplier ?? 1.0} onChange={e => updateSetting('comedownSeverityMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-teal-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-pink-500/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Brain size={14} className="text-pink-500" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Potenciál Závislosti</label>
+                                  </div>
+                                  <span className="text-[10px] text-pink-400 font-mono bg-pink-500/10 px-1.5 py-0.5 rounded">{(settings.addictionPotentialMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Ostražitost Habit Trackingu. Vyšší hodnota více penalizuje změny frekvence zvyků.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.addictionPotentialMultiplier ?? 1.0} onChange={e => updateSetting('addictionPotentialMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-pink-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ENGÍNOVÁ & TECHNICKÁ DATA */}
+                        <div className="space-y-4 pt-2">
+                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                             <Cpu size={14} className="text-emerald-400" /> Datový Model Engine & LLM Override
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-emerald-400/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <LineChart size={14} className="text-emerald-400" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Data Stale Weight</label>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-300 font-mono bg-emerald-400/10 px-1.5 py-0.5 rounded">{(settings.staleDataWeightMultiplier ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Degradace starých dat. Menší než 1 = AI preferuje výhradně nedávné vzorce.</p>
+                               <input type="range" min="0.1" max="5.0" step="0.1" value={settings.staleDataWeightMultiplier ?? 1.0} onChange={e => updateSetting('staleDataWeightMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-sky-400/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Terminal size={14} className="text-sky-400" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Decay Rate Constant</label>
+                                  </div>
+                                  <span className="text-[10px] text-sky-300 font-mono bg-sky-400/10 px-1.5 py-0.5 rounded">{(settings.doseDecayRate ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Přepis základní matematické konstanty celkové eliminační křivky těla.</p>
+                               <input type="range" min="0.1" max="3.0" step="0.1" value={settings.doseDecayRate ?? 1.0} onChange={e => updateSetting('doseDecayRate', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-sky-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-yellow-400/30 transition-all duration-300">
+                               <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                     <Code size={14} className="text-yellow-400" />
+                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Habit Sensitivity</label>
+                                  </div>
+                                  <span className="text-[10px] text-yellow-300 font-mono bg-yellow-400/10 px-1.5 py-0.5 rounded">{(settings.habitAnalysisSensitivity ?? 1.0).toFixed(2)}x</span>
+                               </div>
+                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Určuje sílu LLM k nalézání vzorců. Vyšší = hledá spojitosti i tam, kde nejsou.</p>
+                               <input type="range" min="0.1" max="5.0" step="0.1" value={settings.habitAnalysisSensitivity ?? 1.0} onChange={e => updateSetting('habitAnalysisSensitivity', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
+                            </div>
+
+                            <div className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-white/20 transition-all duration-300">
+                                 <label className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-3 block">AI Max Tokens Limit</label>
+                                 <input type="number" value={settings.aiMaxTokens ?? 600} onChange={e => updateSetting('aiMaxTokens', parseInt(e.target.value) || 600)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm font-mono text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors" />
+                               </div>
+                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-white/20 transition-all duration-300">
+                                 <label className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-3 block">AI Retry Fallbacks</label>
+                                 <input type="number" value={settings.aiMaxRetries ?? 2} onChange={e => updateSetting('aiMaxRetries', parseInt(e.target.value) || 2)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm font-mono text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors" />
+                               </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* LLM PROMPTY */}
+                        <div className="space-y-4 pt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                             <h4 className="text-xs font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
+                                <Terminal size={14} className="text-purple-400" /> Super-User Prompts Override
+                             </h4>
+                             <button
+                               onClick={() => {
+                                  updateSetting('aiSystemPrompt', DEFAULT_SYSTEM_PROMPT);
+                                  updateSetting('aiGlobalPrompt', DEFAULT_GLOBAL_PROMPT);
+                                  updateSetting('aiPredictionPrompt', DEFAULT_PREDICTION_PROMPT);
+                                  updateSetting('aiTaperingSystemPrompt', DEFAULT_TAPERING_PROMPT);
+                               }}
+                               className="text-[10px] font-bold bg-white/5 hover:bg-white/10 text-white/70 px-4 py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-widest border border-white/5 hover:border-white/10"
+                             >
+                                <RefreshCw size={12} /> Resetovat Defaultní Bloky
+                             </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-purple-500/30 transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Analyzátor: Metaprompt Role</label>
+                                 <span className="text-purple-400/80 text-[9px] font-bold uppercase tracking-widest bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">SYSTEM FORMAT</span>
+                              </div>
+                              <textarea 
+                                value={settings.aiSystemPrompt ?? DEFAULT_SYSTEM_PROMPT}
+                                onChange={e => updateSetting('aiSystemPrompt', e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-purple-500/50 focus:text-white focus:bg-white/10 transition-colors h-32 custom-scrollbar resize-none"
+                              />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-purple-500/30 transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Tapering Agent: Metaprompt Role</label>
+                                 <span className="text-purple-400/80 text-[9px] font-bold uppercase tracking-widest bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">SYSTEM FORMAT</span>
+                              </div>
+                              <textarea 
+                                value={settings.aiTaperingSystemPrompt ?? DEFAULT_TAPERING_PROMPT}
+                                onChange={e => updateSetting('aiTaperingSystemPrompt', e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-purple-500/50 focus:text-white focus:bg-white/10 transition-colors h-32 custom-scrollbar resize-none"
+                              />
+                            </div>
+                            
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-sky-500/30 transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Analyzátor: JSON Vstup</label>
+                                 <span className="text-sky-400/80 text-[9px] font-bold uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">USER INSTRUCTION FORMAT</span>
+                              </div>
+                              <textarea 
+                                value={settings.aiGlobalPrompt ?? DEFAULT_GLOBAL_PROMPT}
+                                onChange={e => updateSetting('aiGlobalPrompt', e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-sky-500/50 focus:text-white focus:bg-white/10 transition-colors h-48 custom-scrollbar resize-none"
+                              />
+                            </div>
+
+                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-sky-500/30 transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Tapering Agent: JSON Vstup</label>
+                                 <span className="text-sky-400/80 text-[9px] font-bold uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">USER INSTRUCTION FORMAT</span>
+                              </div>
+                              <textarea 
+                                value={settings.aiPredictionPrompt ?? DEFAULT_PREDICTION_PROMPT}
+                                onChange={e => updateSetting('aiPredictionPrompt', e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-sky-500/50 focus:text-white focus:bg-white/10 transition-colors h-48 custom-scrollbar resize-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* DANGER ZONE */}
+                        <div className="mt-8 border border-red-500/30 bg-red-500/5 rounded-2xl p-6 relative overflow-hidden group">
+                           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDAsMCwwLjE1KSIvPjwvc3ZnPg==')] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                           <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                              <div>
+                                <h4 className="text-red-500 font-black uppercase tracking-widest mb-1 flex items-center gap-2">
+                                  <ShieldAlert size={16} /> Danger Zone
+                                </h4>
+                                <p className="text-xs text-red-500/60 leading-relaxed max-w-sm">
+                                  Tato akce kompletně vymaže všechna lokální data v prohlížeči. Vaše záznamy, nastavení i historie zvyků budou nevratně ztraceny. Proveďte nejprve textovou zálohu v sekci Security.
+                                </p>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  if(window.confirm('VÁŽNÉ VAROVÁNÍ: Opravdu chcete vymazat komplet celou databázi? Tato akce je nevratná!')) {
+                                    localStorage.clear();
+                                    window.location.reload();
+                                  }
+                                }}
+                                className="shrink-0 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/50 px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-[11px] transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+                              >
+                                Hard Reset Dvojitý
+                              </button>
+                           </div>
+                        </div>
+
                     </div>
-                  </div>
-                  
-                </div>
-              </div>
+                 </div>
+               </div>
             </div>
           )}
 
@@ -1281,19 +1463,97 @@ export default function Settings({
                     </button>
                   )}
 
+                  {onExportText && (
+                    <button 
+                      onClick={() => {
+                        const txt = onExportText();
+                        navigator.clipboard.writeText(txt);
+                        alert("Záloha byla zkopírována do schránky jako text.");
+                      }}
+                      className="w-full flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border text-theme-text hover:bg-theme-subtle-hover transition-all group md3-button"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
+                          <Code size={18} />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-bold text-sm">Zkopírovat zálohu jako text</div>
+                          <div className="text-xs text-md3-gray">Uloží zálohu do schránky</div>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="text-md3-gray" />
+                    </button>
+                  )}
+
                   <label className="w-full flex items-center justify-between p-4 rounded-2xl bg-theme-subtle border border-theme-border text-theme-text hover:bg-theme-subtle-hover transition-all cursor-pointer group md3-button">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500 group-hover:scale-110 transition-transform">
                         <Upload size={18} />
                       </div>
                       <div className="text-left">
-                        <div className="font-bold text-sm">Obnovit ze zálohy</div>
+                        <div className="font-bold text-sm">Obnovit ze souboru</div>
                         <div className="text-xs text-md3-gray">Načte data z JSON souboru</div>
                       </div>
                     </div>
                     <ChevronRight size={18} className="text-md3-gray" />
                     <input type="file" accept=".json" onChange={onImport} className="hidden" />
                   </label>
+
+                  {onImportText && (
+                    <div className="rounded-2xl bg-theme-subtle border border-theme-border overflow-hidden">
+                      <button 
+                        onClick={() => setShowTextImport(!showTextImport)}
+                        className="w-full flex items-center justify-between p-4 text-theme-text hover:bg-theme-subtle-hover transition-all group md3-button"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500 group-hover:scale-110 transition-transform">
+                            <Upload size={18} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-bold text-sm">Obnovit z textu</div>
+                            <div className="text-xs text-md3-gray">Vložit textovou zálohu ze schránky</div>
+                          </div>
+                        </div>
+                        <ChevronRight size={18} className={cn("text-md3-gray transition-transform", showTextImport && "rotate-90")} />
+                      </button>
+                      <AnimatePresence>
+                        {showTextImport && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="px-4 pb-4"
+                          >
+                            <textarea 
+                              value={importTextValue}
+                              onChange={e => setImportTextValue(e.target.value)}
+                              placeholder="Vložte text zálohy (JSON)..."
+                              className="w-full h-32 md3-input mb-2 text-xs"
+                              autoFocus
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => { setShowTextImport(false); setImportTextValue(''); }}
+                                className="px-4 py-2 rounded-xl bg-theme-bg text-theme-text border border-theme-border text-sm font-bold"
+                              >
+                                Zrušit
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  onImportText(importTextValue);
+                                  setShowTextImport(false);
+                                  setImportTextValue('');
+                                }}
+                                className="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-md"
+                              >
+                                Načíst text
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
 
                   <button 
                     onClick={onClearData}
@@ -1317,89 +1577,102 @@ export default function Settings({
           {/* ABOUT TAB */}
           {activeTab === 'about' && (
             <div className="space-y-6">
-              <div className="md3-card p-6 flex flex-col items-center text-center space-y-4">
-                <div className="w-20 h-20 rounded-3xl bg-md3-primary flex items-center justify-center shadow-lg">
-                  <Activity size={40} className="text-theme-bg" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-theme-text tracking-tight">BioTracker Pro</h2>
-                  <p className="text-sm font-bold text-md3-gray tracking-widest uppercase mt-1">Verze 2.1.0</p>
-                </div>
-                <p className="text-sm text-md3-gray font-medium max-w-sm leading-relaxed">
-                  Pokročilý systém pro sledování farmakokinetiky, biometrických dat a hloubkovou analýzu užívání látek. Navrženo pro maximální kontrolu a bezpečnost.
-                </p>
+              <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 p-8 flex flex-col items-center justify-center min-h-[300px] shadow-2xl">
+                {/* Abstract background elements */}
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/0 blur-[60px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-emerald-500/20 to-teal-500/0 blur-[60px]" />
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-50" />
                 
-                <div className="w-full text-left space-y-4 mt-6">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-md3-text border-b border-theme-border pb-2">Hlavní funkce</h3>
+                <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.5, type: 'spring' }}
+                    className="w-24 h-24 rounded-full bg-gradient-to-tr from-white/10 to-white/5 border border-white/20 backdrop-blur-md flex items-center justify-center p-1"
+                  >
+                    <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-inner">
+                      <Activity size={40} className="text-white" />
+                    </div>
+                  </motion.div>
                   
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-500 mt-0.5">
-                        <Activity size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-theme-text">Farmakokinetika</h4>
-                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Výpočet plazmatické koncentrace v reálném čase na základě poločasu rozpadu, hmotnosti a metabolismu.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 mt-0.5">
-                        <BarChart3 size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-theme-text">Pokročilá analytika</h4>
-                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Detailní grafy, sledování výdajů, analýza denní doby užívání a výpočet průměrné výdrže balení.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500 mt-0.5">
-                        <ShieldAlert size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-theme-text">Prevence a bezpečnost</h4>
-                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Automatické varování před nebezpečnými interakcemi, sledování budování tolerance a upozornění na comedown.</p>
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <motion.h2 
+                       initial={{ y: 10, opacity: 0 }}
+                       animate={{ y: 0, opacity: 1 }}
+                       transition={{ delay: 0.1 }}
+                       className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white/50 tracking-tighter"
+                    >
+                      BioTracker<span className="text-indigo-400">Pro</span>
+                    </motion.h2>
+                    <motion.div 
+                       initial={{ y: 10, opacity: 0 }}
+                       animate={{ y: 0, opacity: 1 }}
+                       transition={{ delay: 0.2 }}
+                       className="flex items-center justify-center gap-3"
+                    >
+                       <span className="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold text-white tracking-widest uppercase">
+                         Verze 2.1.5
+                       </span>
+                       <span className="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[10px] font-bold text-indigo-300 tracking-widest uppercase">
+                         Quantified Self
+                       </span>
+                    </motion.div>
                   </div>
-                </div>
 
-                <div className="w-full text-left space-y-4 mt-6">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-md3-text border-b border-theme-border pb-2">Ochrana soukromí</h3>
-                  
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 mt-0.5">
-                        <Database size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-theme-text">Lokální úložiště</h4>
-                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Všechna data jsou ukládána výhradně ve vašem zařízení. Aplikace neodesílá žádné informace na externí servery.</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-theme-subtle border border-theme-border">
-                      <div className="p-2 rounded-lg bg-rose-500/10 text-rose-500 mt-0.5">
-                        <Lock size={18} />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-theme-text">Zabezpečení přístupu</h4>
-                        <p className="text-xs text-md3-gray mt-1 leading-relaxed">Možnost uzamknout aplikaci PIN kódem a skrýt citlivé finanční údaje pomocí Režimu soukromí.</p>
-                      </div>
-                    </div>
-                  </div>
+                  <motion.p 
+                     initial={{ y: 10, opacity: 0 }}
+                     animate={{ y: 0, opacity: 1 }}
+                     transition={{ delay: 0.3 }}
+                     className="text-sm text-white/60 font-medium max-w-[280px] leading-relaxed mx-auto"
+                  >
+                    Precizní analytický nástroj na pomezí technologie, biologie a umělé inteligence pro vizualizaci skrytých farmakokinetických dat.
+                  </motion.p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <a href="#" className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle-hover transition-all text-theme-text">
-                  <Github size={24} className="text-md3-gray" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Zdrojový kód</span>
+                <div className="md3-card p-5 group hover:bg-theme-subtle-hover transition-colors">
+                  <Cpu className="text-indigo-500 mb-3 group-hover:scale-110 transition-transform" size={24} />
+                  <h4 className="text-xs font-bold text-theme-text uppercase tracking-widest mb-1">Kinetický Engine</h4>
+                  <p className="text-[10px] text-md3-gray leading-relaxed">Matematické modely predikující akumulaci a half-life pro stovky interakcí.</p>
+                </div>
+                <div className="md3-card p-5 group hover:bg-theme-subtle-hover transition-colors">
+                  <Brain className="text-purple-500 mb-3 group-hover:scale-110 transition-transform" size={24} />
+                  <h4 className="text-xs font-bold text-theme-text uppercase tracking-widest mb-1">AI Průzkumník</h4>
+                  <p className="text-[10px] text-md3-gray leading-relaxed">Samoučící se algoritmy identifikující skryté vzorce chování z metadat.</p>
+                </div>
+                <div className="md3-card p-5 group hover:bg-theme-subtle-hover transition-colors">
+                  <LineChart className="text-emerald-500 mb-3 group-hover:scale-110 transition-transform" size={24} />
+                  <h4 className="text-xs font-bold text-theme-text uppercase tracking-widest mb-1">Chrono-Analýza</h4>
+                  <p className="text-[10px] text-md3-gray leading-relaxed">Mapování cirkadiánních rytmů spotřeby, výkyvů a časových korelací.</p>
+                </div>
+                <div className="md3-card p-5 group hover:bg-theme-subtle-hover transition-colors">
+                  <Lock className="text-rose-500 mb-3 group-hover:scale-110 transition-transform" size={24} />
+                  <h4 className="text-xs font-bold text-theme-text uppercase tracking-widest mb-1">Zero-Trust EEE</h4>
+                  <p className="text-[10px] text-md3-gray leading-relaxed">Data neopouštějí váš prohlížeč. Lokální PWA s plným šifrováním exportů.</p>
+                </div>
+              </div>
+
+              <div className="md3-card p-6 border-l-4 border-l-indigo-500">
+                <h3 className="text-sm font-black uppercase tracking-widest text-theme-text mb-3 flex items-center gap-2">
+                  <Info size={16} className="text-indigo-500" /> Manifest
+                </h3>
+                <p className="text-xs text-md3-gray leading-relaxed space-y-2">
+                  <span className="block italic text-theme-text">„To, co neměříte, nemůžete řídit.“</span>
+                  <span className="block mt-2">
+                  Aplikace nevynáší soudy, nestigmatizuje a nemoralizuje. Poskytuje čistá data, surovou realitu a zrcadlo vašeho fyziologického stavu. Je nástrojem k sebe-uvědomění, biohackingu a redukci rizik (Harm Reduction). Jste administrátorem svého vlastního nervového systému.
+                  </span>
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pb-8">
+                <a href="#" className="flex flex-col items-center justify-center gap-2 py-6 rounded-2xl bg-black border border-white/10 hover:border-white/20 transition-all text-white group">
+                  <Github size={24} className="text-white/60 group-hover:text-white transition-colors" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white">Zdrojový kód</span>
                 </a>
-                <a href="#" className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-theme-subtle border border-theme-border hover:bg-theme-subtle-hover transition-all text-theme-text">
-                  <Heart size={24} className="text-rose-500" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Podpořit</span>
+                <a href="#" className="flex flex-col items-center justify-center gap-2 py-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all text-rose-500 group">
+                  <Heart size={24} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Podpořit projekt</span>
                 </a>
               </div>
             </div>
