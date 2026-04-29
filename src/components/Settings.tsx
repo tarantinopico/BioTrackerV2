@@ -40,7 +40,11 @@ import {
   BatteryCharging,
   Droplets,
   ZapOff,
-  RefreshCw
+  RefreshCw,
+  Network,
+  BrainCircuit,
+  Scan,
+  Bug
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserSettings, CustomEffect, Valence } from '../types';
@@ -1144,12 +1148,209 @@ export default function Settings({
                           </div>
                         </div>
 
-                        {/* ENGÍNOVÁ & TECHNICKÁ DATA */}
+                        {/* AI & ANALÝZA */}
                         <div className="space-y-4 pt-2">
                           <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
-                             <Cpu size={14} className="text-emerald-400" /> Datový Model Engine & LLM Override
+                             <BrainCircuit size={14} className="text-emerald-400" /> AI & Behavior Engine
                           </h4>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                            {/* toggles */}
+                            {[
+                               { id: 'predictiveModeling', label: 'Predictive Modeling', desc: 'Aktivuje extrapolaci budoucích stavů z historie', icon: Network },
+                             ].map((opt) => (
+                               <button
+                                  key={opt.id}
+                                  onClick={() => updateSetting(opt.id as keyof UserSettings, !(settings as any)[opt.id])}
+                                  className={cn(
+                                    "p-3 rounded-2xl border text-left flex flex-col gap-2 transition-all relative overflow-hidden group",
+                                    (settings as any)[opt.id] 
+                                      ? "bg-emerald-500/10 border-emerald-500/30 shadow-[inset_0_0_15px_rgba(16,185,129,0.05)]" 
+                                      : "bg-black/60 border-white/5 hover:bg-black/80 hover:border-white/10"
+                                  )}
+                               >
+                                  <div className="flex justify-between items-center w-full">
+                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-emerald-400" : "text-white/40"} />
+                                    <div className={cn(
+                                      "w-6 h-3 rounded-full flex items-center p-0.5 transition-colors",
+                                      (settings as any)[opt.id] ? "bg-emerald-500" : "bg-white/10"
+                                    )}>
+                                      <div className={cn(
+                                        "w-2 h-2 rounded-full bg-white transition-transform",
+                                        (settings as any)[opt.id] ? "translate-x-3" : "translate-x-0"
+                                      )}/>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-emerald-400" : "text-white/70")}>{opt.label}</h5>
+                                    <p className="text-[8px] text-white/40 leading-tight mt-1">{opt.desc}</p>
+                                  </div>
+                               </button>
+                             ))}
+
+                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Přísnost AI Analýzy</label>
+                                <select 
+                                  value={settings.aiStrictness || 'normal'}
+                                  onChange={e => updateSetting('aiStrictness', e.target.value)}
+                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-emerald-500/50"
+                                >
+                                  <option value="loose">Loose (Liberální)</option>
+                                  <option value="normal">Normal (Standardní)</option>
+                                  <option value="strict">Strict (Konzervativní)</option>
+                                </select>
+                             </div>
+
+                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Model Rozpadu</label>
+                                <select 
+                                  value={settings.decayModel || 'exponential'}
+                                  onChange={e => updateSetting('decayModel', e.target.value)}
+                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-emerald-500/50"
+                                >
+                                  <option value="linear">Lineární (V0)</option>
+                                  <option value="exponential">Exponenciální (Farmakokinetický)</option>
+                                </select>
+                             </div>
+
+                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Matrix Interakcí</label>
+                                <select 
+                                  value={settings.interactionAlgorithm || 'v1'}
+                                  onChange={e => updateSetting('interactionAlgorithm', e.target.value)}
+                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-emerald-500/50"
+                                >
+                                  <option value="v1">Stable V1</option>
+                                  <option value="v2_beta">V2 Beta (N-cestná interakce)</option>
+                                </select>
+                             </div>
+                          </div>
+                        </div>
+
+                        {/* STORAGE & DATA */}
+                        <div className="space-y-4 pt-2">
+                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                             <Database size={14} className="text-cyan-400" /> Úložiště & Datový Model
+                          </h4>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                             {[
+                               { id: 'clearCacheOnStart', label: 'Clear Cache On Start', desc: 'Promaže temporální data enginu při startu', icon: RefreshCw },
+                               { id: 'verboseLogging', label: 'Verbose Logging', desc: 'Zvýšená úroveň logování do Developer Konzole', icon: Terminal },
+                               { id: 'debugMode', label: 'Semafor Debug Mode', desc: 'Aktivuje debug vrstvu nad rizikovým enginem', icon: Bug },
+                             ].map((opt) => (
+                               <button
+                                  key={opt.id}
+                                  onClick={() => updateSetting(opt.id as keyof UserSettings, !(settings as any)[opt.id])}
+                                  className={cn(
+                                    "p-3 rounded-2xl border text-left flex flex-col gap-2 transition-all relative overflow-hidden group",
+                                    (settings as any)[opt.id] 
+                                      ? "bg-cyan-500/10 border-cyan-500/30 shadow-[inset_0_0_15px_rgba(6,182,212,0.05)]" 
+                                      : "bg-black/60 border-white/5 hover:bg-black/80 hover:border-white/10"
+                                  )}
+                               >
+                                  <div className="flex justify-between items-center w-full">
+                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-cyan-400" : "text-white/40"} />
+                                    <div className={cn(
+                                      "w-6 h-3 rounded-full flex items-center p-0.5 transition-colors",
+                                      (settings as any)[opt.id] ? "bg-cyan-500" : "bg-white/10"
+                                    )}>
+                                      <div className={cn(
+                                        "w-2 h-2 rounded-full bg-white transition-transform",
+                                        (settings as any)[opt.id] ? "translate-x-3" : "translate-x-0"
+                                      )}/>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-cyan-400" : "text-white/70")}>{opt.label}</h5>
+                                    <p className="text-[8px] text-white/40 leading-tight mt-1">{opt.desc}</p>
+                                  </div>
+                               </button>
+                             ))}
+
+                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Database Engine</label>
+                                <select 
+                                  value={settings.databaseMode || 'indexed_db'}
+                                  onChange={e => updateSetting('databaseMode', e.target.value)}
+                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-cyan-500/50"
+                                >
+                                  <option value="indexed_db">Indexed DB (Optimized)</option>
+                                  <option value="local_storage">Local Storage (Legacy)</option>
+                                  <option value="memory">In-Memory (Volatile)</option>
+                                </select>
+                             </div>
+                          </div>
+                        </div>
+
+                        {/* RENDER & PERFORMANCE */}
+                        <div className="space-y-4 pt-2">
+                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                             <Cpu size={14} className="text-blue-400" /> Renderovač & Výkon
+                          </h4>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                             {[
+                               { id: 'hardwareAcceleration', label: 'GPU Acceleration', desc: 'Přesune výpočty canvas objektů na GPU', icon: Zap },
+                               { id: 'disableTransitions', label: 'Disable Transitions', desc: 'Vypne zbytečné UI animace pro raw výkon', icon: ZapOff },
+                               { id: 'uiDebugBorders', label: 'Show UI Borders', desc: 'CSS Wireframe mód pro debugování layoutu', icon: Scan },
+                             ].map((opt) => (
+                               <button
+                                  key={opt.id}
+                                  onClick={() => updateSetting(opt.id as keyof UserSettings, !(settings as any)[opt.id])}
+                                  className={cn(
+                                    "p-3 rounded-2xl border text-left flex flex-col gap-2 transition-all relative overflow-hidden group",
+                                    (settings as any)[opt.id] 
+                                      ? "bg-blue-500/10 border-blue-500/30 shadow-[inset_0_0_15px_rgba(59,130,246,0.05)]" 
+                                      : "bg-black/60 border-white/5 hover:bg-black/80 hover:border-white/10"
+                                  )}
+                               >
+                                  <div className="flex justify-between items-center w-full">
+                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-blue-400" : "text-white/40"} />
+                                    <div className={cn(
+                                      "w-6 h-3 rounded-full flex items-center p-0.5 transition-colors",
+                                      (settings as any)[opt.id] ? "bg-blue-500" : "bg-white/10"
+                                    )}>
+                                      <div className={cn(
+                                        "w-2 h-2 rounded-full bg-white transition-transform",
+                                        (settings as any)[opt.id] ? "translate-x-3" : "translate-x-0"
+                                      )}/>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-blue-400" : "text-white/70")}>{opt.label}</h5>
+                                    <p className="text-[8px] text-white/40 leading-tight mt-1">{opt.desc}</p>
+                                  </div>
+                               </button>
+                             ))}
+
+                             <div className="grid grid-cols-1 gap-2">
+                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group h-full">
+                                  <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Canvas Render</label>
+                                  <select 
+                                    value={settings.canvasRenderMode || 'webgl'}
+                                    onChange={e => updateSetting('canvasRenderMode', e.target.value)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-blue-500/50 mt-auto"
+                                  >
+                                    <option value="webgl">WebGL (Fast)</option>
+                                    <option value="2d">Canvas 2D (Safe fallback)</option>
+                                  </select>
+                               </div>
+
+                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group h-full">
+                                  <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Target FPS</label>
+                                  <select 
+                                    value={settings.renderFPS || 60}
+                                    onChange={e => updateSetting('renderFPS', parseInt(e.target.value) as 30 | 60 | 120)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-blue-500/50 mt-auto"
+                                  >
+                                    <option value={30}>30 FPS (Battery Saver)</option>
+                                    <option value={60}>60 FPS (Standard)</option>
+                                    <option value={120}>120 FPS (Display Match)</option>
+                                  </select>
+                               </div>
+                             </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-emerald-400/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
@@ -1197,7 +1398,6 @@ export default function Settings({
                                </div>
                             </div>
                           </div>
-                        </div>
 
                         {/* LLM PROMPTY */}
                         <div className="space-y-4 pt-2">

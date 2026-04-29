@@ -603,6 +603,7 @@ export default function App() {
     <MotionConfig transition={{ duration: settings.animations === false ? 0 : undefined }}>
       <div className={cn(
         "max-w-md mx-auto min-h-[100dvh] h-[100dvh] flex flex-col relative font-sans selection:bg-md3-primary/30 overflow-hidden transition-colors duration-300",
+        settings.uiDebugBorders && "[&_*]:outline [&_*]:outline-1 [&_*]:outline-blue-500/30",
         settings.glassEffects !== false ? "glass-effects-enabled" : "",
         settings.glowEffects !== false ? "glow-effects-enabled" : ""
       )}>
@@ -637,7 +638,7 @@ export default function App() {
         )}
 
         {/* Removed Header - Directly jumping to Main Content for a clean layout */}
-        <main className={cn("flex-1 overflow-y-auto no-scrollbar pb-[90px]", view === 'dashboard' ? 'px-2 pt-2' : 'px-4 pt-6')}>
+        <main className={cn("flex-1 overflow-y-auto no-scrollbar pb-[90px] px-2", view === 'dashboard' ? 'pt-2' : 'pt-4')}>
           <AnimatePresence mode="wait">
           <motion.div
             key={view}

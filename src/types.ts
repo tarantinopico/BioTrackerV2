@@ -270,8 +270,25 @@ export interface UserSettings {
   interactionRiskMultiplier?: number;
   comedownSeverityMultiplier?: number;
   addictionPotentialMultiplier?: number;
+  // Advanced Engine Options
+  predictiveModeling?: boolean;
+  decayModel?: 'linear' | 'exponential';
+  interactionAlgorithm?: 'v1' | 'v2_beta';
+  aiStrictness?: 'loose' | 'normal' | 'strict';
+  
+  // Data & Storage
+  databaseMode?: 'indexed_db' | 'local_storage' | 'memory';
+  clearCacheOnStart?: boolean;
+  verboseLogging?: boolean;
   debugMode?: boolean;
 
+  // Rendering & Performance
+  canvasRenderMode?: 'webgl' | '2d';
+  renderFPS?: 30 | 60 | 120;
+  disableTransitions?: boolean;
+  uiDebugBorders?: boolean;
+  hardwareAcceleration?: boolean;
+  
   // Security
   pinCode?: string | null;
   requirePin?: boolean;
