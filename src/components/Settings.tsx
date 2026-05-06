@@ -161,7 +161,9 @@ export default function Settings({
   ];
 
   return (
-    <div className="space-y-6 pb-32">
+    <div className="space-y-6 relative pb-32">
+       {/* Decorative Background Elements */}
+
       {isSettingPin && (
         <PinLock 
           correctPin=""
@@ -177,16 +179,16 @@ export default function Settings({
       )}
 
       {/* Settings Navigation */}
-      <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4">
+      <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4 relative z-10">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-2xl whitespace-nowrap transition-all font-bold text-sm",
+               "flex items-center gap-2 px-4 py-2.5 rounded-2xl whitespace-nowrap transition-all font-bold text-sm shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md",
               activeTab === tab.id 
-                ? "bg-md3-primary text-theme-bg shadow-md" 
-                : "bg-theme-subtle text-md3-gray hover:bg-theme-subtle-hover"
+                ? "bg-white text-black shadow-[0_4px_15px_rgba(255,255,255,0.2)] border border-theme-border" 
+                : "bg-theme-glass text-theme-text/50 border border-theme-border hover:text-theme-text hover:bg-theme-card"
             )}
           >
             <tab.icon size={16} />
@@ -393,11 +395,21 @@ export default function Settings({
                         onClick={() => updateSetting('theme', 'midnight')}
                         className={cn(
                           "p-3 rounded-xl border flex flex-col items-center gap-2 transition-all",
-                          settings.theme === 'midnight' ? "bg-md3-primary/10 border-md3-primary text-md3-primary" : "bg-theme-subtle border-theme-border text-md3-gray hover:bg-theme-subtle-hover"
+                          settings.theme === 'midnight' ? "bg-white/10 border-theme-border text-theme-text" : "bg-theme-subtle border-theme-border/50 text-theme-text/40 hover:bg-theme-glass"
                         )}
                       >
                         <Moon size={20} className="fill-current" />
                         <span className="text-xs font-bold">Půlnoční</span>
+                      </button>
+                      <button 
+                        onClick={() => updateSetting('theme', 'vision')}
+                        className={cn(
+                          "p-3 rounded-xl border flex flex-col items-center gap-2 transition-all",
+                          settings.theme === 'vision' ? "bg-white/20 border-white/40 text-black dark:text-theme-text backdrop-blur-xl" : "bg-white/5 border-theme-border text-theme-text/60 hover:bg-theme-subtle-hover backdrop-blur-md"
+                        )}
+                      >
+                        <Droplets size={20} />
+                        <span className="text-xs font-bold">Vision</span>
                       </button>
                     </div>
                   </div>
@@ -434,7 +446,7 @@ export default function Settings({
                           )}
                           title={accent.label}
                         >
-                          {settings.colorAccent === accent.id && <Check size={20} className="text-white" />}
+                          {settings.colorAccent === accent.id && <Check size={20} className="text-theme-text" />}
                         </button>
                       ))}
                     </div>
@@ -721,7 +733,7 @@ export default function Settings({
                   <button 
                     onClick={addCustomEffect}
                     disabled={!newEffectName.trim()}
-                    className="p-4 rounded-2xl bg-md3-primary text-theme-bg disabled:opacity-50 md3-button"
+                    className="p-4 rounded-2xl bg-md3-primary text-white disabled:opacity-50 md3-button"
                   >
                     <Plus size={20} />
                   </button>
@@ -966,7 +978,7 @@ export default function Settings({
           {/* DEVELOPER TAB */}
           {activeTab === 'developer' && (
             <div className="space-y-6 pb-8">
-               <div className="relative overflow-hidden rounded-[2rem] bg-[#111] border border-red-500/20 p-4 sm:p-8 shadow-2xl group">
+               <div className="relative overflow-hidden rounded-[2rem] bg-theme-bg border border-red-500/20 p-4 sm:p-8 shadow-2xl group">
                  <div className="absolute top-[-50%] right-[-10%] w-[80%] h-[150%] bg-gradient-to-l from-red-500/10 to-purple-500/0 blur-[80px] pointer-events-none" />
                  
                  <div className="relative z-10">
@@ -976,13 +988,13 @@ export default function Settings({
                            <Terminal size={28} className="text-red-500" />
                         </div>
                         <div>
-                          <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none mb-1">Konzole Vývojáře</h3>
+                          <h3 className="text-xl sm:text-2xl font-black text-theme-text tracking-tight leading-none mb-1">Konzole Vývojáře</h3>
                           <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest leading-none">God Mode Expertní Nastavení</p>
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-xs text-white/50 leading-relaxed max-w-2xl mb-8">
+                    <p className="text-xs text-theme-text/50 leading-relaxed max-w-2xl mb-8">
                       Zde můžete přepsat nízkoúrovňové proměnné celého farmakokinetického enginu, AI parametrů a vnitřní logiky aplikace. 
                       <span className="text-red-400 font-bold ml-1">Změny mohou fatálně ovlivnit výpočty rizik.</span>
                     </p>
@@ -990,79 +1002,79 @@ export default function Settings({
                     <div className="grid grid-cols-1 gap-8">
                         {/* KINETIKA */}
                         <div className="space-y-4">
-                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                          <h4 className="text-xs font-black text-theme-text/80 uppercase tracking-widest border-b border-theme-border/50 pb-2 flex items-center gap-2">
                              <Activity size={14} className="text-emerald-500" /> Farmakologická Kinetika & Absorpce
                           </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-emerald-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-emerald-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Activity size={14} className="text-emerald-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Metabolismus</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Metabolismus</label>
                                   </div>
                                   <span className="text-[10px] text-emerald-400 font-mono bg-emerald-500/10 px-1.5 py-0.5 rounded">{(settings.metabolismMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Násobí rychlost odbourávání látek. Hodnoty &gt; 1 = rychlejší clearance.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Násobí rychlost odbourávání látek. Hodnoty &gt; 1 = rychlejší clearance.</p>
                                <input type="range" min="0.1" max="5.0" step="0.1" value={settings.metabolismMultiplier ?? 1.0} onChange={e => updateSetting('metabolismMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full accent-emerald-500 h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-orange-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-orange-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Thermometer size={14} className="text-orange-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Úroveň Tolerance</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Úroveň Tolerance</label>
                                   </div>
                                   <span className="text-[10px] text-orange-400 font-mono bg-orange-500/10 px-1.5 py-0.5 rounded">{(settings.toleranceMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Agresivita budování tolerance po každé dávce.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Agresivita budování tolerance po každé dávce.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.toleranceMultiplier ?? 1.0} onChange={e => updateSetting('toleranceMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full accent-orange-500 h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-orange-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-blue-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-blue-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Zap size={14} className="text-blue-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">CMax (Peak)</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">CMax (Peak)</label>
                                   </div>
                                   <span className="text-[10px] text-blue-400 font-mono bg-blue-500/10 px-1.5 py-0.5 rounded">{(settings.peakIntensityMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Plošný násobič teoretické maximální plazmatické koncentrace.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Plošný násobič teoretické maximální plazmatické koncentrace.</p>
                                <input type="range" min="0.1" max="2.0" step="0.1" value={settings.peakIntensityMultiplier ?? 1.0} onChange={e => updateSetting('peakIntensityMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full accent-blue-500 h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-purple-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-purple-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Clock size={14} className="text-purple-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Poločas Rozpadu</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Poločas Rozpadu</label>
                                   </div>
                                   <span className="text-[10px] text-purple-400 font-mono bg-purple-500/10 px-1.5 py-0.5 rounded">{(settings.halfLifeMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Globální prodloužení nebo zkrácení eliminačního poločasu.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Globální prodloužení nebo zkrácení eliminačního poločasu.</p>
                                <input type="range" min="0.1" max="5.0" step="0.1" value={settings.halfLifeMultiplier ?? 1.0} onChange={e => updateSetting('halfLifeMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-cyan-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-cyan-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Droplets size={14} className="text-cyan-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Vstřebatelnost</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Vstřebatelnost</label>
                                   </div>
                                   <span className="text-[10px] text-cyan-400 font-mono bg-cyan-500/10 px-1.5 py-0.5 rounded">{(settings.bioavailabilityGlobalMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Úprava celkové míry absorbce účinné látky z GI traktu.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Úprava celkové míry absorbce účinné látky z GI traktu.</p>
                                <input type="range" min="0.1" max="2.0" step="0.1" value={settings.bioavailabilityGlobalMultiplier ?? 1.0} onChange={e => updateSetting('bioavailabilityGlobalMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-cyan-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-indigo-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-indigo-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Gauge size={14} className="text-indigo-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">TMax Shift</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">TMax Shift</label>
                                   </div>
                                   <span className="text-[10px] text-indigo-400 font-mono bg-indigo-500/10 px-1.5 py-0.5 rounded">{(settings.tmaxGlobalMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Zpoždění nástupu teoretického peaku napříč všemi substancemi.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Zpoždění nástupu teoretického peaku napříč všemi substancemi.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.tmaxGlobalMultiplier ?? 1.0} onChange={e => updateSetting('tmaxGlobalMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
                           </div>
@@ -1070,79 +1082,79 @@ export default function Settings({
 
                         {/* RIZIKA A ALERT SYSTÉMY */}
                         <div className="space-y-4 pt-2">
-                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                          <h4 className="text-xs font-black text-theme-text/80 uppercase tracking-widest border-b border-theme-border/50 pb-2 flex items-center gap-2">
                              <ShieldAlert size={14} className="text-red-500" /> Analýza Rizik & Neurotoxicita
                           </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-red-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-red-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <ShieldAlert size={14} className="text-red-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Báze Rizika</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Báze Rizika</label>
                                   </div>
                                   <span className="text-[10px] text-red-400 font-mono bg-red-500/10 px-1.5 py-0.5 rounded">{(settings.riskScoreMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Agresivita alertů u vysokých dávek a extrémním tempu užívání.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Agresivita alertů u vysokých dávek a extrémním tempu užívání.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.riskScoreMultiplier ?? 1.0} onChange={e => updateSetting('riskScoreMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-red-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-rose-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-rose-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Activity size={14} className="text-rose-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Interakce</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Interakce</label>
                                   </div>
                                   <span className="text-[10px] text-rose-400 font-mono bg-rose-500/10 px-1.5 py-0.5 rounded">{(settings.interactionRiskMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Zesilovač varování pro synergie a kontraidikace. Nižší = benevolentnější.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Zesilovač varování pro synergie a kontraidikace. Nižší = benevolentnější.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.interactionRiskMultiplier ?? 1.0} onChange={e => updateSetting('interactionRiskMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-rose-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-red-400/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-red-400/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <ZapOff size={14} className="text-red-400" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Základní Práh (Threshold)</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Základní Práh (Threshold)</label>
                                   </div>
                                   <span className="text-[10px] text-red-300 font-mono bg-red-400/10 px-1.5 py-0.5 rounded">{(settings.baseRiskThreshold ?? 5.0).toFixed(1)}</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Minimální hodnota teoretické koncentrace vzbuzující high-level varování.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Minimální hodnota teoretické koncentrace vzbuzující high-level varování.</p>
                                <input type="range" min="1.0" max="20.0" step="0.5" value={settings.baseRiskThreshold ?? 5.0} onChange={e => updateSetting('baseRiskThreshold', parseFloat(e.target.value) || 5.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-red-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-yellow-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-yellow-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <BatteryCharging size={14} className="text-yellow-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Odvykací Stav</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Odvykací Stav</label>
                                   </div>
                                   <span className="text-[10px] text-yellow-400 font-mono bg-yellow-500/10 px-1.5 py-0.5 rounded">{(settings.withdrawalSeverityMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Penalizace AI skóre pro taperingové modely a zohlednění diskomfortu (craving).</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Penalizace AI skóre pro taperingové modely a zohlednění diskomfortu (craving).</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.withdrawalSeverityMultiplier ?? 1.0} onChange={e => updateSetting('withdrawalSeverityMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-yellow-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-teal-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-teal-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <HeartPulse size={14} className="text-teal-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Comedown Efekt</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Comedown Efekt</label>
                                   </div>
                                   <span className="text-[10px] text-teal-400 font-mono bg-teal-500/10 px-1.5 py-0.5 rounded">{(settings.comedownSeverityMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Dopamin/Serotonin deplece - ovlivňuje odhady energetické propasti v AI analýze.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Dopamin/Serotonin deplece - ovlivňuje odhady energetické propasti v AI analýze.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.comedownSeverityMultiplier ?? 1.0} onChange={e => updateSetting('comedownSeverityMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-teal-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-pink-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-pink-500/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Brain size={14} className="text-pink-500" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Potenciál Závislosti</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Potenciál Závislosti</label>
                                   </div>
                                   <span className="text-[10px] text-pink-400 font-mono bg-pink-500/10 px-1.5 py-0.5 rounded">{(settings.addictionPotentialMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Ostražitost Habit Trackingu. Vyšší hodnota více penalizuje změny frekvence zvyků.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Ostražitost Habit Trackingu. Vyšší hodnota více penalizuje změny frekvence zvyků.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.addictionPotentialMultiplier ?? 1.0} onChange={e => updateSetting('addictionPotentialMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-pink-500 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
                           </div>
@@ -1150,7 +1162,7 @@ export default function Settings({
 
                         {/* AI & ANALÝZA */}
                         <div className="space-y-4 pt-2">
-                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                          <h4 className="text-xs font-black text-theme-text/80 uppercase tracking-widest border-b border-theme-border/50 pb-2 flex items-center gap-2">
                              <BrainCircuit size={14} className="text-emerald-400" /> AI & Behavior Engine
                           </h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -1165,11 +1177,11 @@ export default function Settings({
                                     "p-3 rounded-2xl border text-left flex flex-col gap-2 transition-all relative overflow-hidden group",
                                     (settings as any)[opt.id] 
                                       ? "bg-emerald-500/10 border-emerald-500/30 shadow-[inset_0_0_15px_rgba(16,185,129,0.05)]" 
-                                      : "bg-black/60 border-white/5 hover:bg-black/80 hover:border-white/10"
+                                      : "bg-theme-card border-theme-border/50 hover:bg-theme-secondary hover:border-theme-border"
                                   )}
                                >
                                   <div className="flex justify-between items-center w-full">
-                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-emerald-400" : "text-white/40"} />
+                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-emerald-400" : "text-theme-text/40"} />
                                     <div className={cn(
                                       "w-6 h-3 rounded-full flex items-center p-0.5 transition-colors",
                                       (settings as any)[opt.id] ? "bg-emerald-500" : "bg-white/10"
@@ -1181,18 +1193,18 @@ export default function Settings({
                                     </div>
                                   </div>
                                   <div>
-                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-emerald-400" : "text-white/70")}>{opt.label}</h5>
-                                    <p className="text-[8px] text-white/40 leading-tight mt-1">{opt.desc}</p>
+                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-emerald-400" : "text-theme-text/70")}>{opt.label}</h5>
+                                    <p className="text-[8px] text-theme-text/40 leading-tight mt-1">{opt.desc}</p>
                                   </div>
                                </button>
                              ))}
 
-                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
-                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Přísnost AI Analýzy</label>
+                             <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-wider mb-2">Přísnost AI Analýzy</label>
                                 <select 
                                   value={settings.aiStrictness || 'normal'}
                                   onChange={e => updateSetting('aiStrictness', e.target.value)}
-                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-emerald-500/50"
+                                  className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-xs text-theme-text/90 outline-none focus:border-emerald-500/50"
                                 >
                                   <option value="loose">Loose (Liberální)</option>
                                   <option value="normal">Normal (Standardní)</option>
@@ -1200,24 +1212,24 @@ export default function Settings({
                                 </select>
                              </div>
 
-                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
-                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Model Rozpadu</label>
+                             <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-wider mb-2">Model Rozpadu</label>
                                 <select 
                                   value={settings.decayModel || 'exponential'}
                                   onChange={e => updateSetting('decayModel', e.target.value)}
-                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-emerald-500/50"
+                                  className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-xs text-theme-text/90 outline-none focus:border-emerald-500/50"
                                 >
                                   <option value="linear">Lineární (V0)</option>
                                   <option value="exponential">Exponenciální (Farmakokinetický)</option>
                                 </select>
                              </div>
 
-                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
-                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Matrix Interakcí</label>
+                             <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-wider mb-2">Matrix Interakcí</label>
                                 <select 
                                   value={settings.interactionAlgorithm || 'v1'}
                                   onChange={e => updateSetting('interactionAlgorithm', e.target.value)}
-                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-emerald-500/50"
+                                  className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-xs text-theme-text/90 outline-none focus:border-emerald-500/50"
                                 >
                                   <option value="v1">Stable V1</option>
                                   <option value="v2_beta">V2 Beta (N-cestná interakce)</option>
@@ -1228,7 +1240,7 @@ export default function Settings({
 
                         {/* STORAGE & DATA */}
                         <div className="space-y-4 pt-2">
-                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                          <h4 className="text-xs font-black text-theme-text/80 uppercase tracking-widest border-b border-theme-border/50 pb-2 flex items-center gap-2">
                              <Database size={14} className="text-cyan-400" /> Úložiště & Datový Model
                           </h4>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -1244,11 +1256,11 @@ export default function Settings({
                                     "p-3 rounded-2xl border text-left flex flex-col gap-2 transition-all relative overflow-hidden group",
                                     (settings as any)[opt.id] 
                                       ? "bg-cyan-500/10 border-cyan-500/30 shadow-[inset_0_0_15px_rgba(6,182,212,0.05)]" 
-                                      : "bg-black/60 border-white/5 hover:bg-black/80 hover:border-white/10"
+                                      : "bg-theme-card border-theme-border/50 hover:bg-theme-secondary hover:border-theme-border"
                                   )}
                                >
                                   <div className="flex justify-between items-center w-full">
-                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-cyan-400" : "text-white/40"} />
+                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-cyan-400" : "text-theme-text/40"} />
                                     <div className={cn(
                                       "w-6 h-3 rounded-full flex items-center p-0.5 transition-colors",
                                       (settings as any)[opt.id] ? "bg-cyan-500" : "bg-white/10"
@@ -1260,18 +1272,18 @@ export default function Settings({
                                     </div>
                                   </div>
                                   <div>
-                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-cyan-400" : "text-white/70")}>{opt.label}</h5>
-                                    <p className="text-[8px] text-white/40 leading-tight mt-1">{opt.desc}</p>
+                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-cyan-400" : "text-theme-text/70")}>{opt.label}</h5>
+                                    <p className="text-[8px] text-theme-text/40 leading-tight mt-1">{opt.desc}</p>
                                   </div>
                                </button>
                              ))}
 
-                             <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group">
-                                <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Database Engine</label>
+                             <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between group">
+                                <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-wider mb-2">Database Engine</label>
                                 <select 
                                   value={settings.databaseMode || 'indexed_db'}
                                   onChange={e => updateSetting('databaseMode', e.target.value)}
-                                  className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-cyan-500/50"
+                                  className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-xs text-theme-text/90 outline-none focus:border-cyan-500/50"
                                 >
                                   <option value="indexed_db">Indexed DB (Optimized)</option>
                                   <option value="local_storage">Local Storage (Legacy)</option>
@@ -1283,7 +1295,7 @@ export default function Settings({
 
                         {/* RENDER & PERFORMANCE */}
                         <div className="space-y-4 pt-2">
-                          <h4 className="text-xs font-black text-white/80 uppercase tracking-widest border-b border-white/5 pb-2 flex items-center gap-2">
+                          <h4 className="text-xs font-black text-theme-text/80 uppercase tracking-widest border-b border-theme-border/50 pb-2 flex items-center gap-2">
                              <Cpu size={14} className="text-blue-400" /> Renderovač & Výkon
                           </h4>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -1299,11 +1311,11 @@ export default function Settings({
                                     "p-3 rounded-2xl border text-left flex flex-col gap-2 transition-all relative overflow-hidden group",
                                     (settings as any)[opt.id] 
                                       ? "bg-blue-500/10 border-blue-500/30 shadow-[inset_0_0_15px_rgba(59,130,246,0.05)]" 
-                                      : "bg-black/60 border-white/5 hover:bg-black/80 hover:border-white/10"
+                                      : "bg-theme-card border-theme-border/50 hover:bg-theme-secondary hover:border-theme-border"
                                   )}
                                >
                                   <div className="flex justify-between items-center w-full">
-                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-blue-400" : "text-white/40"} />
+                                    <opt.icon size={12} className={(settings as any)[opt.id] ? "text-blue-400" : "text-theme-text/40"} />
                                     <div className={cn(
                                       "w-6 h-3 rounded-full flex items-center p-0.5 transition-colors",
                                       (settings as any)[opt.id] ? "bg-blue-500" : "bg-white/10"
@@ -1315,31 +1327,31 @@ export default function Settings({
                                     </div>
                                   </div>
                                   <div>
-                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-blue-400" : "text-white/70")}>{opt.label}</h5>
-                                    <p className="text-[8px] text-white/40 leading-tight mt-1">{opt.desc}</p>
+                                    <h5 className={cn("text-[9px] font-black uppercase tracking-widest mt-1", (settings as any)[opt.id] ? "text-blue-400" : "text-theme-text/70")}>{opt.label}</h5>
+                                    <p className="text-[8px] text-theme-text/40 leading-tight mt-1">{opt.desc}</p>
                                   </div>
                                </button>
                              ))}
 
                              <div className="grid grid-cols-1 gap-2">
-                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group h-full">
-                                  <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Canvas Render</label>
+                               <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between group h-full">
+                                  <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-wider mb-2">Canvas Render</label>
                                   <select 
                                     value={settings.canvasRenderMode || 'webgl'}
                                     onChange={e => updateSetting('canvasRenderMode', e.target.value)}
-                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-blue-500/50 mt-auto"
+                                    className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-xs text-theme-text/90 outline-none focus:border-blue-500/50 mt-auto"
                                   >
                                     <option value="webgl">WebGL (Fast)</option>
                                     <option value="2d">Canvas 2D (Safe fallback)</option>
                                   </select>
                                </div>
 
-                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between group h-full">
-                                  <label className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-2">Target FPS</label>
+                               <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between group h-full">
+                                  <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-wider mb-2">Target FPS</label>
                                   <select 
                                     value={settings.renderFPS || 60}
                                     onChange={e => updateSetting('renderFPS', parseInt(e.target.value) as 30 | 60 | 120)}
-                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs text-white/90 outline-none focus:border-blue-500/50 mt-auto"
+                                    className="w-full bg-theme-subtle border border-theme-border rounded-xl px-3 py-2 text-xs text-theme-text/90 outline-none focus:border-blue-500/50 mt-auto"
                                   >
                                     <option value={30}>30 FPS (Battery Saver)</option>
                                     <option value={60}>60 FPS (Standard)</option>
@@ -1351,58 +1363,58 @@ export default function Settings({
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-emerald-400/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-emerald-400/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <LineChart size={14} className="text-emerald-400" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Data Stale Weight</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Data Stale Weight</label>
                                   </div>
                                   <span className="text-[10px] text-emerald-300 font-mono bg-emerald-400/10 px-1.5 py-0.5 rounded">{(settings.staleDataWeightMultiplier ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Degradace starých dat. Menší než 1 = AI preferuje výhradně nedávné vzorce.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Degradace starých dat. Menší než 1 = AI preferuje výhradně nedávné vzorce.</p>
                                <input type="range" min="0.1" max="5.0" step="0.1" value={settings.staleDataWeightMultiplier ?? 1.0} onChange={e => updateSetting('staleDataWeightMultiplier', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-sky-400/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-sky-400/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Terminal size={14} className="text-sky-400" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Decay Rate Constant</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Decay Rate Constant</label>
                                   </div>
                                   <span className="text-[10px] text-sky-300 font-mono bg-sky-400/10 px-1.5 py-0.5 rounded">{(settings.doseDecayRate ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Přepis základní matematické konstanty celkové eliminační křivky těla.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Přepis základní matematické konstanty celkové eliminační křivky těla.</p>
                                <input type="range" min="0.1" max="3.0" step="0.1" value={settings.doseDecayRate ?? 1.0} onChange={e => updateSetting('doseDecayRate', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-sky-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 flex flex-col justify-between hover:bg-black/80 hover:border-yellow-400/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 flex flex-col justify-between hover:bg-theme-secondary hover:border-yellow-400/30 transition-all duration-300">
                                <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
                                      <Code size={14} className="text-yellow-400" />
-                                     <label className="text-[10px] font-bold text-white uppercase tracking-wider">Habit Sensitivity</label>
+                                     <label className="text-[10px] font-bold text-theme-text uppercase tracking-wider">Habit Sensitivity</label>
                                   </div>
                                   <span className="text-[10px] text-yellow-300 font-mono bg-yellow-400/10 px-1.5 py-0.5 rounded">{(settings.habitAnalysisSensitivity ?? 1.0).toFixed(2)}x</span>
                                </div>
-                               <p className="text-[10px] text-white/40 mb-4 leading-relaxed min-h-[44px]">Určuje sílu LLM k nalézání vzorců. Vyšší = hledá spojitosti i tam, kde nejsou.</p>
+                               <p className="text-[10px] text-theme-text/40 mb-4 leading-relaxed min-h-[44px]">Určuje sílu LLM k nalézání vzorců. Vyšší = hledá spojitosti i tam, kde nejsou.</p>
                                <input type="range" min="0.1" max="5.0" step="0.1" value={settings.habitAnalysisSensitivity ?? 1.0} onChange={e => updateSetting('habitAnalysisSensitivity', parseFloat(e.target.value) || 1.0)} className="w-full h-1.5 bg-white/5 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:rounded-full cursor-pointer" />
                             </div>
 
                             <div className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-white/20 transition-all duration-300">
-                                 <label className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-3 block">AI Max Tokens Limit</label>
-                                 <input type="number" value={settings.aiMaxTokens ?? 600} onChange={e => updateSetting('aiMaxTokens', parseInt(e.target.value) || 600)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm font-mono text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors" />
+                               <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 focus-within:border-theme-border transition-all duration-300">
+                                 <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-widest mb-3 block">AI Max Tokens Limit</label>
+                                 <input type="number" value={settings.aiMaxTokens ?? 600} onChange={e => updateSetting('aiMaxTokens', parseInt(e.target.value) || 600)} className="w-full bg-white/5 border border-theme-border rounded-xl p-3 text-sm font-mono text-theme-text focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors" />
                                </div>
-                               <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-white/20 transition-all duration-300">
-                                 <label className="text-[10px] font-bold text-white/80 uppercase tracking-widest mb-3 block">AI Retry Fallbacks</label>
-                                 <input type="number" value={settings.aiMaxRetries ?? 2} onChange={e => updateSetting('aiMaxRetries', parseInt(e.target.value) || 2)} className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm font-mono text-white focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors" />
+                               <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 focus-within:border-theme-border transition-all duration-300">
+                                 <label className="text-[10px] font-bold text-theme-text/80 uppercase tracking-widest mb-3 block">AI Retry Fallbacks</label>
+                                 <input type="number" value={settings.aiMaxRetries ?? 2} onChange={e => updateSetting('aiMaxRetries', parseInt(e.target.value) || 2)} className="w-full bg-white/5 border border-theme-border rounded-xl p-3 text-sm font-mono text-theme-text focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-colors" />
                                </div>
                             </div>
                           </div>
 
                         {/* LLM PROMPTY */}
                         <div className="space-y-4 pt-2">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
-                             <h4 className="text-xs font-black text-white/80 uppercase tracking-widest flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-theme-border/50 pb-3">
+                             <h4 className="text-xs font-black text-theme-text/80 uppercase tracking-widest flex items-center gap-2">
                                 <Terminal size={14} className="text-purple-400" /> Super-User Prompts Override
                              </h4>
                              <button
@@ -1412,58 +1424,58 @@ export default function Settings({
                                   updateSetting('aiPredictionPrompt', DEFAULT_PREDICTION_PROMPT);
                                   updateSetting('aiTaperingSystemPrompt', DEFAULT_TAPERING_PROMPT);
                                }}
-                               className="text-[10px] font-bold bg-white/5 hover:bg-white/10 text-white/70 px-4 py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-widest border border-white/5 hover:border-white/10"
+                               className="text-[10px] font-bold bg-white/5 hover:bg-theme-subtle-hover text-theme-text/70 px-4 py-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 uppercase tracking-widest border border-theme-border/50 hover:border-theme-border"
                              >
                                 <RefreshCw size={12} /> Resetovat Defaultní Bloky
                              </button>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-purple-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 focus-within:border-purple-500/30 transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
-                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Analyzátor: Metaprompt Role</label>
+                                 <label className="text-[10px] font-bold text-theme-text uppercase tracking-widest">Analyzátor: Metaprompt Role</label>
                                  <span className="text-purple-400/80 text-[9px] font-bold uppercase tracking-widest bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">SYSTEM FORMAT</span>
                               </div>
                               <textarea 
                                 value={settings.aiSystemPrompt ?? DEFAULT_SYSTEM_PROMPT}
                                 onChange={e => updateSetting('aiSystemPrompt', e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-purple-500/50 focus:text-white focus:bg-white/10 transition-colors h-32 custom-scrollbar resize-none"
+                                className="w-full bg-white/5 border border-theme-border rounded-xl p-4 text-[11px] leading-relaxed font-mono text-theme-text/70 focus:outline-none focus:border-purple-500/50 focus:text-theme-text focus:bg-white/10 transition-colors h-32 custom-scrollbar resize-none"
                               />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-purple-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 focus-within:border-purple-500/30 transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
-                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Tapering Agent: Metaprompt Role</label>
+                                 <label className="text-[10px] font-bold text-theme-text uppercase tracking-widest">Tapering Agent: Metaprompt Role</label>
                                  <span className="text-purple-400/80 text-[9px] font-bold uppercase tracking-widest bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">SYSTEM FORMAT</span>
                               </div>
                               <textarea 
                                 value={settings.aiTaperingSystemPrompt ?? DEFAULT_TAPERING_PROMPT}
                                 onChange={e => updateSetting('aiTaperingSystemPrompt', e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-purple-500/50 focus:text-white focus:bg-white/10 transition-colors h-32 custom-scrollbar resize-none"
+                                className="w-full bg-white/5 border border-theme-border rounded-xl p-4 text-[11px] leading-relaxed font-mono text-theme-text/70 focus:outline-none focus:border-purple-500/50 focus:text-theme-text focus:bg-white/10 transition-colors h-32 custom-scrollbar resize-none"
                               />
                             </div>
                             
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-sky-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 focus-within:border-sky-500/30 transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
-                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Analyzátor: JSON Vstup</label>
+                                 <label className="text-[10px] font-bold text-theme-text uppercase tracking-widest">Analyzátor: JSON Vstup</label>
                                  <span className="text-sky-400/80 text-[9px] font-bold uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">USER INSTRUCTION FORMAT</span>
                               </div>
                               <textarea 
                                 value={settings.aiGlobalPrompt ?? DEFAULT_GLOBAL_PROMPT}
                                 onChange={e => updateSetting('aiGlobalPrompt', e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-sky-500/50 focus:text-white focus:bg-white/10 transition-colors h-48 custom-scrollbar resize-none"
+                                className="w-full bg-white/5 border border-theme-border rounded-xl p-4 text-[11px] leading-relaxed font-mono text-theme-text/70 focus:outline-none focus:border-sky-500/50 focus:text-theme-text focus:bg-white/10 transition-colors h-48 custom-scrollbar resize-none"
                               />
                             </div>
 
-                            <div className="bg-black/60 border border-white/5 rounded-2xl p-4 focus-within:border-sky-500/30 transition-all duration-300">
+                            <div className="bg-theme-card border border-theme-border/50 rounded-2xl p-4 focus-within:border-sky-500/30 transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
-                                 <label className="text-[10px] font-bold text-white uppercase tracking-widest">Tapering Agent: JSON Vstup</label>
+                                 <label className="text-[10px] font-bold text-theme-text uppercase tracking-widest">Tapering Agent: JSON Vstup</label>
                                  <span className="text-sky-400/80 text-[9px] font-bold uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded-full border border-sky-500/20">USER INSTRUCTION FORMAT</span>
                               </div>
                               <textarea 
                                 value={settings.aiPredictionPrompt ?? DEFAULT_PREDICTION_PROMPT}
                                 onChange={e => updateSetting('aiPredictionPrompt', e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-[11px] leading-relaxed font-mono text-white/70 focus:outline-none focus:border-sky-500/50 focus:text-white focus:bg-white/10 transition-colors h-48 custom-scrollbar resize-none"
+                                className="w-full bg-white/5 border border-theme-border rounded-xl p-4 text-[11px] leading-relaxed font-mono text-theme-text/70 focus:outline-none focus:border-sky-500/50 focus:text-theme-text focus:bg-white/10 transition-colors h-48 custom-scrollbar resize-none"
                               />
                             </div>
                           </div>
@@ -1488,7 +1500,7 @@ export default function Settings({
                                     window.location.reload();
                                   }
                                 }}
-                                className="shrink-0 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/50 px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-[11px] transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]"
+                                className="shrink-0 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-theme-text border border-red-500/50 px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-[11px] transition-all duration-300 shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)]"
                               >
                                 Hard Reset Dvojitý
                               </button>
@@ -1744,7 +1756,7 @@ export default function Settings({
                                   setShowTextImport(false);
                                   setImportTextValue('');
                                 }}
-                                className="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-md"
+                                className="px-4 py-2 rounded-xl bg-orange-500 text-theme-text font-bold text-sm shadow-md"
                               >
                                 Načíst text
                               </button>
@@ -1777,7 +1789,7 @@ export default function Settings({
           {/* ABOUT TAB */}
           {activeTab === 'about' && (
             <div className="space-y-6">
-              <div className="relative overflow-hidden rounded-[2rem] bg-black border border-white/10 p-8 flex flex-col items-center justify-center min-h-[300px] shadow-2xl">
+              <div className="relative overflow-hidden rounded-[2rem] bg-theme-bg border border-theme-border p-8 flex flex-col items-center justify-center min-h-[300px] shadow-2xl">
                 {/* Abstract background elements */}
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/0 blur-[60px]" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-tl from-emerald-500/20 to-teal-500/0 blur-[60px]" />
@@ -1788,10 +1800,10 @@ export default function Settings({
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.5, type: 'spring' }}
-                    className="w-24 h-24 rounded-full bg-gradient-to-tr from-white/10 to-white/5 border border-white/20 backdrop-blur-md flex items-center justify-center p-1"
+                    className="w-24 h-24 rounded-full bg-gradient-to-tr from-white/10 to-white/5 border border-theme-border backdrop-blur-md flex items-center justify-center p-1"
                   >
                     <div className="w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-inner">
-                      <Activity size={40} className="text-white" />
+                      <Activity size={40} className="text-theme-text" />
                     </div>
                   </motion.div>
                   
@@ -1810,7 +1822,7 @@ export default function Settings({
                        transition={{ delay: 0.2 }}
                        className="flex items-center justify-center gap-3"
                     >
-                       <span className="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-[10px] font-bold text-white tracking-widest uppercase">
+                       <span className="px-3 py-1 rounded-full bg-white/10 border border-theme-border text-[10px] font-bold text-theme-text tracking-widest uppercase">
                          Verze 2.1.5
                        </span>
                        <span className="px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[10px] font-bold text-indigo-300 tracking-widest uppercase">
@@ -1823,7 +1835,7 @@ export default function Settings({
                      initial={{ y: 10, opacity: 0 }}
                      animate={{ y: 0, opacity: 1 }}
                      transition={{ delay: 0.3 }}
-                     className="text-sm text-white/60 font-medium max-w-[280px] leading-relaxed mx-auto"
+                     className="text-sm text-theme-text/60 font-medium max-w-[280px] leading-relaxed mx-auto"
                   >
                     Precizní analytický nástroj na pomezí technologie, biologie a umělé inteligence pro vizualizaci skrytých farmakokinetických dat.
                   </motion.p>
@@ -1866,9 +1878,9 @@ export default function Settings({
               </div>
 
               <div className="grid grid-cols-2 gap-3 pb-8">
-                <a href="#" className="flex flex-col items-center justify-center gap-2 py-6 rounded-2xl bg-black border border-white/10 hover:border-white/20 transition-all text-white group">
-                  <Github size={24} className="text-white/60 group-hover:text-white transition-colors" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 group-hover:text-white">Zdrojový kód</span>
+                <a href="#" className="flex flex-col items-center justify-center gap-2 py-6 rounded-2xl bg-theme-bg border border-theme-border hover:border-theme-border transition-all text-theme-text group">
+                  <Github size={24} className="text-theme-text/60 group-hover:text-theme-text transition-colors" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-theme-text/60 group-hover:text-theme-text">Zdrojový kód</span>
                 </a>
                 <a href="#" className="flex flex-col items-center justify-center gap-2 py-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all text-rose-500 group">
                   <Heart size={24} className="group-hover:scale-110 transition-transform" />

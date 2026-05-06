@@ -18,6 +18,7 @@
   --color-theme-glass: var(--md3-glass);
   --color-theme-subtle: var(--md3-subtle);
   --color-theme-subtle-hover: var(--md3-subtle-hover);
+  --color-theme-primary: var(--md3-primary);
 
   --color-md3-primary: var(--md3-primary, #D0BCFF);
   --color-md3-primary-container: var(--md3-primary-container, #4F378B);
@@ -28,7 +29,7 @@
   --color-md3-orange: #FDBA74;
   --color-md3-gray: #C4C7C5;
   --color-cyan-primary: #A8C7FA;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
 
   --animate-shake: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
   
@@ -136,6 +137,28 @@ input[type="number"] {
     --md3-subtle: rgba(255, 255, 255, 0.03);
     --md3-subtle-hover: rgba(255, 255, 255, 0.06);
   }
+  .vision {
+    --md3-bg: #E5E5EA;
+    --md3-text: #1C1C1E;
+    --md3-card: rgba(255, 255, 255, 0.6);
+    --md3-secondary: rgba(255, 255, 255, 0.4);
+    --md3-border: rgba(255, 255, 255, 0.4);
+    --md3-glass: rgba(255, 255, 255, 0.5);
+    --md3-subtle: rgba(255, 255, 255, 0.3);
+    --md3-subtle-hover: rgba(255, 255, 255, 0.5);
+    --md3-primary: #007AFF;
+  }
+  .vision.dark {
+    --md3-bg: #000000;
+    --md3-text: #FFFFFF;
+    --md3-card: rgba(30, 30, 30, 0.6);
+    --md3-secondary: rgba(255, 255, 255, 0.1);
+    --md3-border: rgba(255, 255, 255, 0.2);
+    --md3-glass: rgba(50, 50, 50, 0.4);
+    --md3-subtle: rgba(255, 255, 255, 0.05);
+    --md3-subtle-hover: rgba(255, 255, 255, 0.12);
+    --md3-primary: #0A84FF;
+  }
 
   body {
     @apply antialiased bg-md3-bg text-md3-text selection:bg-md3-primary/30;
@@ -149,47 +172,56 @@ input[type="number"] {
 
 @layer utilities {
   .md3-glass {
-    @apply bg-md3-glass backdrop-blur-xl border border-md3-border shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+    @apply bg-theme-glass backdrop-blur-3xl border shadow-xl transition-colors duration-300;
+    border-color: var(--md3-border);
   }
   .md3-glass-light {
-    @apply bg-md3-glass backdrop-blur-md border border-md3-border;
+    @apply bg-theme-secondary backdrop-blur-md border shadow-sm transition-colors duration-300;
+    border-color: var(--md3-border);
+    backdrop-filter: blur(12px);
   }
   .md3-card {
-    @apply bg-md3-card rounded-2xl border border-md3-border shadow-md transition-all duration-300;
+    @apply bg-theme-card backdrop-blur-2xl rounded-[2.5rem] border shadow-2xl transition-all duration-300;
+    border-color: var(--md3-border);
   }
   
   .bento-mode .md3-card {
-    @apply rounded-3xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-0.5;
+    @apply rounded-[2.5rem] shadow-lg hover:shadow-2xl hover:-translate-y-0.5;
   }
 
   .glass-mode .md3-card {
-    @apply bg-md3-glass/70 backdrop-blur shadow-sm border-white/10;
-    backdrop-filter: blur(4px) saturate(120%);
-    -webkit-backdrop-filter: blur(4px) saturate(120%);
+    @apply bg-theme-glass backdrop-blur-3xl shadow-2xl;
+    border-color: var(--md3-border);
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
   }
 
   .glass-mode header {
-    @apply bg-md3-glass/80 backdrop-blur-md border-b border-white/10 shadow-sm;
-    backdrop-filter: blur(8px) saturate(120%);
-    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    @apply bg-theme-glass backdrop-blur-md border-b shadow-sm;
+    border-color: var(--md3-border);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
   }
   
   .glass-mode nav {
-    @apply bg-md3-glass/80 backdrop-blur-md border-t border-white/10 shadow-[0_-4px_20px_rgb(0,0,0,0.06)];
-    backdrop-filter: blur(8px) saturate(120%);
-    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    @apply bg-theme-glass backdrop-blur-md border-t shadow-lg;
+    border-color: var(--md3-border);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
   }
 
   .glass-mode .md3-input {
-    @apply bg-md3-glass backdrop-blur-sm border border-white/10 focus:border-md3-primary/50;
+    @apply bg-theme-subtle backdrop-blur-lg border focus:border-theme-primary/50 text-theme-text placeholder:text-theme-text/40 shadow-inner;
+    border-color: var(--md3-border);
   }
 
   .glass-mode .md3-button {
-    @apply backdrop-blur-sm;
+    @apply backdrop-blur-md;
   }
 
   .glass-mode .bg-theme-subtle {
-    @apply bg-md3-glass/50 backdrop-blur-md border border-white/5;
+    @apply bg-theme-subtle backdrop-blur-md border;
+    border-color: var(--md3-border);
   }
 
   .glow-effects-enabled .md3-card {
@@ -211,7 +243,7 @@ input[type="number"] {
     @apply active:scale-[0.97] transition-all duration-200 cursor-pointer rounded-2xl font-medium;
   }
   .md3-input {
-    @apply bg-md3-secondary border border-transparent rounded-2xl px-4 py-3.5 text-md3-text placeholder:text-md3-gray focus:border-md3-primary/30 focus:bg-md3-card focus:ring-4 focus:ring-md3-primary/10 outline-none transition-all duration-200;
+    @apply bg-theme-subtle backdrop-blur-xl border border-theme-border rounded-2xl px-4 py-3.5 text-theme-text placeholder:text-theme-text/40 focus:border-theme-primary/50 focus:bg-theme-glass shadow-inner focus:shadow-[inset_0_2px_10px_rgba(0,0,0,0.1),0_0_15px_rgba(0,0,0,0.1)] outline-none transition-all duration-300;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -274,3 +306,7 @@ input[type="number"] {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--md3-border);
 }
+
+
+.hide-scroll-indicator::-webkit-scrollbar { display: none; }
+.hide-scroll-indicator { -ms-overflow-style: none; scrollbar-width: none; }

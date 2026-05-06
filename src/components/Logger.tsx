@@ -3,6 +3,7 @@ import {
   Plus, 
   Minus, 
   AlertTriangle, 
+  AlertCircle,
   Fingerprint,
   Clock,
   Activity,
@@ -122,12 +123,13 @@ interface LoggerProps {
   substances: Substance[];
   doses: Dose[];
   settings: UserSettings;
+  onUpdateSettings?: (settings: UserSettings) => void;
   onAddDose: (dose: Dose) => void;
   onDeleteDose: (id: string) => void;
   onClearAll: () => void;
 }
 
-export default function Logger({ substances, doses, settings, onAddDose }: LoggerProps) {
+export default function Logger({ substances, doses, settings, onUpdateSettings, onAddDose }: LoggerProps) {
   const [selectedSubstanceId, setSelectedSubstanceId] = useState(substances[0]?.id || '');
   const [selectedStrainId, setSelectedStrainId] = useState('');
   const [amount, setAmount] = useState(0);
@@ -436,10 +438,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
   return (
     <div className="space-y-1.5 pb-2 relative">
       {/* Decorative Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 mix-blend-screen dark:mix-blend-color-dodge">
-        <div className="absolute top-[15%] left-[-5%] w-[35%] h-[35%] bg-md3-primary/10 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[25%] right-[-5%] w-[30%] h-[30%] bg-md3-primary/5 blur-[100px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+      
 
       {/* Substance Selection - Modern Pill Row */}
       <section className="relative z-10 pt-2">
@@ -454,8 +453,8 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                 className={cn(
                   "flex items-center gap-2 px-4 py-3 rounded-[1.2rem] border transition-all whitespace-nowrap justify-center relative overflow-hidden shadow-sm shrink-0 snap-start active:scale-[0.98] group",
                   isActive 
-                    ? "border-transparent text-white font-black scale-[1.02]" 
-                    : "bg-theme-bg/60 backdrop-blur-md text-white/50 border-white/5 hover:bg-theme-bg hover:text-white/80"
+                    ? "border-transparent text-theme-text font-black scale-[1.02]" 
+                    : "bg-theme-bg/60 backdrop-blur-md text-theme-text/50 border-theme-border/50 hover:bg-theme-bg hover:text-theme-text/80"
                 )}
                 style={isActive ? { backgroundColor: s.color || '#00d1ff', boxShadow: `0 8px 25px ${s.color}66` } : {}}
               >
@@ -512,46 +511,81 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 mb-1 bg-theme-subtle border-2 rounded-[1.5rem] p-4 shadow-lg relative overflow-hidden flex flex-col gap-2"
-          style={{ 
-            borderColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef444455' : (taperingGuidance.isRightTime ? '#10b98155' : '#f59e0b55'),
-            backgroundColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef444410' : (taperingGuidance.isRightTime ? '#10b98110' : '#f59e0b10')
-          }}
+          className="mt-4 mb-2 bg-theme-glass backdrop-blur-3xl border border-theme-border rounded-[2rem] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_10px_30px_rgba(0,0,0,0.3)] relative overflow-hidden flex flex-col gap-3 group"
         >
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-                style={{ backgroundColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef4444' : (taperingGuidance.isRightTime ? '#10b981' : '#f59e0b') }}
-             >
-                <Activity size={20} />
+          {/* Subtle colored glow based on status */}
+          <div className="absolute top-[-50px] right-[-50px] w-32 h-32 blur-[50px] opacity-20 pointer-events-none transition-all group-hover:opacity-40"
+             style={{ backgroundColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef4444' : (taperingGuidance.isRightTime ? '#10b981' : '#f59e0b') }}
+          />
+
+          <div className="flex items-center justify-between mb-1 relative z-10">
+            <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-theme-text shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                  style={{ backgroundColor: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef444499' : (taperingGuidance.isRightTime ? '#10b98199' : '#f59e0b99') }}
+               >
+                  <Activity size={20} strokeWidth={2.5}/>
+               </div>
+               <div>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-0.5 drop-shadow-sm"
+                    style={{ color: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#f87171' : (taperingGuidance.isRightTime ? '#34d399' : '#fbbf24') }}
+                  >
+                    Tapering Plán
+                  </h4>
+                  <div className="text-[10px] font-bold text-theme-text/50">
+                    Rozvrženo na dnešní den
+                  </div>
+               </div>
+            </div>
+            
+            <button
+               onClick={() => {
+                 if (onUpdateSettings) {
+                   onUpdateSettings({ ...settings, activeTaperingPlan: null });
+                 }
+               }}
+               className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-300 transition-all shadow-sm active:scale-95"
+            >
+               Zrušit
+            </button>
+          </div>
+          
+          <div className="relative z-10 w-full mb-1">
+             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest mb-1.5">
+               <span className="text-theme-text/60">Dnes užito</span>
+               <span className="text-theme-text">
+                 <span className={cn(taperingGuidance.isOverTotal ? "text-red-400" : "text-theme-text")}>{formatAmount(taperingGuidance.usedToday, selectedSubstance?.unit || '', 1)}</span> 
+                 <span className="text-theme-text/40"> / {formatAmount(taperingGuidance.plannedTotal, selectedSubstance?.unit || '', 1)}</span>
+               </span>
              </div>
-             <div>
-                <h4 className="text-xs font-black uppercase tracking-widest text-theme-text mb-0.5"
-                  style={{ color: taperingGuidance.isOverTotal || taperingGuidance.isOverAmount ? '#ef4444' : (taperingGuidance.isRightTime ? '#10b981' : '#f59e0b') }}
-                >
-                  Plánováno na Dnes
-                </h4>
-                <div className="text-[10px] font-bold text-md3-gray">
-                  Z plných {taperingGuidance.plannedTotal} {selectedSubstance?.unit} sis dnes dal {taperingGuidance.usedToday} {selectedSubstance?.unit}.
-                </div>
+             <div className="h-2 w-full bg-theme-card rounded-full overflow-hidden border border-theme-border/50 shadow-inner">
+               <motion.div 
+                 className="h-full rounded-full"
+                 initial={{ width: 0 }}
+                 animate={{ width: `${Math.min(100, (taperingGuidance.usedToday / taperingGuidance.plannedTotal) * 100)}%` }}
+                 style={{ backgroundColor: taperingGuidance.isOverTotal ? '#ef4444' : '#10b981' }}
+               />
              </div>
           </div>
           
-          {taperingGuidance.nearestDose && (
-            <div className="p-3 bg-theme-bg rounded-xl border border-theme-border flex justify-between items-center mt-2 shadow-inner">
+          {taperingGuidance.nearestDose ? (
+            <div className="p-3 bg-theme-glass rounded-[1rem] border border-theme-border flex justify-between items-center mt-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] relative z-10">
                <div>
-                  <div className="text-[10px] uppercase font-bold text-md3-gray mb-1">{taperingGuidance.timeMsg}</div>
-                  <div className="text-xs font-black text-theme-text">{taperingGuidance.amountMsg}</div>
+                  <div className="text-[10px] uppercase font-bold text-theme-text/50 mb-1 tracking-wider">{taperingGuidance.timeMsg}</div>
+                  <div className={cn("text-xs font-black", taperingGuidance.amountMsg.includes('OK') ? "text-emerald-400" : "text-amber-400")}>{taperingGuidance.amountMsg}</div>
                   {taperingGuidance.recentlyTook && (
-                    <div className="text-[10px] text-red-500 font-bold mt-1">Nezapomeň, že dávku jsi už doložil před malou chvílí.</div>
+                    <div className="text-[10px] text-red-400 font-bold mt-1.5 flex items-center gap-1">
+                      <AlertCircle size={10} /> Dávka užita před krátkou chvílí
+                    </div>
                   )}
                </div>
                <div className="text-right pl-3">
-                  <div className="text-2xl font-black">{taperingGuidance.nearestDose.time}</div>
+                  <div className="text-2xl font-black text-theme-text drop-shadow-md">{taperingGuidance.nearestDose.time}</div>
                </div>
             </div>
-          )}
-          {!taperingGuidance.nearestDose && (
-             <div className="text-[10px] uppercase font-bold text-md3-gray mt-1">Dnešní plán nemá určené přesné časy.</div>
+          ) : (
+             <div className="text-[10px] uppercase font-bold text-theme-text/40 mt-1 tracking-widest text-center py-2 relative z-10 bg-theme-subtle rounded-xl border border-theme-border/50">
+                Dnešní plán nemá určené přesné časy
+             </div>
           )}
         </motion.div>
       )}
@@ -559,7 +593,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       {/* Main Focus: Amount Control */}
       <section className="relative z-10 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] group mt-2 w-full rounded-[2.5rem]">
         {/* Soft abstract background glares inside an overflow-hidden wrapper */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-black/60 backdrop-blur-[40px] rounded-[2.5rem] border border-white/20 overflow-hidden pointer-events-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-black/60 backdrop-blur-[40px] rounded-[2.5rem] border border-theme-border overflow-hidden pointer-events-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
           <div 
             className="absolute inset-0 opacity-[0.25] pointer-events-none transition-opacity duration-1000 group-hover:opacity-[0.4]" 
             style={{ background: `radial-gradient(circle at top center, ${currentStrain?.color || selectedSubstance?.color || '#00d1ff'}88, transparent 75%)` }}
@@ -572,7 +606,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
         
         <div className="relative p-5 sm:p-6 flex flex-col items-center w-full">
           {selectedSubstance?.stash !== undefined && (
-            <div className="absolute top-4 right-4 text-[9px] font-bold uppercase tracking-widest text-md3-gray bg-black/40 px-2.5 py-1 rounded-xl border border-white/10 shadow-xl backdrop-blur-xl">
+            <div className="absolute top-4 right-4 text-[9px] font-bold uppercase tracking-widest text-md3-gray bg-theme-glass px-2.5 py-1 rounded-xl border border-theme-border shadow-xl backdrop-blur-xl">
               Zásoba: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }} className="font-black drop-shadow-md ml-1">{formatAmount(selectedSubstance.stash, selectedSubstance.unit, 1)}</span>
             </div>
           )}
@@ -584,7 +618,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
             {/* Big Minus Button */}
             <button 
               onClick={() => handleAdjust(-1)}
-              className="w-20 sm:w-24 h-16 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center bg-black/40 border border-white/10 text-white/80 active:scale-95 hover:scale-105 transition-all hover:bg-black/80 shadow-[0_10px_30px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-3xl z-10 hover:border-white/30 hover:text-white relative touch-manipulation group/btn shrink-0"
+              className="w-20 sm:w-24 h-16 sm:h-20 rounded-[1.2rem] sm:rounded-[1.5rem] flex items-center justify-center bg-theme-glass border border-theme-border text-theme-text/80 active:scale-95 hover:scale-105 transition-all hover:bg-theme-secondary shadow-[0_10px_30px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-3xl z-10 hover:border-theme-border hover:text-theme-text relative touch-manipulation group/btn shrink-0"
             >
               <div className="absolute inset-[-15px]" /> {/* Expanded touch target */}
               <Minus size={28} strokeWidth={3} className="drop-shadow-md group-hover/btn:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)] transition-all" />
@@ -597,7 +631,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                   type="number"
                   value={amount || ''}
                   onChange={(e) => setAmount(Number(e.target.value))}
-                  className="text-[4rem] sm:text-[5.5rem] font-black tracking-tighter tabular-nums bg-transparent border-none outline-none text-center leading-none py-0 placeholder:text-white/10 transition-all focus:scale-110"
+                  className="text-[4rem] sm:text-[5.5rem] font-black tracking-tighter tabular-nums bg-transparent border-none outline-none text-center leading-none py-0 placeholder:text-theme-text/10 transition-all focus:scale-110"
                   placeholder="0"
                   style={{ 
                     width: `${Math.max(1, String(amount || '').length) + 0.6}ch`,
@@ -633,7 +667,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
               return (
                 <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2 max-w-full relative z-10">
                   {actives.map((ai, idx) => (
-                    <div key={idx} className="text-[8px] font-bold uppercase tracking-widest text-md3-gray bg-black/40 px-2 py-0.5 rounded-md border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md">
+                    <div key={idx} className="text-[8px] font-bold uppercase tracking-widest text-md3-gray bg-theme-glass px-2 py-0.5 rounded-md border border-theme-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md">
                       <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }} className="font-black drop-shadow-sm">
                         {formatAmount(((amount * ai.percentage) / 100), selectedSubstance?.unit || 'g', 2)}
                       </span> {ai.name}
@@ -643,7 +677,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
               );
             } else if (selectedSubstance?.activeIngredientName && (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage)) {
               return (
-                <div className="text-[8px] font-bold uppercase tracking-widest text-md3-gray mt-2 bg-black/40 px-2 py-0.5 rounded-md border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md relative z-10">
+                <div className="text-[8px] font-bold uppercase tracking-widest text-md3-gray mt-2 bg-theme-glass px-2 py-0.5 rounded-md border border-theme-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md relative z-10">
                    ÚČ. LÁTKA: <span style={{ color: currentStrain?.color || selectedSubstance?.color || '#00d1ff' }} className="font-black drop-shadow-sm">{formatAmount(((amount * (currentStrain?.activeIngredientPercentage || selectedSubstance?.activeIngredientPercentage || 0)) / 100), selectedSubstance?.unit || 'g', 2)}</span> {selectedSubstance.activeIngredientName}
                 </div>
               );
@@ -743,7 +777,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                   "px-5 py-3 rounded-[1.2rem] text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-[0.1em] shrink-0 border",
                   timeOffset === opt.value
                     ? "text-black drop-shadow-sm scale-[1.02] shadow-xl" 
-                    : "bg-black/40 backdrop-blur-3xl text-white/60 border-white/5 hover:bg-black/60 hover:text-white"
+                    : "bg-theme-glass backdrop-blur-3xl text-theme-text/60 border-theme-border/50 hover:bg-theme-card hover:text-theme-text"
                 )}
                 style={timeOffset === opt.value ? { backgroundColor: currentStrain?.color || selectedSubstance?.color || '#00d1ff', borderColor: 'transparent', boxShadow: `0 8px 25px ${currentStrain?.color || selectedSubstance?.color || '#00d1ff'}66` } : {}}
               >
@@ -757,7 +791,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           type="button"
           className={cn(
             "px-6 py-3 rounded-[1.2rem] border transition-all shrink-0 flex items-center justify-center gap-2 text-[10px] uppercase font-black tracking-widest shadow-lg",
-            showAdvanced ? "bg-black/80 border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]" : "bg-black/40 backdrop-blur-3xl border-white/5 text-white/60 hover:text-white hover:bg-black/60"
+            showAdvanced ? "bg-theme-secondary border-cyan-500/50 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]" : "bg-theme-glass backdrop-blur-3xl border-theme-border/50 text-theme-text/60 hover:text-theme-text hover:bg-theme-card"
           )}
         >
           <Fingerprint size={16} className={cn("transition-transform", showAdvanced && "scale-110")} />
@@ -776,7 +810,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className="w-full relative z-50 overflow-hidden"
             >
-                <div className="p-4 rounded-[1.5rem] bg-black/40 backdrop-blur-3xl border border-white/10 space-y-4 shadow-2xl relative mb-2 flex flex-col gap-1">
+                <div className="p-4 rounded-[1.5rem] bg-theme-glass backdrop-blur-3xl border border-theme-border space-y-4 shadow-2xl relative mb-2 flex flex-col gap-1">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
                   
                   {/* Route & Stomach Options Abstract Design */}
@@ -840,7 +874,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                                   onClick={() => setStomach(s.id)}
                                   className={cn(
                                     "flex-1 py-2 text-[10px] font-black transition-all relative z-10",
-                                    stomach === s.id ? "text-orange-400 shadow-sm" : "text-md3-gray hover:text-white"
+                                    stomach === s.id ? "text-orange-400 shadow-sm" : "text-md3-gray hover:text-theme-text"
                                   )}
                                 >
                                   {s.label}
@@ -916,7 +950,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                                   type="number" 
                                   value={customFieldValues[field.id] ?? ''} 
                                   onChange={e => handleCustomFieldValueChange(field.id, e.target.value ? parseFloat(e.target.value) : undefined)}
-                                  className="w-full bg-theme-bg/60 border border-theme-border/30 rounded-2xl px-5 py-4 text-[11px] font-black tracking-widest text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all shadow-inner"
+                                  className="w-full bg-theme-bg/60 border border-theme-border/30 rounded-2xl px-5 py-4 text-[11px] font-black tracking-widest text-theme-text outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all shadow-inner"
                                   placeholder="0.00"
                                 />
                               </div>
@@ -933,7 +967,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                                   type="text" 
                                   value={customFieldValues[field.id] || ''} 
                                   onChange={e => handleCustomFieldValueChange(field.id, e.target.value)}
-                                  className="w-full bg-theme-bg/60 border border-theme-border/30 rounded-2xl px-5 py-4 text-[11px] font-black tracking-widest text-white outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all shadow-inner uppercase"
+                                  className="w-full bg-theme-bg/60 border border-theme-border/30 rounded-2xl px-5 py-4 text-[11px] font-black tracking-widest text-theme-text outline-none focus:border-purple-500/50 focus:bg-purple-500/5 transition-all shadow-inner uppercase"
                                   placeholder="TEXT..."
                                 />
                               </div>
@@ -954,7 +988,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
                                 type="range" min="1" max="5" step="1"
                                 value={customFieldValues[field.id] || 3} 
                                 onChange={e => handleCustomFieldValueChange(field.id, parseInt(e.target.value))}
-                                className="w-full h-1.5 bg-theme-border/30 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:rounded-full cursor-pointer shadow-sm"
+                                className="w-full h-1.5 bg-theme-border/30 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-purple-500 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-theme-bg [&::-webkit-slider-thumb]:rounded-full cursor-pointer shadow-sm"
                               />
                             </div>
                           );
@@ -974,14 +1008,14 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
       <div className="mt-2 flex flex-col gap-2 relative z-10 pb-0 px-1">
         <div className="relative group w-full">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Fingerprint size={16} className="text-md3-gray/60 group-focus-within:text-white transition-colors" />
+            <Fingerprint size={16} className="text-md3-gray/60 group-focus-within:text-theme-text transition-colors" />
           </div>
           <input 
             type="text" 
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="PŘIPOJTE POZNÁMKU..."
-            className="w-full bg-black/40 backdrop-blur-3xl border border-white/5 rounded-[1.2rem] py-3.5 pl-12 pr-4 text-[10px] font-black tracking-[0.2em] outline-none focus:border-white/20 focus:bg-black/60 transition-all text-white shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] placeholder:text-white/20 uppercase"
+            className="w-full bg-theme-glass backdrop-blur-3xl border border-theme-border/50 rounded-[1.2rem] py-3.5 pl-12 pr-4 text-[10px] font-black tracking-[0.2em] outline-none focus:border-theme-border focus:bg-theme-card transition-all text-theme-text shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] placeholder:text-theme-text/20 uppercase"
           />
         </div>
 
@@ -990,7 +1024,7 @@ export default function Logger({ substances, doses, settings, onAddDose }: Logge
           disabled={isLoggedState}
           className={cn(
             "w-full py-4 rounded-[1.2rem] font-black text-[13px] md:text-sm flex items-center justify-center gap-3 shadow-[0_4px_30px_rgba(0,0,0,0.2),inset_0_1px_2px_rgba(255,255,255,0.4)] active:scale-[0.98] transition-all uppercase tracking-[0.3em] relative overflow-hidden group border",
-            isLoggedState ? "bg-emerald-500 scale-[1.02] border-emerald-400" : "border-white/20 hover:scale-[1.02]"
+            isLoggedState ? "bg-emerald-500 scale-[1.02] border-emerald-400" : "border-theme-border hover:scale-[1.02]"
           )}
           style={isLoggedState ? { color: '#000' } : { backgroundColor: currentStrain?.color || selectedSubstance?.color || '#fff', color: '#000', boxShadow: `0 10px 40px ${currentStrain?.color || selectedSubstance?.color || '#fff'}66, inset 0 2px 4px rgba(255,255,255,0.5)` }}
         >

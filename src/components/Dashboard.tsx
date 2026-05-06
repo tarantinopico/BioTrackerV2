@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { 
+  History,
+  CalendarDays,
   HeartPulse, 
   Activity, 
   TrendingUp, 
@@ -397,76 +399,37 @@ export default function Dashboard({
     return Object.values(stats);
   }, [doses, substances]);
 
-  const systemLoad = useMemo(() => {
-    const totalLoad = activeSubstanceDetails.reduce((sum, item) => sum + item.level, 0);
-    if (totalLoad === 0) return { label: 'SYSTÉM ČISTÝ', color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: ShieldCheck };
-    if (totalLoad < 50) return { label: 'LEHKÁ ZÁTĚŽ', color: 'text-cyan-primary', bg: 'bg-cyan-500/10', icon: Activity };
-    if (totalLoad < 100) return { label: 'STŘEDNÍ ZÁTĚŽ', color: 'text-amber-400', bg: 'bg-amber-500/10', icon: Zap };
-    return { label: 'VYSOKÁ ZÁTĚŽ!', color: 'text-red-500', bg: 'bg-red-500/10', icon: AlertCircle, pulse: true };
-  }, [activeSubstanceDetails]);
-
-  const greeting = useMemo(() => {
-    const hour = currentTime.getHours();
-    if (hour < 5 || hour >= 22) return { text: 'Dobrou noc', Icon: MoonStar, color: 'text-indigo-400' };
-    if (hour < 11) return { text: 'Dobré ráno', Icon: Sunrise, color: 'text-amber-400' };
-    if (hour < 18) return { text: 'Dobré odpoledne', Icon: Coffee, color: 'text-amber-600' };
-    return { text: 'Dobrý večer', Icon: Sunset, color: 'text-orange-500' };
-  }, [currentTime]);
-
-  const dailyMessage = useMemo(() => {
-    if (activeSubstanceDetails.length === 0) return 'Váš systém je krásně čistý. Jen tak dál!';
-    if (systemLoad.label === 'LEHKÁ ZÁTĚŽ' || systemLoad.label === 'STŘEDNÍ ZÁTĚŽ') return `Látky pracují ve vašem těle. Nezapomínejte pít vodu.`;
-    return 'Dávejte na sebe pozor, systém hlásí vyšší zátěž!';
-  }, [activeSubstanceDetails.length, systemLoad.label]);
-
   return (
-    <div className="flex flex-col gap-5 relative h-full pb-32 overflow-x-hidden overflow-y-auto custom-scrollbar">
-      {/* Header - Artistic and Open */}
-      <div className="px-5 pt-6 flex items-start justify-between shrink-0 relative z-20">
-        <div className="flex flex-col gap-1.5 mt-2">
-          <h2 className="text-[28px] font-black text-theme-text flex items-center gap-2 leading-none tracking-tighter drop-shadow-sm">
-            {greeting.text} <greeting.Icon className={cn("text-theme-text opacity-80")} size={24} strokeWidth={2.5} />
-          </h2>
-          <p className="text-[11px] text-md3-gray/90 font-bold uppercase tracking-[0.2em] leading-relaxed max-w-[220px]">
-            {dailyMessage}
-          </p>
-        </div>
-        <div className={cn("text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border shadow-[0_4px_20px_-5px_rgba(0,0,0,0.3)] backdrop-blur-xl", systemLoad.color, systemLoad.bg, systemLoad.color.replace('text-', 'border-').replace('400', '400/20').replace('500', '500/20'))}>
-           <div className="flex items-center gap-1.5">
-             <systemLoad.icon size={12} className={systemLoad.pulse ? "animate-pulse" : ""} strokeWidth={3} />
-             {systemLoad.label}
-           </div>
-        </div>
-      </div>
+    <div className="flex flex-col gap-3 relative h-full pb-32 overflow-x-hidden overflow-y-auto custom-scrollbar pt-safe">
 
       {/* Hero Chart - Integrated Background style */}
-      <section className="relative flex-1 shrink min-h-[220px] flex flex-col -mx-2 z-0 pointer-events-none mt-4">
+      <section className="relative flex-1 shrink min-h-[380px] flex flex-col -mx-5 sm:mx-0 z-0 pointer-events-none border-b border-white/5 rounded-b-[3rem] overflow-hidden shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)]">
         
         {/* Floating Abstract Pills inside Chart Layer */}
-        <div className="absolute top-2 left-4 flex flex-col gap-3 z-20 pointer-events-auto">
-          <div className="bg-white/5 dark:bg-black/20 backdrop-blur-3xl border border-white/10 px-4 py-3 rounded-[1.2rem] flex flex-col shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-            <span className="text-[10px] font-bold text-md3-gray/80 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5"><Brain size={12} className="text-md3-primary/90"/> Čas od čistoty</span>
+        <div className="absolute top-0 left-4 pt-safe flex flex-col gap-3 z-20 pointer-events-auto mt-4">
+          <div className="bg-theme-glass backdrop-blur-3xl border border-theme-border px-4 py-3 rounded-[1rem] flex flex-col shadow-[0_8px_30px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)]">
+            <span className="text-[10px] font-bold text-theme-text/50 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5"><Brain size={12} className="text-cyan-400"/> Čas od čistoty</span>
             <span className="text-[18px] font-black tracking-tight text-theme-text leading-none drop-shadow-sm">{cleanTime > 0 ? `${cleanHours}h ${cleanMinutes}m` : '0h 0m'}</span>
           </div>
           {settings.dashboardWidgets?.budget !== false && (
-             <div className="bg-white/5 dark:bg-black/20 backdrop-blur-3xl border border-white/10 px-4 py-3 rounded-[1.2rem] flex flex-col shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-              <span className="text-[10px] font-bold text-md3-green/80 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5"><PiggyBank size={12} className="text-md3-green/90"/> Útrata Dnes</span>
-              <span className="text-[18px] font-black tracking-tight text-theme-text leading-none drop-shadow-sm">{settings.privacyMode ? '***' : dailyCost.toLocaleString('cs-CZ')} <span className="text-[11px] text-md3-gray/70 font-bold ml-0.5">{settings.currency || 'Kč'}</span></span>
+             <div className="bg-theme-glass backdrop-blur-3xl border border-theme-border px-4 py-3 rounded-[1rem] flex flex-col shadow-[0_8px_30px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)]">
+              <span className="text-[10px] font-bold text-emerald-400/80 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5"><PiggyBank size={12} className="text-emerald-400"/> Útrata Dnes</span>
+              <span className="text-[18px] font-black tracking-tight text-theme-text leading-none drop-shadow-sm">{settings.privacyMode ? '***' : dailyCost.toLocaleString('cs-CZ')} <span className="text-[11px] text-theme-text/50 font-bold ml-0.5">{settings.currency || 'Kč'}</span></span>
             </div>
           )}
         </div>
 
-        <div className="absolute top-2 right-4 z-20 pointer-events-auto">
-          <div className="flex bg-white/5 dark:bg-black/20 backdrop-blur-3xl p-1 rounded-2xl border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+        <div className="absolute top-0 right-4 pt-safe z-20 pointer-events-auto mt-4">
+          <div className="flex bg-theme-glass backdrop-blur-3xl p-1 rounded-2xl border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.1)]">
             <button 
               onClick={() => setChartType('kinetic')}
-              className={cn("px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", chartType === 'kinetic' ? "bg-md3-primary/90 text-white shadow-md backdrop-blur-md" : "text-md3-gray hover:text-theme-text")}
+              className={cn("px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", chartType === 'kinetic' ? "bg-cyan-500 text-black shadow-md backdrop-blur-md" : "text-theme-text/50 hover:text-theme-text")}
             >
               Kinetika
             </button>
             <button 
               onClick={() => setChartType('effects')}
-              className={cn("px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", chartType === 'effects' ? "bg-[#ff9f0a]/90 text-white shadow-md backdrop-blur-md" : "text-md3-gray hover:text-theme-text")}
+              className={cn("px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all", chartType === 'effects' ? "bg-orange-500 text-black shadow-md backdrop-blur-md" : "text-theme-text/50 hover:text-theme-text")}
             >
               Účinky
             </button>
@@ -474,9 +437,9 @@ export default function Dashboard({
         </div>
         
         {/* Soft elegant mask for the chart */}
-        <div className="absolute inset-x-0 bottom-0 top-[10px] w-full opacity-[0.9] transition-opacity duration-1000 -z-10" style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)' }}>
+        <div className="absolute inset-x-0 bottom-0 top-0 w-full opacity-[0.95] transition-opacity duration-1000 -z-10 pt-4" style={{ maskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)', WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ left: -25, right: -10, top: 40, bottom: -20 }}>
+            <AreaChart data={chartData} margin={{ left: -25, right: -10, top: 60, bottom: -10 }}>
               <defs>
                 {chartType === 'kinetic' ? (
                   substances.map(s => (
@@ -494,25 +457,13 @@ export default function Dashboard({
                   ))
                 )}
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--md3-border)" vertical={false} opacity={0.2} />
-              <XAxis 
-                dataKey="time" 
-                type="number" 
-                domain={['dataMin', 'dataMax']} 
-                tickFormatter={(time) => formatTime(time, settings)}
-                stroke="transparent"
-                tick={{ fill: 'var(--md3-gray)', fontSize: 8, fontWeight: '900' }}
-                minTickGap={30}
-                tickMargin={2}
-              />
-              <YAxis 
-                domain={[0, maxChartValue]} 
-                stroke="transparent"
-                tick={false}
-                width={0}
-              />
+              <XAxis dataKey="time" hide={true} domain={['dataMin', 'dataMax']} type="number" />
+              <YAxis hide={true} domain={[0, maxChartValue]} />
+              
+              
+              
               <Tooltip 
-                contentStyle={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.8)', backdropFilter: 'blur(10px)', border: '1px solid var(--md3-border)', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: '9px', color: 'var(--md3-text)', fontWeight: '900', padding: '6px' }}
+                contentStyle={{ backgroundColor: 'rgba(var(--theme-bg-rgb), 0.7)', backdropFilter: 'blur(30px) saturate(1.5)', border: '1px solid var(--theme-border)', borderRadius: '1.2rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', fontSize: '11px', color: 'var(--md3-text)', fontWeight: '900', padding: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
                 itemStyle={{ padding: '0' }}
                 labelFormatter={(time) => formatTime(time, settings)}
                 formatter={(value: number, name: string) => [`${value.toFixed(1)}%`, name]}
@@ -526,25 +477,37 @@ export default function Dashboard({
               />
               {chartType === 'kinetic' ? (
                 substances.map(s => (
-                  <Area key={s.id} type="monotone" dataKey={s.id} name={s.name} stroke={s.color || CATEGORY_COLORS[s.category] || '#0a84ff'} fillOpacity={1} fill={`url(#color-${s.id})`} strokeWidth={2.5} connectNulls animationDuration={settings.chartAnimation ? 300 : 0} dot={false} activeDot={{ r: 4, fill: s.color, stroke: 'var(--theme-bg)', strokeWidth: 2 }} />
+                  <Area key={s.id} type="monotone" dataKey={s.id} name={s.name} stroke={s.color || CATEGORY_COLORS[s.category] || '#0a84ff'} fillOpacity={0.8} fill={`url(#color-${s.id})`} strokeWidth={3} connectNulls animationDuration={settings.chartAnimation ? 300 : 0} dot={false} activeDot={{ r: 4, fill: s.color, stroke: 'var(--theme-bg)', strokeWidth: 2 }} />
                 ))
               ) : (
                 Array.from(new Set(substances.flatMap(s => s.effects?.map(e => e.type) || []))).map(type => (
-                  <Area key={type} type="monotone" dataKey={type} name={type} stroke={EFFECT_COLORS[type] || '#ff9f0a'} fillOpacity={1} fill={`url(#color-effect-${type})`} strokeWidth={2.5} connectNulls animationDuration={settings.chartAnimation ? 300 : 0} dot={false} activeDot={{ r: 4, fill: EFFECT_COLORS[type], stroke: 'var(--theme-bg)', strokeWidth: 2 }} />
+                  <Area key={type} type="monotone" dataKey={type} name={type} stroke={EFFECT_COLORS[type] || '#ff9f0a'} fillOpacity={0.8} fill={`url(#color-effect-${type})`} strokeWidth={3} connectNulls animationDuration={settings.chartAnimation ? 300 : 0} dot={false} activeDot={{ r: 4, fill: EFFECT_COLORS[type], stroke: 'var(--theme-bg)', strokeWidth: 2 }} />
                 ))
               )}
               <ReferenceLine 
                 x={now} 
-                stroke="#ff453a" 
-                strokeDasharray="3 3" 
-                strokeWidth={1.5} 
-                label={{ position: 'top', value: 'TEĎ', fill: '#ff453a', fontSize: 8, fontWeight: '900' }} 
+                stroke="#06b6d4" 
+                strokeDasharray="4 4" 
+                strokeWidth={2} 
+                label={{ position: 'top', value: 'NYNÍ', fill: '#06b6d4', fontSize: 11, fontWeight: '900', letterSpacing: '0.1em' }} 
                 isFront={true}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </section>
+
+      {/* QUICK ACTIONS ROW */}
+      <div className="px-3 w-full max-w-[100vw] z-10 relative transform -translate-y-6">
+         <QuickActions 
+           shortcuts={shortcuts} 
+           onUseShortcut={onUseShortcut} 
+           onAddShortcut={onAddShortcut} 
+           onRemoveShortcut={onRemoveShortcut}
+           onUpdateShortcut={onUpdateShortcut}
+           substances={substances}
+         />
+      </div>
 
       {/* Insight Engine Mini */}
       {settings.insightEngine && (() => {
@@ -554,9 +517,9 @@ export default function Dashboard({
         
         let insightMessage = "Systém je stabilní. Pokračujte ve správném užívání.";
         let alertColor = "text-md3-gray";
-        let alertBg = "bg-theme-bg/40 border-theme-border/20";
+        let alertBg = "bg-theme-glass border-theme-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)]";
         let IconCmp = Sparkles;
-        let ringColor = "ring-white/5";
+        let ringColor = "ring-white/10";
         
         if (recentDoses.length >= 5) {
            const span = recentDoses[0].timestamp - recentDoses[recentDoses.length - 1].timestamp;
@@ -564,16 +527,16 @@ export default function Dashboard({
               const hourRate = recentDoses.length / (span / 3600000);
               if (hourRate > 1) { 
                  insightMessage = "Extrémní rychlost dávkování. Hrozí akutní přetížení.";
-                 alertColor = "text-red-500";
-                 alertBg = "bg-red-500/10 border-red-500/20";
+                 alertColor = "text-red-400";
+                 alertBg = "bg-red-500/10 border-red-500/30 shadow-[inset_0_1px_1px_rgba(239,68,68,0.2)]";
                  IconCmp = AlertCircle;
-                 ringColor = "ring-red-500/30";
+                 ringColor = "ring-red-500/40";
               } else if (hourRate > 0.4) {
                  insightMessage = "Zvýšená frekvence užívání. Dejte tělu čas na zpracování.";
-                 alertColor = "text-amber-500";
-                 alertBg = "bg-amber-500/10 border-amber-500/20";
+                 alertColor = "text-amber-400";
+                 alertBg = "bg-amber-500/10 border-amber-500/30 shadow-[inset_0_1px_1px_rgba(245,158,11,0.2)]";
                  IconCmp = Activity;
-                 ringColor = "ring-amber-500/30";
+                 ringColor = "ring-amber-500/40";
               }
            }
         }
@@ -582,27 +545,27 @@ export default function Dashboard({
 
         if (activeSubstanceDetails.length === 0 && cleanHours > 48) {
             insightMessage = `Systém plně detoxifikován. Čistota: ${cleanHours}h.`;
-            alertColor = "text-emerald-500";
-            alertBg = "bg-emerald-500/10 border-emerald-500/20";
+            alertColor = "text-emerald-400";
+            alertBg = "bg-emerald-500/10 border-emerald-500/30 shadow-[inset_0_1px_1px_rgba(16,185,129,0.2)]";
             IconCmp = Brain;
-            ringColor = "ring-emerald-500/30";
+            ringColor = "ring-emerald-500/40";
         } else if (activeSubstanceDetails.length === 0 && cleanHours > 24) {
             insightMessage = "Fáze zotavení. Doporučena vyšší hydratace a spánek.";
-            alertColor = "text-cyan-primary";
-            alertBg = "bg-cyan-primary/10 border-cyan-primary/20";
+            alertColor = "text-cyan-400";
+            alertBg = "bg-cyan-500/10 border-cyan-500/30 shadow-[inset_0_1px_1px_rgba(6,182,212,0.2)]";
             IconCmp = Cpu;
-            ringColor = "ring-cyan-primary/30";
+            ringColor = "ring-cyan-500/40";
         }
         
         return (
-           <div className={cn("shrink-0 rounded-full py-2.5 px-4 flex gap-3.5 items-center justify-center w-full mx-auto max-w-[340px] shadow-[0_8px_30px_rgba(0,0,0,0.06)] border backdrop-blur-2xl transition-all relative overflow-hidden group mt-2 mb-4", alertBg)}>
-             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent pointer-events-none group-hover:via-white/[0.08] transition-colors" />
-             <div className="flex flex-row items-center gap-2.5 relative z-10 min-w-0">
-                <div className={cn("p-1.5 rounded-full shrink-0 shadow-inner ring-2", alertColor, ringColor)}>
-                   <IconCmp size={14} strokeWidth={2.5} />
+           <div className={cn("shrink-0 rounded-[2rem] border border-theme-border/50 backdrop-blur-md shadow-[0_10px_30px_rgba(0,0,0,0.2)] py-2.5 px-4 flex gap-3 items-center justify-center w-full mx-auto max-w-[340px] shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] border backdrop-blur-3xl transition-all relative overflow-hidden group", alertBg)}>
+             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none opacity-50" />
+             <div className="flex flex-row items-center gap-3 relative z-10 min-w-0 w-full">
+                <div className={cn("p-2 rounded-xl shrink-0 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] ring-1 bg-theme-glass", alertColor, ringColor)}>
+                   <IconCmp size={14} strokeWidth={3} />
                 </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[12px] font-bold text-theme-text leading-tight w-full truncate drop-shadow-sm">
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-[12px] font-bold text-theme-text/90 leading-tight w-full truncate drop-shadow-sm">
                     {insightMessage}
                   </span>
                 </div>
@@ -611,247 +574,140 @@ export default function Dashboard({
         );
       })()}
 
-      {/* Dynamic Compact Display Row */}
-      <div className="flex gap-4 shrink-0 w-full relative z-10 px-2 mt-4">
-        {/* Active Substance Monitor & Recent */}
-        {settings.dashboardWidgets?.activeEffects !== false && (
-          <section className="bg-white/5 dark:bg-black/20 backdrop-blur-3xl rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] w-1/2 flex flex-col relative group hover:bg-white/[0.08] dark:hover:bg-black/30 transition-colors">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.05] to-transparent pointer-events-none rounded-[2rem]" />
-            <div className="flex items-center justify-between opacity-90 px-4 pt-4 mb-3 shrink-0 z-10">
-              <span className="text-[10px] font-bold text-md3-gray/90 uppercase tracking-[0.15em] flex items-center gap-1.5 drop-shadow-sm">
-                <Activity size={12} className="text-md3-primary/90" /> Interakce
-              </span>
-              <span className="text-[10px] font-black tabular-nums text-md3-primary bg-md3-primary/15 px-2 py-0.5 rounded-lg text-center min-w-[24px] tracking-wide">{activeSubstanceDetails.length}</span>
-            </div>
-            <div className="flex flex-col gap-2.5 px-3 pb-3 z-10">
-              {(() => {
-                // Combine active substances and recently used inactive substances (last 48hours)
-                const now = currentTime.getTime();
-                const recentThreshold = now - (48 * 60 * 60 * 1000); // 48 hours
-                
-                const allRecentItemsMap = new Map();
-                
-                // Add active items first
-                activeSubstanceDetails.forEach(item => {
-                  allRecentItemsMap.set(item.substance!.id, item);
-                });
-                
-                // Add inactive items from recent doses
-                const recentDoses = doses.filter(d => d.timestamp >= recentThreshold).sort((a,b) => b.timestamp - a.timestamp);
-                recentDoses.forEach(dose => {
-                  if (!allRecentItemsMap.has(dose.substanceId)) {
-                    const substance = substances.find(s => s.id === dose.substanceId);
-                    if (substance) {
-                      allRecentItemsMap.set(dose.substanceId, { substance, level: 0, inactive: true });
-                    }
-                  }
-                });
-                
-                const displayItems = Array.from(allRecentItemsMap.values());
+      {/* BENTO GRID LAYOUT */}
+        
+      {/* Abstract Background Elements */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[10%] left-[-20%] w-[60%] h-[40%] bg-indigo-500/10 blur-[140px] rounded-full mix-blend-screen animate-pulse duration-[10000ms]" />
+        <div className="absolute top-[50%] right-[-10%] w-[50%] h-[50%] bg-rose-500/10 blur-[130px] rounded-full mix-blend-screen animate-pulse duration-[12000ms]" />
+        <div className="absolute bottom-[-20%] left-[20%] w-[70%] h-[40%] bg-emerald-500/10 blur-[150px] rounded-full mix-blend-screen animate-pulse duration-[15000ms]" />
+        <div className="absolute top-[30%] left-[30%] w-[40%] h-[40%] bg-cyan-500/10 blur-[100px] rounded-full mix-blend-screen animate-pulse duration-[8000ms]" />
+      </div>
 
-                if (displayItems.length === 0) {
-                  return (
-                    <div className="bg-theme-bg/30 border border-theme-border/20 rounded-2xl p-2 flex flex-col justify-center items-center gap-1.5 opacity-60 h-full mt-1">
-                      <ShieldCheck size={16} className="text-emerald-400/70" />
-                      <span className="text-[10px] font-semibold tracking-wider text-md3-gray">Systém čistý</span>
-                    </div>
-                  );
-                }
-
-                return displayItems.map(({ substance, level, inactive }) => {
-                  const Icon = SUBSTANCE_ICONS[substance!.icon] || Zap;
-                  const color = inactive ? '#8e8e93' : (substance!.color || CATEGORY_COLORS[substance!.category] || '#0a84ff');
-                  
-                  const lastDose = doses.filter(d => d.substanceId === substance!.id).sort((a,b) => b.timestamp - a.timestamp)[0];
-                  const lastDoseDate = lastDose ? new Date(lastDose.timestamp) : null;
-                  let lastUsedText = '';
-                  if (lastDoseDate) {
-                     const diffMs = now - lastDoseDate.getTime();
-                     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-                     const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                     if (diffHrs === 0) lastUsedText = `${diffMins}m`;
-                     else if (diffHrs < 24) lastUsedText = `${diffHrs}h ${diffMins}m`;
-                     else lastUsedText = `${diffHrs}h`;
-                  }
-
-                  return (
-                    <button 
-                      key={substance!.id} 
-                      onClick={() => !inactive && setSelectedDetailsId(substance!.id)}
-                      disabled={inactive}
-                      className={cn(
-                        "flex items-center gap-3 border rounded-[1.2rem] p-2.5 w-full transition-all shadow-[0_4px_15px_rgba(0,0,0,0.05)] group relative overflow-hidden shrink-0",
-                        inactive ? "bg-white/5 dark:bg-black/10 border-white/5 opacity-70" : "bg-white/5 dark:bg-black/20 border-white/10 hover:bg-white/10 dark:hover:bg-black/30 backdrop-blur-xl"
-                      )}
-                    >
-                      {!inactive && <div className="absolute left-0 bottom-0 top-0 opacity-[0.12]" style={{backgroundColor: color, width: `${level}%`}} />}
-                      <div className="w-9 h-9 flex items-center justify-center rounded-xl bg-theme-bg/60 shrink-0 shadow-inner group-hover:scale-[1.08] transition-transform relative z-10 backdrop-blur-md border border-white/5">
-                        <Icon size={16} style={{ color }} strokeWidth={2.5} />
-                      </div>
-                      <div className="flex flex-col flex-1 text-left justify-center overflow-hidden relative z-10">
-                        <div className="flex justify-between items-center w-full">
-                           <span className={cn("text-[12px] font-bold tracking-tight truncate mr-1.5 drop-shadow-sm", inactive ? "text-md3-gray" : "text-theme-text")}>{substance!.name}</span>
-                           {!inactive && <span className="text-[10px] font-black tabular-nums leading-none ml-1 px-2 py-1 rounded-md bg-theme-bg/80 backdrop-blur-md drop-shadow-sm" style={{ color }}>{level.toFixed(0)}%</span>}
-                        </div>
-                        {inactive && <span className="text-[9px] font-semibold text-md3-gray/80 leading-none mt-1 truncate">{lastUsedText && `Před: ${lastUsedText}`}</span>}
-                      </div>
-                    </button>
-                  );
-                });
-              })()}
-            </div>
-          </section>
-        )}
-
-        {/* Today's Stats per Substance */}
-        <section className="bg-white/5 dark:bg-black/20 backdrop-blur-3xl rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] flex flex-col w-1/2 relative group hover:bg-white/[0.08] dark:hover:bg-black/30 transition-colors">
-          <div className="absolute inset-0 bg-gradient-to-bl from-white/[0.05] to-transparent pointer-events-none rounded-[2rem]" />
-          <div className="flex items-center justify-between opacity-90 px-4 pt-4 mb-3 shrink-0 z-10">
-            <span className="text-[10px] font-bold text-md3-gray/90 uppercase tracking-[0.15em] flex items-center gap-1.5 drop-shadow-sm">
-              <Pill size={12} className="text-md3-primary/90" /> Dnes
-            </span>
-          </div>
-          <div className="flex flex-col gap-2.5 px-3 pb-3 z-10">
-            {dailyStats.length > 0 ? (
-              dailyStats.map((stat, idx) => {
-                const IconComp = SUBSTANCE_ICONS[stat.icon] || Pill;
-                return (
-                  <div key={idx} className="bg-theme-bg/40 border border-white/10 rounded-2xl p-2.5 flex items-center shadow-[0_4px_15px_rgba(0,0,0,0.05)] relative overflow-hidden shrink-0 backdrop-blur-xl" style={{ borderLeftColor: stat.color, borderLeftWidth: '3px' }}>
-                    <div className="absolute right-[-10px] top-1/2 -translate-y-1/2 opacity-[0.03] pointer-events-none" style={{ color: stat.color }}>
-                       <IconComp size={48} />
-                    </div>
-                    <div className="w-9 h-9 rounded-xl flex justify-center items-center shrink-0 mr-3 z-10 backdrop-blur-xl shadow-inner border border-white/5" style={{ backgroundColor: stat.color + '15', color: stat.color }}>
-                      <IconComp size={16} strokeWidth={2.5}/>
-                    </div>
-                    <div className="flex flex-col overflow-hidden z-10 w-full justify-center">
-                      <div className="flex justify-between items-center w-full">
-                        <span className="text-[11px] font-bold tracking-tight text-md3-gray/90 truncate mr-1.5">{stat.name}</span>
-                        <span className="text-[12px] font-black text-theme-text leading-none whitespace-nowrap ml-1 drop-shadow-sm">{stat.amount}<span className="text-[10px] text-md3-gray/70 ml-0.5">{stat.unit}</span></span>
-                      </div>
-                      {!settings.privacyMode && stat.cost > 0 && (
-                        <div className="text-[9px] font-bold text-md3-green/90 mt-1 truncate tracking-wider">{stat.cost.toLocaleString('cs-CZ')} {settings.currency || 'Kč'}</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-               <div className="bg-theme-bg/20 border border-white/5 rounded-2xl p-4 flex flex-col justify-center items-center opacity-60 mt-1 min-h-[90px] shadow-sm backdrop-blur-md">
-                  <Coffee size={18} className="text-md3-gray/70 mb-2" strokeWidth={2.5}/>
-                  <span className="text-[10px] font-bold tracking-[0.1em] text-md3-gray/70 text-center uppercase leading-tight drop-shadow-sm">Zatím<br/>čistý</span>
+      <div className="flex flex-col gap-3 px-4 z-10 w-full mb-4 relative drop-shadow-xl">
+      
+         {/* Historie Užití (Recent Substances) */}
+         {settings.dashboardWidgets?.recentDoses !== false && allSubstancesLastUsed.filter(a => a.lastUsedHours !== null && a.lastUsedHours <= 48).length > 0 && (
+            <div className="flex flex-col gap-3">
+               <div className="flex items-center justify-between px-2">
+                 <h3 className="text-[12px] font-black text-theme-text/80 uppercase tracking-widest flex items-center gap-2 drop-shadow-sm">
+                   <Target size={14} className="text-indigo-400" strokeWidth={2.5} /> Poslední Aktivity
+                 </h3>
                </div>
-            )}
-          </div>
-        </section>
+               <div className="grid grid-cols-1 gap-3">
+                 {allSubstancesLastUsed.filter(a => a.lastUsedHours !== null && a.lastUsedHours <= 48).sort((a, b) => (a.lastUsedHours || 0) - (b.lastUsedHours || 0)).slice(0, 5).map((item, idx) => {
+                    const activeDetails = activeSubstanceDetails.find(a => a.substance?.id === item.id);
+                    const isActive = activeDetails && activeDetails.level > 0.1;
+                    
+                    const formatTimeAgo = (hours: number) => {
+                      if (hours < 1) return `${Math.round(hours * 60)}m zpět`;
+                      if (hours < 24) return `${hours.toFixed(1)}h zpět`;
+                      const days = Math.floor(hours / 24);
+                      if (days === 1) return `Včera`;
+                      return `Před ${days} dny`;
+                    };
+
+                    return (
+                      <div key={idx} className="bg-theme-glass backdrop-blur-2xl rounded-[2rem] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_30px_rgba(0,0,0,0.15)] p-4 flex flex-col gap-3 relative overflow-hidden group hover:border-white/10 transition-colors">
+                        <div className="absolute inset-0 opacity-[0.03] bg-gradient-to-br from-white to-transparent pointer-events-none" />
+                        <div className="flex justify-between items-center z-10 w-full relative">
+                           <div className="flex items-center gap-3 min-w-0">
+                             <div className="w-10 h-10 rounded-[1rem] flex items-center justify-center shrink-0 border border-theme-border/30 bg-theme-bg/50 shadow-inner group-hover:scale-105 transition-transform" style={{ color: item.color || '#fff' }}>
+                               {(() => {
+                                 const IconComp = SUBSTANCE_ICONS[item.icon || 'pill'] || Pill;
+                                 return <IconComp size={18} strokeWidth={2.5}/>;
+                               })()}
+                             </div>
+                             <div className="flex flex-col min-w-0">
+                               <span className="font-bold text-[13px] uppercase tracking-wider text-theme-text/90 truncate">{item.name}</span>
+                               <span className="text-[10px] font-bold text-theme-text/40 flex items-center gap-1"><Clock size={10}/> {item.lastUsedHours !== null ? formatTimeAgo(item.lastUsedHours) : 'Dnes'}</span>
+                             </div>
+                           </div>
+                           {isActive && (
+                             <div className="flex flex-col items-end shrink-0">
+                               <span className="text-[14px] font-black tabular-nums text-indigo-300 bg-indigo-900/40 px-3 py-1 rounded-xl shadow-inner border border-indigo-500/20">{Math.round(activeDetails.level)}%</span>
+                             </div>
+                           )}
+                        </div>
+                        
+                        {isActive && (
+                           <div className="w-full bg-theme-bg/50 rounded-full h-1.5 overflow-hidden shadow-inner border border-theme-border/30 mt-1 relative z-10">
+                             <motion.div 
+                               initial={{ width: 0 }}
+                               animate={{ width: `${activeDetails.level}%` }}
+                               transition={{ duration: 1, ease: "easeOut" }}
+                               className="h-full rounded-full"
+                               style={{ backgroundColor: item.color, boxShadow: `0 0 10px ${item.color}` }}
+                             />
+                           </div>
+                        )}
+                      </div>
+                    );
+                 })}
+               </div>
+            </div>
+         )}
+         
+         {/* Dnešní Výchylky (Daily Stats) */}
+         {settings.dashboardWidgets?.recentDoses !== false && (
+            <div className="flex flex-col gap-3">
+               <div className="flex items-center justify-between px-2">
+                 <h3 className="text-[12px] font-black text-theme-text/80 uppercase tracking-widest flex items-center gap-2 drop-shadow-sm">
+                   <CalendarDays size={14} className="text-pink-400" strokeWidth={2.5} /> Dnešní Výchylky
+                 </h3>
+               </div>
+               
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {dailyStats.length > 0 ? (
+                    dailyStats.map((stat, idx) => {
+                      const IconComp = SUBSTANCE_ICONS[stat.icon] || Pill;
+                      return (
+                        <div key={idx} className="bg-theme-glass backdrop-blur-2xl rounded-[2rem] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_8px_30px_rgba(0,0,0,0.15)] p-4 flex flex-col justify-between gap-2 relative overflow-hidden group hover:border-white/10 transition-colors">
+                           <div className="absolute inset-0 opacity-[0.03] bg-gradient-to-br from-white to-transparent pointer-events-none" />
+                           <div className="absolute -right-3 -bottom-3 opacity-[0.08] pointer-events-none drop-shadow-md rotate-[15deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-110" style={{ color: stat.color }}>
+                             <IconComp size={48} />
+                           </div>
+                           
+                           <div className="flex items-center gap-2.5 relative z-10 w-full min-w-0">
+                             <div className="w-8 h-8 rounded-[0.8rem] flex justify-center items-center shrink-0 border border-theme-border/30 bg-theme-bg/50 shadow-inner group-hover:scale-105 transition-transform" style={{ color: stat.color }}>
+                               <IconComp size={16} strokeWidth={2.5}/>
+                             </div>
+                             <span className="text-[11px] font-bold truncate text-theme-text/90 uppercase tracking-wider">{stat.name}</span>
+                           </div>
+                           
+                           <div className="mt-2 flex flex-col gap-1.5 relative z-10 w-full">
+                              <div className="flex items-center justify-between bg-theme-bg/30 px-2.5 py-1.5 rounded-xl border border-white/5">
+                                 <span className="text-[9px] font-bold text-theme-text/50 uppercase tracking-wider">Množství</span>
+                                 <div className="flex items-baseline gap-1">
+                                    <span className="text-[14px] font-black tracking-tighter leading-none drop-shadow-sm">{stat.amount}</span>
+                                    <span className="text-[9px] font-bold text-theme-text/50 uppercase">{stat.unit}</span>
+                                 </div>
+                              </div>
+                              <div className="flex items-center justify-between bg-theme-bg/30 px-2.5 py-1.5 rounded-xl border border-white/5">
+                                 <span className="text-[9px] font-bold text-theme-text/50 uppercase tracking-wider">Útrata</span>
+                                 <div className="flex items-baseline gap-1">
+                                    <span className="text-[14px] font-black tracking-tighter leading-none drop-shadow-sm text-emerald-400">{settings.privacyMode ? '***' : stat.cost.toLocaleString('cs-CZ')}</span>
+                                    <span className="text-[9px] font-bold text-emerald-400/50 uppercase">{settings.currency || 'Kč'}</span>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="col-span-full bg-theme-glass backdrop-blur-2xl rounded-[2rem] border border-white/5 border-dashed p-6 flex flex-col items-center justify-center gap-2 text-theme-text/40 shadow-inner">
+                      <div className="w-12 h-12 rounded-full bg-theme-bg/30 flex items-center justify-center mb-1">
+                        <Sparkles size={20} className="opacity-50" />
+                      </div>
+                      <span className="text-[11px] font-bold uppercase tracking-widest">Zatím nic</span>
+                    </div>
+                  )}
+               </div>
+            </div>
+         )}
+         
       </div>
       
-      {/* Quick Actions */}
-      {settings.dashboardWidgets?.quickAdd !== false && (
-        <section className="w-full shrink-0 relative z-20 mt-2 mb-4 px-1">
-          <QuickActions 
-            shortcuts={shortcuts}
-            substances={substances}
-            onUseShortcut={onUseShortcut}
-            onAddShortcut={onAddShortcut}
-            onRemoveShortcut={onRemoveShortcut}
-            onUpdateShortcut={onUpdateShortcut}
-          />
-        </section>
-      )}
-      
-      {/* Keep the padding at the bottom of the column for spacing */}
-      <div className="h-6 shrink-0"></div>
-
-      {/* Substance Details Modal - Glassmorphism */}
-      <AnimatePresence>
-        {selectedDetailsId && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedDetailsId(null)}
-              className="absolute inset-0 bg-theme-bg/40 backdrop-blur-3xl"
-            />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 350, damping: 30 }}
-              className="w-full max-w-md bg-white/10 dark:bg-black/30 border border-white/20 rounded-[2.5rem] overflow-hidden relative z-10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] backdrop-blur-2xl pb-safe"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent pointer-events-none" />
-              {(() => {
-                const item = activeSubstanceDetails.find(d => d.substance?.id === selectedDetailsId);
-                if (!item) return null;
-                const { substance, level, tolerance } = item;
-                const color = substance!.color || '#00d1ff';
-                return (
-                  <div className="p-8 relative z-10">
-                    <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-[80px] pointer-events-none opacity-30" style={{ backgroundColor: color }} />
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-[1.2rem] bg-white/5 border border-white/10 flex items-center justify-center shadow-inner relative overflow-hidden backdrop-blur-md">
-                          <div className="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t opacity-20 pointer-events-none" style={{ from: color, to: 'transparent' }} />
-                          <Activity size={24} style={{ color }} strokeWidth={2.5}/>
-                        </div>
-                        <div>
-                          <h3 className="text-2xl font-black tracking-tight text-white drop-shadow-sm">{substance!.name}</h3>
-                          <div className="text-[10px] text-white/50 font-bold uppercase tracking-[0.2em] mt-1">Biometrická Měření</div>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => setSelectedDetailsId(null)}
-                        className="p-3 rounded-full bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-all hover:scale-110 active:scale-90 border border-white/5 shadow-sm"
-                      >
-                        <X size={20} strokeWidth={2.5} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="bg-white/5 rounded-[1.8rem] p-6 border border-white/10 relative overflow-hidden group hover:bg-white/[0.08] transition-colors shadow-inner">
-                        <div className="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-20 transition-colors" style={{ backgroundColor: color }}></div>
-                        <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-3 relative z-10">Hladina</div>
-                        <div className="text-4xl font-black tracking-tight relative z-10 drop-shadow-sm" style={{ color }}>{level.toFixed(1)}<span className="text-xl opacity-80">%</span></div>
-                      </div>
-                      <div className="bg-white/5 rounded-[1.8rem] p-6 border border-white/10 relative overflow-hidden group hover:bg-white/[0.08] transition-colors shadow-inner">
-                        <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-rose-500/20 rounded-full blur-2xl transition-colors"></div>
-                        <div className="text-[10px] font-bold text-white/60 uppercase tracking-widest mb-3 relative z-10">Tolerance</div>
-                        <div className="text-4xl font-black text-rose-400 tracking-tight relative z-10 drop-shadow-sm">{tolerance.toFixed(1)}<span className="text-xl opacity-80">%</span></div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 mb-8">
-                      {[
-                        { icon: Clock, label: 'Poločas rozpadu', value: `${substance!.halfLife}h` },
-                        { icon: Zap, label: 'Nástup účinku', value: `${substance!.onset}m` },
-                        { icon: Activity, label: 'Doba trvání', value: `${substance!.duration}h` }
-                      ].map((row, i) => (
-                        <div key={i} className="flex items-center justify-between px-5 py-4 bg-white/5 rounded-[1.2rem] border border-white/10 backdrop-blur-md shadow-sm">
-                          <div className="flex items-center gap-3">
-                            <row.icon size={16} className="text-white/50" />
-                            <span className="text-sm font-semibold text-white/80">{row.label}</span>
-                          </div>
-                          <span className="text-sm font-black tracking-wide text-white drop-shadow-sm">{row.value}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <button 
-                      onClick={() => setSelectedDetailsId(null)}
-                      className="w-full py-5 rounded-2xl font-black text-sm text-[#000] transition-all uppercase tracking-[0.3em] relative overflow-hidden shadow-[0_4px_25px_rgba(0,0,0,0.15)] active:scale-[0.98] drop-shadow-sm"
-                      style={{ backgroundColor: color, boxShadow: `0 10px 30px ${color}55` }}
-                    >
-                      <div className="absolute inset-0 bg-white/20" />
-                      <span className="relative z-10 text-black">Ukončit Zobrazení</span>
-                    </button>
-                  </div>
-                );
-              })()}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

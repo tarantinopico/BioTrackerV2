@@ -186,7 +186,7 @@ export interface UserSettings {
   hapticFeedback: boolean;
   language: string;
   currency: string;
-  theme: 'dark' | 'light' | 'midnight';
+  theme: 'dark' | 'light' | 'midnight' | 'vision';
   bentoMode?: boolean;
   glassmorphism?: boolean;
   privacyMode?: boolean;

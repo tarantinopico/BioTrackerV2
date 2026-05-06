@@ -693,28 +693,30 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
   }
 
   return (
-    <div className="flex flex-col gap-4 pb-20">
-       <div className="flex items-center gap-3 px-1 mb-2">
-         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 text-indigo-400 flex items-center justify-center shadow-inner">
+    <div className="flex flex-col gap-4 relative pb-20">
+       {/* Decorative Background Elements */}
+      
+       <div className="flex items-center gap-3 px-1 mb-2 relative z-10">
+         <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
            <Cpu size={24} strokeWidth={2.5} />
          </div>
          <div>
-           <h1 className="text-2xl font-black text-theme-text tracking-tight flex items-center gap-2">
+           <h1 className="text-2xl font-black text-theme-text tracking-tight flex items-center gap-2 drop-shadow-sm">
              Laboratoř Predikcí
            </h1>
-           <p className="text-xs text-md3-gray font-bold uppercase tracking-widest mt-0.5">
+           <p className="text-xs text-theme-text/50 font-bold uppercase tracking-widest mt-0.5 drop-shadow-sm">
              Chytré Sledování & Behaviorální Analýza
            </p>
          </div>
        </div>
 
        {activeSubstances.length === 0 ? (
-          <div className="md3-card p-8 flex flex-col items-center justify-center text-center">
-            <Database size={32} className="text-md3-gray mb-4 opacity-50" />
-            <p className="text-md3-gray font-medium">Nemáte dostatek záznamů pro spuštění prediktivních modelů.</p>
+          <div className="bg-theme-glass backdrop-blur-2xl border border-theme-border rounded-[2rem] p-8 flex flex-col items-center justify-center text-center relative z-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)]">
+            <Database size={32} className="text-theme-text/40 mb-4 opacity-50" />
+            <p className="text-theme-text/60 font-medium">Nemáte dostatek záznamů pro spuštění prediktivních modelů.</p>
           </div>
        ) : (
-         <>
+         <div className="relative z-10">
            {/* Substance Selector */}
            <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar px-1">
              {activeSubstances.map(sub => (
@@ -722,10 +724,10 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
                   key={sub.id}
                   onClick={() => setSelectedSubstanceId(sub.id)}
                   className={cn(
-                    "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                    "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md",
                     selectedSubstanceId === sub.id 
-                      ? "bg-theme-text text-theme-bg shadow-md" 
-                      : "bg-theme-card border border-theme-border text-md3-gray hover:text-theme-text"
+                      ? "bg-white text-black shadow-md border border-theme-border" 
+                      : "bg-theme-glass border border-theme-border text-theme-text/50 hover:text-theme-text"
                   )}
                 >
                   {sub.name}
@@ -1236,7 +1238,7 @@ Odpovídej POUZE platným formátem JSON.`) + `\n\nZde je mých posledních max 
                 <div className="text-md3-gray text-sm mt-1">K výpočtu chytrých modelů jsou vyžadovány alespoň 3 záznamy dané látky.</div>
              </div>
            )}
-         </>
+         </div>
        )}
     </div>
   );

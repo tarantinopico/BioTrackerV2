@@ -53,22 +53,19 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
   return (
     <div className="space-y-4 relative pb-10">
       {/* Decorative Background Elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[30%] left-[-20%] w-[50%] h-[50%] bg-md3-primary/10 blur-[120px] rounded-full animate-blob transform-gpu will-change-transform mix-blend-screen" />
-      </div>
 
       <div className="flex items-center justify-between px-2 pt-2 relative z-10">
         <div>
           <h2 className="text-[20px] font-black text-theme-text flex items-center gap-1.5 leading-none tracking-tight">
             Archiv
           </h2>
-          <p className="text-[10px] text-md3-gray/80 mt-1.5 font-bold uppercase tracking-wider leading-none flex items-center gap-1.5">
-            <Clock size={10} className="text-md3-primary/80" /> Časová osa
+          <p className="text-[10px] text-theme-text/50 mt-1.5 font-bold uppercase tracking-wider leading-none flex items-center gap-1.5">
+            <Clock size={10} className="text-cyan-400" /> Časová osa
           </p>
         </div>
         <button 
           onClick={onClearAll}
-          className="px-3 py-1.5 rounded-xl text-[9px] font-black text-red-500 uppercase tracking-widest hover:bg-red-500/10 transition-all active:scale-95 border border-red-500/20 backdrop-blur-md shadow-sm"
+          className="px-3 py-1.5 rounded-xl text-[9px] font-black text-theme-text/60 uppercase tracking-widest hover:text-theme-text hover:bg-red-500/80 transition-all active:scale-95 border border-theme-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md bg-theme-glass"
         >
           Smazat Vše
         </button>
@@ -78,19 +75,19 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
       {doses.length > 0 && (
         <div className="relative z-10 space-y-3 px-1 mt-2">
           <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-md3-primary/10 to-transparent rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-md3-gray group-focus-within:text-md3-primary transition-colors" />
+            <div className="absolute inset-0 bg-cyan-500/10 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-theme-text/40 group-focus-within:text-cyan-400 transition-colors" />
             <input 
               type="text" 
               placeholder="Vyhledat v archivu..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-theme-bg/40 backdrop-blur-xl border border-theme-border/30 text-xs font-semibold outline-none focus:border-md3-primary/50 transition-all text-theme-text shadow-sm"
+              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-theme-glass backdrop-blur-3xl border border-theme-border text-xs font-semibold outline-none focus:border-cyan-500/30 transition-all text-theme-text shadow-[0_4px_15px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.1)] placeholder:text-theme-text/30 tracking-widest"
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-md3-gray hover:text-theme-text p-1"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-theme-text/40 hover:text-theme-text p-1"
               >
                 <X size={12} strokeWidth={3} />
               </button>
@@ -100,10 +97,10 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
             <button
               onClick={() => setSelectedSubstanceId('all')}
               className={cn(
-                "px-3 py-1.5 rounded-[0.85rem] text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border",
+                "px-3 py-1.5 rounded-[0.85rem] text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md",
                 selectedSubstanceId === 'all' 
-                  ? "bg-theme-border border-md3-primary text-md3-primary" 
-                  : "bg-theme-subtle border-theme-border text-md3-gray hover:text-theme-text"
+                  ? "bg-cyan-500 border-cyan-400 text-black shadow-[0_0_15px_rgba(0,209,255,0.4)]" 
+                  : "bg-theme-glass border-theme-border text-theme-text/50 hover:text-theme-text"
               )}
             >
               Vše
@@ -123,10 +120,10 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                   key={subId}
                   onClick={() => setSelectedSubstanceId(subId)}
                   className={cn(
-                    "px-3 py-1.5 rounded-[0.85rem] text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border",
+                    "px-3 py-1.5 rounded-[0.85rem] text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] backdrop-blur-md",
                     isActive 
-                      ? "bg-theme-border border-md3-primary text-md3-primary" 
-                      : "bg-theme-subtle border-theme-border text-md3-gray hover:text-theme-text"
+                      ? "bg-theme-card shadow-[0_0_15px_rgba(0,0,0,0.4)] text-theme-text" 
+                      : "bg-theme-glass border-theme-border text-theme-text/50 hover:text-theme-text hover:bg-theme-card"
                   )}
                   style={isActive ? { borderColor: substance.color, color: substance.color } : {}}
                 >
@@ -139,13 +136,13 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
       )}
 
       {filteredDoses.length === 0 ? (
-        <div className="p-12 text-center bg-theme-bg/20 backdrop-blur-2xl rounded-[2rem] border border-theme-border/20 shadow-sm relative z-10 flex flex-col items-center justify-center mx-2 mt-4">
-          <div className="w-16 h-16 bg-theme-bg/40 rounded-2xl flex items-center justify-center mb-4 border border-theme-border/30 shadow-inner relative overflow-hidden">
-             <Clock size={28} className="text-md3-gray relative z-10" />
-             <div className="absolute inset-0 bg-gradient-to-br from-transparent to-md3-primary/10" />
+        <div className="p-12 text-center bg-theme-glass backdrop-blur-2xl rounded-[2rem] border border-theme-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] relative z-10 flex flex-col items-center justify-center mx-2 mt-4">
+          <div className="w-16 h-16 bg-theme-card rounded-2xl flex items-center justify-center mb-4 border border-theme-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] relative overflow-hidden">
+             <Clock size={28} className="text-theme-text/60 relative z-10" />
+             <div className="absolute inset-0 bg-gradient-to-br from-transparent to-cyan-500/20" />
           </div>
           <span className="text-sm text-theme-text font-black uppercase tracking-wider">Archiv je prázdný</span>
-          <p className="text-xs text-md3-gray font-semibold mt-2 max-w-[200px] leading-relaxed">
+          <p className="text-xs text-theme-text/50 font-semibold mt-2 max-w-[200px] leading-relaxed">
             Zatím tu nic neruší vaši rovnováhu. První krok začíná u vás.
           </p>
         </div>
@@ -177,28 +174,28 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                     <div 
                       key={dose.id} 
                       className={cn(
-                        "bg-theme-card/40 backdrop-blur-2xl border border-theme-border/30 flex items-center justify-between group hover:bg-theme-bg/60 transition-all shadow-sm rounded-2xl p-3 relative overflow-hidden",
+                        "bg-theme-glass backdrop-blur-2xl border border-theme-border flex items-center justify-between group hover:bg-theme-card transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_15px_rgba(0,0,0,0.2)] rounded-[1.5rem] p-3 relative overflow-hidden",
                       )}
                     >
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl blur-3xl opacity-10 rounded-full pointer-events-none" style={{ from: substance.color || '#00d1ff', to: 'transparent' }} />
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[radial-gradient(circle_at_center,var(--tw-gradient-from),transparent_70%)] blur-3xl opacity-10 rounded-full pointer-events-none" style={{ '--tw-gradient-from': substance.color || '#00d1ff' } as any} />
                       <div className="flex items-center gap-3 relative z-10 min-w-0">
                         {(() => {
                           const IconComponent = getIconComponent(substance.icon);
                           const strainColor = dose.strainId ? substance.strains?.find(s => s.name === dose.strainId)?.color : undefined;
                           const color = strainColor || substance.color || '#00d1ff';
                           return (
-                            <div className="bg-theme-bg/60 flex items-center justify-center border border-theme-border/20 group-hover:scale-110 transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.1)] w-10 h-10 rounded-xl shrink-0">
+                            <div className="bg-theme-card flex items-center justify-center border border-theme-border group-hover:scale-110 transition-transform shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] w-10 h-10 rounded-[1rem] shrink-0">
                               <IconComponent size={18} style={{ color }} strokeWidth={2.5}/>
                             </div>
                           );
                         })()}
                         <div className="flex flex-col min-w-0">
-                          <div className="font-bold text-theme-text text-[13px] flex items-baseline gap-1.5 truncate">
+                          <div className="font-bold text-theme-text text-[13px] flex items-baseline gap-1.5 truncate drop-shadow-sm">
                             {substance.name}
-                            {dose.strainId && <span className="text-[9px] text-md3-gray font-bold uppercase tracking-widest opacity-80 truncate border border-theme-border/30 px-1 py-0.5 rounded-md bg-theme-bg/30">{dose.strainId}</span>}
+                            {dose.strainId && <span className="text-[9px] text-theme-text/50 font-bold uppercase tracking-widest opacity-80 truncate border border-theme-border px-1 py-0.5 rounded-md bg-theme-glass">{dose.strainId}</span>}
                           </div>
-                          <div className="text-md3-gray font-semibold text-[10px] uppercase tracking-wider mt-1 truncate flex items-center gap-1.5">
-                            <span className="text-theme-text font-black text-[11px] px-1.5 py-0.5 bg-theme-bg/50 rounded-md shadow-sm border border-theme-border/20" style={{ color: substance.color }}>{formatAmount(dose.amount, substance.unit, 1)}</span>
+                          <div className="text-theme-text/40 font-semibold text-[10px] uppercase tracking-wider mt-1 truncate flex items-center gap-1.5">
+                            <span className="text-theme-text font-black text-[11px] px-1.5 py-0.5 bg-theme-card rounded-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)] border border-theme-border" style={{ color: substance.color }}>{formatAmount(dose.amount, substance.unit, 1)}</span>
                             <span className="opacity-50">•</span> 
                             <span className="flex items-center gap-1"><Clock size={8} /> {formatTime(dose.timestamp, settings)}</span>
                             {dose.route && <><span className="opacity-50">•</span> <span>{dose.route}</span></>}
@@ -210,7 +207,7 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                               return (
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                   {activeNames.map((name, i) => (
-                                    <div key={i} className="text-theme-text opacity-80 font-black text-[8px] uppercase tracking-widest bg-theme-bg/50 border border-theme-border/30 px-1.5 py-0.5 rounded shadow-sm">
+                                    <div key={i} className="text-theme-text/80 font-black text-[8px] uppercase tracking-widest bg-theme-glass border border-theme-border px-1.5 py-0.5 rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_20px_rgba(0,0,0,0.05)]">
                                       {formatAmount(activeSums[name], substance.unit, 2)} {name}
                                     </div>
                                   ))}
@@ -220,7 +217,7 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                             return null;
                           })()}
                           {!settings.compactMode && dose.note && (
-                            <div className="mt-1.5 text-[10px] font-medium text-md3-gray italic leading-tight border-l border-theme-border pl-2 py-0.5">
+                            <div className="mt-1.5 text-[10px] font-medium text-theme-text/50 italic leading-tight border-l border-theme-border pl-2 py-0.5">
                               {dose.note}
                             </div>
                           )}
@@ -244,7 +241,7 @@ export default function History({ doses, substances, settings, onDeleteDose, onE
                                 }
 
                                 return (
-                                  <span key={fieldId} className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-cyan-primary/10 text-cyan-primary border border-cyan-primary/20">
+                                  <span key={fieldId} className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                                     {displayValue}
                                   </span>
                                 );

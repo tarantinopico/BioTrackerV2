@@ -48,21 +48,21 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
     if (defaultActives.length === 0 && !substance.activeIngredientName) return null;
 
     return (
-      <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
+      <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
         <div className="absolute right-0 top-0 w-32 h-32 bg-purple-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-        <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+        <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
           <Activity size={16} /> Specifikace účinných látek
         </h3>
         <div className="space-y-3 relative z-10">
           {defaultActives.length > 0 ? (
             defaultActives.map((ai, i) => (
-              <div key={i} className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner">
+              <div key={i} className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-theme-border/50 shadow-inner">
                 <span className="font-bold text-theme-text flex items-center gap-2"><Leaf size={14} className="text-md3-primary/70" /> {ai.name}</span>
                 <span className="font-bold text-md3-primary px-2 py-1 bg-md3-primary/10 rounded-lg">{ai.percentage.toFixed(2)} %</span>
               </div>
             ))
           ) : (
-            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5 shadow-inner">
+            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-theme-border/50 shadow-inner">
               <span className="font-bold text-theme-text flex items-center gap-2"><Leaf size={14} className="text-md3-primary/70" /> {substance.activeIngredientName}</span>
               <span className="font-bold text-md3-primary px-2 py-1 bg-md3-primary/10 rounded-lg">{substance.activeIngredientPercentage?.toFixed(2)} %</span>
             </div>
@@ -92,12 +92,12 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
       </div>
 
       {/* Main Info Card */}
-      <div className="p-8 rounded-[2.5rem] bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 flex flex-col items-center relative overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
+      <div className="p-8 rounded-[2.5rem] bg-theme-subtle backdrop-blur-[40px] border border-theme-border flex flex-col items-center relative overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)]">
         <div className="absolute top-0 w-full h-[6px]" style={{ backgroundColor: substance.color || '#00d1ff', boxShadow: `0 0 30px ${substance.color}aa` }} />
         <div className="absolute top-[10%] right-[-10%] w-[60%] h-[60%] blur-[100px] rounded-full pointer-events-none opacity-40 transition-all duration-1000" style={{ backgroundColor: substance.color || '#00d1ff' }} />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-white/5 blur-[80px] rounded-full pointer-events-none" />
 
-        <div className="w-24 h-24 bg-white/10 dark:bg-black/30 rounded-[1.8rem] flex items-center justify-center border border-white/20 mb-6 shadow-inner relative backdrop-blur-xl group hover:scale-105 transition-transform duration-500">
+        <div className="w-24 h-24 bg-theme-card rounded-[1.8rem] flex items-center justify-center border border-theme-border mb-6 shadow-inner relative backdrop-blur-xl group hover:scale-105 transition-transform duration-500">
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-[1.8rem] opacity-50" />
           <IconComponent size={42} style={{ color: substance.color || '#00d1ff' }} strokeWidth={2.5} className="drop-shadow-lg relative z-10 group-hover:rotate-12 transition-transform duration-500" />
           {substance.isFavorite && (
@@ -109,7 +109,7 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
         
         <h1 className="text-4xl font-black text-theme-text tracking-tight mb-3 drop-shadow-sm leading-none text-center">{substance.name}</h1>
         <div className="flex items-center justify-center flex-wrap gap-2 mb-6">
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-md3-gray/90 shadow-sm backdrop-blur-sm">
+          <span className="text-[10px] uppercase font-bold tracking-[0.2em] px-3 py-1.5 rounded-lg bg-white/5 border border-theme-border text-md3-gray/90 shadow-sm backdrop-blur-sm">
             {substance.category}
           </span>
           {substance.isIllegal && (
@@ -131,17 +131,17 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
         )}
 
         <div className="w-full grid grid-cols-2 gap-4 mt-2 relative z-10">
-          <div className="bg-white/5 dark:bg-black/30 p-5 rounded-[1.5rem] border border-white/10 flex flex-col items-center backdrop-blur-md shadow-inner transition-all hover:bg-white/[0.08]">
+          <div className="bg-theme-subtle p-5 rounded-[1.5rem] border border-theme-border flex flex-col items-center backdrop-blur-md shadow-inner transition-all hover:bg-white/[0.08]">
             <div className="flex items-center gap-1.5 mb-2">
                <Clock size={14} className="text-md3-gray/60" />
-               <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.15em]">Poločas (T½)</span>
+               <span className="text-[10px] font-bold text-theme-text/50 uppercase tracking-[0.15em]">Poločas (T½)</span>
             </div>
             <span className="text-2xl font-black text-theme-text drop-shadow-sm">{substance.halfLife || '—'}<span className="text-sm opacity-60 ml-0.5">h</span></span>
           </div>
-          <div className="bg-white/5 dark:bg-black/30 p-5 rounded-[1.5rem] border border-white/10 flex flex-col items-center backdrop-blur-md shadow-inner transition-all hover:bg-white/[0.08]">
+          <div className="bg-theme-subtle p-5 rounded-[1.5rem] border border-theme-border flex flex-col items-center backdrop-blur-md shadow-inner transition-all hover:bg-white/[0.08]">
             <div className="flex items-center gap-1.5 mb-2">
                <Zap size={14} className="text-md3-gray/60" />
-               <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.15em]">Nástup (Tmax)</span>
+               <span className="text-[10px] font-bold text-theme-text/50 uppercase tracking-[0.15em]">Nástup (Tmax)</span>
             </div>
             <span className="text-2xl font-black text-theme-text drop-shadow-sm">{substance.tmax || '—'}<span className="text-sm opacity-60 ml-0.5">h</span></span>
           </div>
@@ -150,8 +150,8 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
 
       {/* Consumption Chart */}
       {substanceDoses.length > 0 && (
-        <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6">
-          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2">
+        <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6">
+          <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2">
             <PieChart size={16} /> Spotřeba v čase
           </h3>
           <div className="h-48 w-full">
@@ -218,54 +218,54 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
         {/* Statistics Block */}
-        <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
+        <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
           <div className="absolute right-0 top-0 w-32 h-32 bg-md3-primary/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+          <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
             <Activity size={16} /> Statistiky
           </h3>
           <div className="grid grid-cols-2 gap-4 relative z-10">
-            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-white/5 shadow-inner">
-              <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Celkem užito</div>
+            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-theme-border/50 shadow-inner">
+              <div className="text-[10px] text-theme-text/50 font-bold uppercase tracking-widest mb-1">Celkem užito</div>
               <div className="text-xl font-black text-theme-text drop-shadow-sm">{formatAmount(stats.totalAmount, substance.unit, 1)}</div>
             </div>
-            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-white/5 shadow-inner">
-              <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Celková cena</div>
+            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-theme-border/50 shadow-inner">
+              <div className="text-[10px] text-theme-text/50 font-bold uppercase tracking-widest mb-1">Celková cena</div>
               <div className="text-xl font-black text-md3-green drop-shadow-sm">{settings.privacyMode ? '***' : stats.totalCost.toFixed(0)} <span className="text-sm text-md3-green/60">{settings.currency}</span></div>
             </div>
-            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-white/5 shadow-inner">
-              <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Prům. dávka</div>
+            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-theme-border/50 shadow-inner">
+              <div className="text-[10px] text-theme-text/50 font-bold uppercase tracking-widest mb-1">Prům. dávka</div>
               <div className="text-xl font-black text-theme-text drop-shadow-sm">{formatAmount(stats.avgDose, substance.unit, 1)}</div>
             </div>
-            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-white/5 shadow-inner">
-              <div className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Záznamů</div>
+            <div className="bg-white/5 rounded-[1.2rem] p-4 border border-theme-border/50 shadow-inner">
+              <div className="text-[10px] text-theme-text/50 font-bold uppercase tracking-widest mb-1">Záznamů</div>
               <div className="text-xl font-black text-theme-text drop-shadow-sm">{stats.totalDoses}x</div>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-5 mt-2 space-y-3 relative z-10">
-            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-2.5 rounded-xl border border-white/5 shadow-sm">
-              <span className="text-white/60 font-semibold flex items-center gap-2"><Database size={14}/> Zásoba</span>
+          <div className="border-t border-theme-border pt-5 mt-2 space-y-3 relative z-10">
+            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-2.5 rounded-xl border border-theme-border/50 shadow-sm">
+              <span className="text-theme-text/60 font-semibold flex items-center gap-2"><Database size={14}/> Zásoba</span>
               <span className="font-black text-theme-text">{substance.stash !== undefined ? formatAmount(substance.stash, substance.unit, 1) : '–'}</span>
             </div>
-            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-2.5 rounded-xl border border-white/5 shadow-sm">
-              <span className="text-white/60 font-semibold flex items-center gap-2"><Clock size={14}/> Poprvé</span>
+            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-2.5 rounded-xl border border-theme-border/50 shadow-sm">
+              <span className="text-theme-text/60 font-semibold flex items-center gap-2"><Clock size={14}/> Poprvé</span>
               <span className="font-black text-theme-text">{stats.firstUse ? new Date(stats.firstUse).toLocaleDateString('cs-CZ') : '–'}</span>
             </div>
-            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-2.5 rounded-xl border border-white/5 shadow-sm">
-              <span className="text-white/60 font-semibold flex items-center gap-2"><Clock size={14}/> Naposledy</span>
+            <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-2.5 rounded-xl border border-theme-border/50 shadow-sm">
+              <span className="text-theme-text/60 font-semibold flex items-center gap-2"><Clock size={14}/> Naposledy</span>
               <span className="font-black text-theme-text">{stats.lastUse ? new Date(stats.lastUse).toLocaleDateString('cs-CZ') : '–'}</span>
             </div>
           </div>
         </div>
 
         {/* Pricing / Units Block */}
-        <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
+        <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
           <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+          <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
             <DollarSign size={16} /> Hodnocení & Ceny
           </h3>
           <div className="space-y-3 relative z-10">
-             <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5 shadow-sm">
-               <span className="text-white/60 font-semibold">Cena za {substance.unit}</span>
+             <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-theme-border/50 shadow-sm">
+               <span className="text-theme-text/60 font-semibold">Cena za {substance.unit}</span>
                <span className="font-black text-theme-text">{substance.price} {settings.currency}</span>
              </div>
              
@@ -274,8 +274,8 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
                 substance.activeIngredients.map((ai, i) => {
                    const costPerActive = ai.percentage > 0 ? (substance.price / (ai.percentage / 100)) : 0;
                    return (
-                     <div key={i} className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5 shadow-sm">
-                       <span className="text-white/60 font-semibold">Cena za {substance.unit} {ai.name}</span>
+                     <div key={i} className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-theme-border/50 shadow-sm">
+                       <span className="text-theme-text/60 font-semibold">Cena za {substance.unit} {ai.name}</span>
                        <span className="font-black text-theme-text">{costPerActive.toFixed(2)} {settings.currency}</span>
                      </div>
                    );
@@ -285,16 +285,16 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
                 (() => {
                   const costPerActive = (substance.price / (substance.activeIngredientPercentage / 100));
                   return (
-                     <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5 shadow-sm">
-                       <span className="text-white/60 font-semibold">Cena za {substance.unit} {substance.activeIngredientName}</span>
+                     <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-theme-border/50 shadow-sm">
+                       <span className="text-theme-text/60 font-semibold">Cena za {substance.unit} {substance.activeIngredientName}</span>
                        <span className="font-black text-theme-text">{costPerActive.toFixed(2)} {settings.currency}</span>
                      </div>
                   );
                 })()
              )}
 
-             <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-white/5 shadow-sm">
-               <span className="text-white/60 font-semibold">Tolerance Rate</span>
+             <div className="flex justify-between items-center text-sm bg-white/5 px-4 py-3 rounded-xl border border-theme-border/50 shadow-sm">
+               <span className="text-theme-text/60 font-semibold">Tolerance Rate</span>
                <span className="font-black text-md3-primary">{substance.toleranceRate}%</span>
              </div>
           </div>
@@ -306,14 +306,14 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
         {activeIngredientsContent}
         
         {substance.tags && substance.tags.length > 0 && (
-          <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
+          <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
             <div className="absolute right-0 top-0 w-32 h-32 bg-pink-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+            <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
               <Hash size={16} /> Tagy
             </h3>
             <div className="flex flex-wrap gap-2 relative z-10">
               {substance.tags.map((tag, i) => (
-                <span key={i} className="px-3 py-1.5 bg-white/10 border border-white/10 rounded-xl text-xs text-theme-text tracking-wider font-bold uppercase shadow-sm">
+                <span key={i} className="px-3 py-1.5 bg-white/10 border border-theme-border rounded-xl text-xs text-theme-text tracking-wider font-bold uppercase shadow-sm">
                   {tag}
                 </span>
               ))}
@@ -324,19 +324,19 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
 
       {/* Strains */}
       {substance.strains && substance.strains.length > 0 && (
-        <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
+        <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
           <div className="absolute right-0 top-0 w-40 h-40 bg-[var(--md-sys-color-primary)]/10 blur-[50px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+          <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
             <Leaf size={16} /> Druhy ({substance.strains.length})
           </h3>
           <div className="space-y-3 relative z-10">
             {substance.strains.map((strain, i) => (
-              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 shadow-sm gap-3">
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white/5 rounded-2xl border border-theme-border/50 shadow-sm gap-3">
                 <div className="flex items-center gap-3">
-                   <div className="w-4 h-4 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)] border border-white/10" style={{ backgroundColor: strain.color || substance.color || '#00d1ff' }} />
+                   <div className="w-4 h-4 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)] border border-theme-border" style={{ backgroundColor: strain.color || substance.color || '#00d1ff' }} />
                    <div>
                      <div className="font-black text-theme-text tracking-tight">{strain.name}</div>
-                     <div className="text-xs text-white/50 font-bold tracking-wider">{strain.price} {settings.currency} / {substance.unit}</div>
+                     <div className="text-xs text-theme-text/50 font-bold tracking-wider">{strain.price} {settings.currency} / {substance.unit}</div>
                    </div>
                 </div>
                 {/* Custom active ingredient breakdown for this strain */}
@@ -347,7 +347,7 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
                                       : (substance.activeIngredients && substance.activeIngredients.length > 0 ? substance.activeIngredients : []);
                       if (actives.length > 0) {
                         return actives.map((ai, j) => (
-                           <div key={j} className="text-[10px] font-black tracking-wider uppercase text-theme-text bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10 shadow-inner">
+                           <div key={j} className="text-[10px] font-black tracking-wider uppercase text-theme-text bg-white/10 px-2.5 py-1.5 rounded-lg border border-theme-border shadow-inner">
                              {ai.name} <span className="text-md3-primary ml-1">{ai.percentage.toFixed(1)}%</span>
                            </div>
                         ));
@@ -356,7 +356,7 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
                       const singleActivePct = strain.activeIngredientPercentage ?? substance.activeIngredientPercentage;
                       if (substance.activeIngredientName && singleActivePct) {
                          return (
-                           <div className="text-[10px] font-black tracking-wider uppercase text-theme-text bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10 shadow-inner">
+                           <div className="text-[10px] font-black tracking-wider uppercase text-theme-text bg-white/10 px-2.5 py-1.5 rounded-lg border border-theme-border shadow-inner">
                              {substance.activeIngredientName} <span className="text-md3-primary ml-1">{singleActivePct.toFixed(1)}%</span>
                            </div>
                          );
@@ -373,14 +373,14 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
 
       {/* Effects */}
       {substance.effects && substance.effects.length > 0 && (
-        <div className="bg-white/5 dark:bg-black/20 backdrop-blur-[40px] p-6 rounded-[2rem] border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
+        <div className="bg-theme-subtle backdrop-blur-[40px] p-6 rounded-[2rem] border border-theme-border shadow-[0_8px_30px_rgba(0,0,0,0.12)] space-y-6 group hover:bg-white/[0.08] transition-colors relative overflow-hidden">
           <div className="absolute right-0 top-0 w-32 h-32 bg-cyan-500/10 blur-[40px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-          <h3 className="text-[11px] font-bold text-white/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
+          <h3 className="text-[11px] font-bold text-theme-text/60 uppercase tracking-[0.2em] flex items-center gap-2 relative z-10">
             <Percent size={16} /> Typické Účinky
           </h3>
           <div className="space-y-3 relative z-10">
              {substance.effects.map((effect, i) => (
-                <div key={i} className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5 shadow-sm">
+                <div key={i} className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-theme-border/50 shadow-sm">
                   <div className="flex items-center gap-3">
                      <div className={cn(
                        "w-3 h-3 rounded-full shadow-[0_0_8px_currentColor]",
@@ -388,7 +388,7 @@ export default function SubstanceInfo({ substance, doses, settings, onBack, onEd
                      )} />
                      <span className="font-bold text-theme-text">{effect.type}</span>
                   </div>
-                  <div className="flex gap-4 text-[11px] font-bold uppercase tracking-wider text-white/60">
+                  <div className="flex gap-4 text-[11px] font-bold uppercase tracking-wider text-theme-text/60">
                      <span>Síla <span className="text-theme-text bg-white/10 px-2 py-1 rounded ml-1">{effect.intensity}/10</span></span>
                      <span>Délka <span className="text-theme-text bg-white/10 px-2 py-1 rounded ml-1">{effect.duration}h</span></span>
                   </div>

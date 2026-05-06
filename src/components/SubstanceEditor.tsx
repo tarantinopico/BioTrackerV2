@@ -278,7 +278,7 @@ const CustomOptionsInput = ({
         onChange(newVal.split(',').map(s => s.trim()).filter(Boolean));
       }}
       placeholder="např. Rekreační, Práce, Společnost"
-      className="w-full p-2 rounded-lg bg-theme-card border border-theme-border outline-none text-theme-text text-xs"
+      className="w-full md3-input text-xs"
     />
   );
 };
@@ -393,7 +393,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
         <div className="flex items-center justify-between p-6 border-b border-theme-border bg-theme-subtle">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-md3-primary flex items-center justify-center shadow-lg">
-              <Settings2 className="text-theme-bg" size={24} strokeWidth={3} />
+              <Settings2 className="text-white" size={24} strokeWidth={3} />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-theme-text uppercase tracking-tight">
@@ -443,7 +443,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     type="text" 
                     value={formData.name || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full p-4 rounded-2xl bg-theme-subtle border border-theme-border focus:border-cyan-primary/50 focus:bg-theme-subtle-hover outline-none transition-all text-theme-text font-bold text-base shadow-inner" 
+                    className="w-full md3-input text-xs" 
                     placeholder="Např. Kofein"
                     required 
                   />
@@ -477,7 +477,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         className={cn(
                           "flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all",
                           formData.icon === iconObj.id 
-                            ? "bg-md3-primary text-theme-bg shadow-[0_0_15px_var(--md3-primary-40)] scale-110" 
+                            ? "bg-md3-primary text-white shadow-[0_0_15px_var(--md3-primary-40)] scale-110" 
                             : "bg-theme-card border border-theme-border text-md3-gray hover:text-theme-text hover:bg-theme-subtle-hover"
                         )}
                       >
@@ -505,7 +505,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     <select 
                       value={formData.category || 'other'} 
                       onChange={e => setFormData(prev => ({ ...prev, category: e.target.value as SubstanceCategory }))}
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[46px] text-xs font-bold"
+                      className="w-full md3-input text-xs"
                     >
                       <option value="stimulant">Stimulans</option>
                       <option value="depressant">Depresans</option>
@@ -538,7 +538,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     <select 
                       value={formData.unit || 'mg'} 
                       onChange={e => setFormData(prev => ({ ...prev, unit: e.target.value }))}
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[46px] text-xs font-bold"
+                      className="w-full md3-input text-xs"
                     >
                       <option value="mg">mg</option>
                       <option value="g">g</option>
@@ -557,7 +557,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, step: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0.01" 
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -571,7 +571,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0" 
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -581,7 +581,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       value={formData.packageSize || ''} 
                       onChange={e => setFormData(prev => ({ ...prev, packageSize: parseFloat(e.target.value) }))}
                       placeholder="Volitelné"
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -673,7 +673,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="0.1" 
                       min="0" 
                       placeholder="Volitelné"
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -685,7 +685,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="0.1" 
                       min="0" 
                       placeholder="Aktuální zásoba"
-                      className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-md3-primary outline-none text-theme-text text-xs font-bold" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -697,7 +697,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     value={formData.tags?.join(', ') || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }))}
                     placeholder="Např. stimulant, nootropic, ranní (oddělené čárkou)"
-                    className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-xs font-bold" 
+                    className="w-full md3-input text-xs" 
                   />
                 </div>
                 
@@ -707,7 +707,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     value={formData.description || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={2} 
-                    className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none resize-none text-theme-text text-xs font-medium" 
+                    className="w-full md3-input text-xs" 
                     placeholder="Volitelný popis látky..."
                   />
                 </div>
@@ -884,7 +884,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, halfLife: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0.1" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -895,7 +895,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, tmax: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0.1" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -909,7 +909,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     step="1" 
                     min="1" 
                     max="100" 
-                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                    className="w-full md3-input text-xs" 
                   />
                 </div>
                 
@@ -922,7 +922,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, onset: parseFloat(e.target.value) }))}
                       step="1" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -933,7 +933,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, offset: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -953,7 +953,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   <select 
                     value={formData.metabolismCurve || 'standard'} 
                     onChange={e => setFormData(prev => ({ ...prev, metabolismCurve: e.target.value as MetabolismCurveType }))}
-                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[58px]"
+                    className="w-full md3-input text-xs"
                   >
                     <option value="standard">Standardní (lineární)</option>
                     <option value="exponential">Exponenciální</option>
@@ -1035,7 +1035,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, beta: parseFloat(e.target.value) }))}
                         step="0.01" 
                         min="0.01" 
-                        className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                     <div className="space-y-2">
@@ -1046,7 +1046,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, ka: parseFloat(e.target.value) }))}
                         step="0.01" 
                         min="0.01" 
-                        className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                   </div>
@@ -1443,7 +1443,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     value={formData.interactionMessage || ''} 
                     onChange={e => setFormData(prev => ({ ...prev, interactionMessage: e.target.value }))}
                     rows={2} 
-                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none resize-none text-theme-text" 
+                    className="w-full md3-input text-xs" 
                     placeholder="Specifické varování pro tuto kombinaci..."
                   />
                 </div>
@@ -1534,7 +1534,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                   <select 
                     value={formData.defaultRoute || 'oral'} 
                     onChange={e => setFormData(prev => ({ ...prev, defaultRoute: e.target.value }))}
-                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text"
+                    className="w-full md3-input text-xs"
                   >
                     <option value="oral">Ústně</option>
                     <option value="sublingual">Sublingválně</option>
@@ -1555,7 +1555,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="1" 
                       min="0" 
                       max="100"
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -1566,7 +1566,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, volumeOfDistribution: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0.01" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -1580,7 +1580,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, clearanceRate: parseFloat(e.target.value) }))}
                       step="0.01" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -1591,7 +1591,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, molarMass: parseFloat(e.target.value) }))}
                       step="0.1" 
                       min="0" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -1604,7 +1604,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       value={formData.pKa || 7.4} 
                       onChange={e => setFormData(prev => ({ ...prev, pKa: parseFloat(e.target.value) }))}
                       step="0.1" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -1614,7 +1614,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       value={formData.logP || 0} 
                       onChange={e => setFormData(prev => ({ ...prev, logP: parseFloat(e.target.value) }))}
                       step="0.1" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -1676,7 +1676,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                 newFields.splice(index, 1);
                                 setFormData(prev => ({ ...prev, customFields: newFields }));
                               }}
-                              className="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all shrink-0"
+                              className="w-11 h-11 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-theme-text transition-all shrink-0"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -1708,7 +1708,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                                   setFormData(prev => ({ ...prev, customFields: newFields }));
                                 }}
                                 placeholder="např. BPM"
-                                className="w-full p-2 rounded-lg bg-theme-card border border-theme-border outline-none text-theme-text text-xs"
+                                className="w-full md3-input text-xs"
                               />
                             </div>
                           )}
@@ -1724,7 +1724,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     <select 
                       value={formData.addictionPotential || 'low'} 
                       onChange={e => setFormData(prev => ({ ...prev, addictionPotential: e.target.value as any }))}
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text h-[58px]"
+                      className="w-full md3-input text-xs"
                     >
                       <option value="low">Nízký</option>
                       <option value="moderate">Střední</option>
@@ -1738,7 +1738,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       type="text" 
                       value={formData.legalityStatus || 'legal'} 
                       onChange={e => setFormData(prev => ({ ...prev, legalityStatus: e.target.value }))}
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                       placeholder="Např. Legální / Rx / Schedule I"
                     />
                   </div>
@@ -1752,7 +1752,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     onChange={e => setFormData(prev => ({ ...prev, toleranceHalfLife: parseFloat(e.target.value) }))}
                     step="1" 
                     min="1" 
-                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                    className="w-full md3-input text-xs" 
                   />
                 </div>
 
@@ -1764,7 +1764,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                     onChange={e => setFormData(prev => ({ ...prev, toxicity: parseFloat(e.target.value) }))}
                     step="0.1" 
                     min="1" 
-                    className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                    className="w-full md3-input text-xs" 
                   />
                 </div>
                 
@@ -1778,7 +1778,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       step="0.1" 
                       min="0" 
                       max="100" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -1789,7 +1789,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                       onChange={e => setFormData(prev => ({ ...prev, toleranceReset: parseFloat(e.target.value) }))}
                       step="1" 
                       min="1" 
-                      className="w-full p-4 rounded-2xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text" 
+                      className="w-full md3-input text-xs" 
                     />
                   </div>
                 </div>
@@ -1805,7 +1805,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, threshold: parseFloat(e.target.value) } as any }))}
                         step="0.01" 
                         min="0" 
-                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                     <div className="space-y-2">
@@ -1816,7 +1816,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, light: parseFloat(e.target.value) } as any }))}
                         step="0.01" 
                         min="0" 
-                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                     <div className="space-y-2">
@@ -1827,7 +1827,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, common: parseFloat(e.target.value) } as any }))}
                         step="0.01" 
                         min="0" 
-                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                     <div className="space-y-2">
@@ -1838,7 +1838,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, strong: parseFloat(e.target.value) } as any }))}
                         step="0.01" 
                         min="0" 
-                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                     <div className="space-y-2">
@@ -1849,7 +1849,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
                         onChange={e => setFormData(prev => ({ ...prev, dosage: { ...prev.dosage, heavy: parseFloat(e.target.value) } as any }))}
                         step="0.01" 
                         min="0" 
-                        className="w-full p-3 rounded-xl bg-theme-card border border-theme-border focus:border-cyan-primary outline-none text-theme-text text-sm" 
+                        className="w-full md3-input text-xs" 
                       />
                     </div>
                   </div>
@@ -1901,7 +1901,7 @@ export default function SubstanceEditor({ isOpen, substanceId, template, substan
           <button 
             form="substance-form"
             type="submit" 
-            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-xs bg-md3-primary text-theme-bg shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 glow-effects-enabled:shadow-[0_0_20px_var(--md3-primary-20)]"
+            className="flex-[1.5] py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-xs bg-md3-primary text-white shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 glow-effects-enabled:shadow-[0_0_20px_var(--md3-primary-20)]"
           >
             <CheckCircle size={16} strokeWidth={3} />
             Uložit konfiguraci

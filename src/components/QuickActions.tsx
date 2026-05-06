@@ -68,9 +68,9 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between px-3">
-        <h3 className="text-[11px] font-bold text-md3-gray/80 uppercase tracking-[0.2em] leading-none flex items-center gap-2 drop-shadow-sm">
-          <Zap size={14} className="text-md3-primary/90" strokeWidth={2.5} /> Rychlé Akce
+      <div className="flex items-center justify-between px-3 mb-1">
+        <h3 className="text-[10px] font-bold text-theme-text/80 uppercase tracking-widest flex items-center gap-1.5 drop-shadow-sm">
+          <Zap size={14} className="text-amber-400" strokeWidth={2.5} /> Rychlé Užití
         </h3>
         <button 
           onClick={() => {
@@ -78,13 +78,13 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             setNewShortcut({ name: '', amount: 0, substanceId: '', strainId: null, route: 'oral', color: '#0a84ff' });
             setIsAdding(true);
           }}
-          className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 dark:bg-black/20 border border-white/10 text-md3-primary hover:bg-white/10 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.05)] backdrop-blur-md active:scale-95 group"
+          className="w-7 h-7 flex items-center justify-center rounded-lg bg-theme-secondary border border-theme-border text-theme-text/80 hover:bg-theme-card transition-all shadow-sm active:scale-95 group"
         >
-          <Plus size={16} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
+          <Plus size={14} strokeWidth={2.5} className="group-hover:scale-110 transition-transform" />
         </button>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
         <AnimatePresence mode="popLayout">
           {shortcuts.map((shortcut) => (
             <motion.div
@@ -97,16 +97,16 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             >
               <button
                 onClick={() => onUseShortcut(shortcut)}
-                className="w-full flex flex-col justify-between items-start p-3 bg-white/5 dark:bg-black/20 border border-white/10 rounded-[1.4rem] text-left relative overflow-hidden active:scale-95 transition-all shadow-[0_8px_20px_rgba(0,0,0,0.06)] hover:bg-white/10 dark:hover:bg-black/30 backdrop-blur-2xl h-[78px]"
+                className="w-full flex flex-col justify-between items-start p-2.5 bg-theme-card border border-theme-border rounded-[1.4rem] text-left relative overflow-hidden active:scale-[0.98] transition-all shadow-sm hover:border-theme-border/80 group h-[76px] backdrop-blur-sm"
               >
                 {/* Glow drop */}
-                <div className="absolute top-0 right-0 w-24 h-24 rounded-full blur-[25px] pointer-events-none opacity-[0.15]" style={{ backgroundColor: shortcut.color }} />
+                <div className="absolute -right-4 -bottom-4 w-32 h-32 rounded-full blur-[35px] pointer-events-none opacity-[0.2] group-hover:opacity-[0.35] transition-opacity" style={{ backgroundColor: shortcut.color }} />
                 
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-inner bg-theme-bg/60 border border-white/5 relative z-10 backdrop-blur-md" style={{ color: shortcut.color }}>
+                <div className="w-8 h-8 rounded-[0.8rem] flex items-center justify-center shrink-0 border border-theme-border/50 bg-theme-bg/50 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] group-hover:scale-105 transition-transform" style={{ color: shortcut.color }}>
                   {(() => {
                     const substance = substances.find(s => s.id === shortcut.substanceId);
                     const IconComponent = getIconComponent(substance?.icon);
-                    return <IconComponent size={16} strokeWidth={2.5}/>;
+                    return <IconComponent size={14} strokeWidth={2.5}/>;
                   })()}
                 </div>
                 
@@ -115,10 +115,10 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                     {shortcut.name}
                   </div>
                   <div className="flex items-baseline gap-[2px] truncate drop-shadow-sm">
-                    <span className="text-[13px] font-black tabular-nums leading-none tracking-tight" style={{ color: shortcut.color }}>
+                    <span className="text-[15px] font-black tracking-tighter tabular-nums leading-none tracking-tight" style={{ color: shortcut.color }}>
                       {shortcut.amount}
                     </span>
-                    <span className="text-[9px] font-bold text-md3-gray/80 leading-none truncate ml-0.5 uppercase tracking-wide">
+                    <span className="text-[9px] font-bold text-theme-text/60 leading-none truncate ml-0.5 uppercase tracking-wide">
                       {substances.find(s => s.id === shortcut.substanceId)?.unit || ''}
                     </span>
                   </div>
@@ -131,7 +131,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                     e.stopPropagation();
                     handleEdit(shortcut);
                   }}
-                  className="w-6 h-6 rounded-lg bg-theme-bg/90 border border-theme-border/30 text-md3-primary flex items-center justify-center shadow-md active:scale-90"
+                  className="w-6 h-6 rounded-lg bg-theme-secondary border border-theme-border text-md3-primary flex items-center justify-center shadow-md active:scale-90"
                 >
                   <Edit2 size={10} strokeWidth={2.5} />
                 </button>
@@ -140,7 +140,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                     e.stopPropagation();
                     onRemoveShortcut(shortcut.id);
                   }}
-                  className="w-6 h-6 rounded-lg bg-theme-bg/90 border border-theme-border/30 text-red-500 flex items-center justify-center shadow-md active:scale-90"
+                  className="w-6 h-6 rounded-lg bg-theme-secondary border border-theme-border text-red-500 flex items-center justify-center shadow-md active:scale-90"
                 >
                   <Trash2 size={10} strokeWidth={2.5} />
                 </button>
@@ -152,12 +152,12 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
         {shortcuts.length === 0 && (
           <button
             onClick={() => setIsAdding(true)}
-            className="col-span-full py-4 bg-theme-bg/20 border-dashed border-2 border-theme-border/40 flex flex-col items-center justify-center gap-1.5 text-md3-gray hover:text-md3-primary rounded-2xl transition-all"
+            className="col-span-full py-4 bg-theme-card border-dashed border border-theme-border/50 flex flex-col items-center justify-center gap-2 text-theme-text/40 hover:text-theme-text/80 rounded-[1.4rem] transition-all group hover:border-theme-border hover:bg-theme-bg/50"
           >
-            <div className="w-8 h-8 rounded-xl bg-theme-bg/50 border border-theme-border/30 flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-[0.8rem] bg-theme-bg/50 border border-theme-border/50 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] text-theme-text/80 group-hover:scale-110 transition-transform">
               <Plus size={14} strokeWidth={3} />
             </div>
-            <span className="text-[10px] font-semibold text-md3-gray tracking-wide">Žádné zkratky</span>
+            <span className="text-[10px] font-semibold text-theme-text/50 tracking-wide inline-block drop-shadow-sm">Žádné zkratky</span>
           </button>
         )}
       </div>
@@ -182,7 +182,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
             >
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-black text-theme-text uppercase tracking-wider">{editingShortcutId ? 'Upravit zkratku' : 'Nová zkratka'}</h2>
-                <button onClick={() => setIsAdding(false)} className="p-3 rounded-full bg-theme-subtle text-md3-gray hover:text-theme-text transition-all active:scale-90">
+                <button onClick={() => setIsAdding(false)} className="p-2.5 rounded-full bg-theme-subtle text-md3-gray hover:text-theme-text transition-all active:scale-90">
                   <X size={20} />
                 </button>
               </div>
@@ -301,7 +301,7 @@ export default function QuickActions({ shortcuts, substances, onUseShortcut, onA
                   <button
                     onClick={handleSave}
                     disabled={!newShortcut.name || !newShortcut.substanceId || (newShortcut.amount ?? 0) <= 0}
-                    className="flex-1 py-4 rounded-[1.5rem] bg-md3-primary text-theme-bg font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                    className="flex-1 py-4 rounded-[1.5rem] bg-md3-primary text-white font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all disabled:opacity-50"
                   >
                     {editingShortcutId ? 'ULOŽIT' : 'PŘIDAT'}
                   </button>

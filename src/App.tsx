@@ -226,11 +226,13 @@ export default function App() {
     
     // Apply theme
     const root = document.documentElement;
-    root.classList.remove('dark', 'midnight', 'bento-mode', 'glass-mode', 'text-sm', 'text-base', 'text-lg', 'reduced-motion', 'accent-blue', 'accent-purple', 'accent-orange', 'accent-pink', 'accent-cyan', 'accent-emerald');
+    root.classList.remove('dark', 'midnight', 'vision', 'bento-mode', 'glass-mode', 'text-sm', 'text-base', 'text-lg', 'reduced-motion', 'accent-blue', 'accent-purple', 'accent-orange', 'accent-pink', 'accent-cyan', 'accent-emerald');
     if (settings.theme === 'dark') {
       root.classList.add('dark');
     } else if (settings.theme === 'midnight') {
-      root.classList.add('midnight');
+      root.classList.add('midnight', 'dark');
+    } else if (settings.theme === 'vision') {
+      root.classList.add('vision');
     }
     
     if (settings.bentoMode) root.classList.add('bento-mode');
@@ -607,38 +609,52 @@ export default function App() {
         settings.glassEffects !== false ? "glass-effects-enabled" : "",
         settings.glowEffects !== false ? "glow-effects-enabled" : ""
       )}>
-        {/* Ambient Background */}
+        {/* Ambient Background - Deep Liquid Glass */}
         {settings.ambientBackground !== false && (
-          <div className="fixed inset-0 overflow-hidden pointer-events-none z-[-1] will-change-transform transform-gpu">
-            <div className="absolute inset-0 bg-theme-bg" />
-            <div className="absolute inset-0 blur-[130px] opacity-[0.4] mix-blend-screen dark:mix-blend-color-dodge">
+          <div className={cn(
+            "fixed inset-0 overflow-hidden pointer-events-none z-[-1]",
+            settings.theme === 'vision' ? "bg-[#d1d5db] dark:bg-[#374151]" : "bg-black"
+          )}>
+            <div className={cn(
+              "absolute inset-0 blur-[130px] opacity-60 mix-blend-screen transition-all duration-[3000ms]",
+              settings.theme === 'vision' && "opacity-90 mix-blend-hard-light"
+            )}>
               <div className={cn(
-                "absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-[100%] scale-y-[1.5] rotate-[-15deg]",
-                "bg-md3-primary/80",
+                "absolute top-[-20%] left-[-10%] w-[80%] h-[80%] rounded-[100%] scale-y-[1.5] rotate-[-15deg] mix-blend-plus-lighter",
+                "bg-[radial-gradient(circle_at_center,rgba(0,180,255,0.8),transparent_70%)]",
                 settings.animations !== false && "animate-blob"
               )} />
               <div className={cn(
-                "absolute top-[10%] right-[-30%] w-[80%] h-[100%] rounded-[100%] scale-x-[1.2] rotate-[20deg] opacity-70",
-                "bg-cyan-primary/70",
+                "absolute top-[20%] right-[-30%] w-[90%] h-[110%] rounded-[100%] scale-x-[1.2] rotate-[20deg] opacity-70 mix-blend-plus-lighter",
+                "bg-[radial-gradient(circle_at_center,rgba(80,0,255,0.7),transparent_70%)]",
                 settings.animations !== false && "animate-blob animation-delay-2000"
               )} />
               <div className={cn(
-                "absolute bottom-[-30%] left-[10%] w-[90%] h-[80%] rounded-[100%] scale-y-[0.8] rotate-[-5deg] opacity-60",
-                "bg-purple-600/70",
+                "absolute bottom-[-30%] left-[10%] w-[100%] h-[90%] rounded-[100%] scale-y-[0.8] rotate-[-5deg] opacity-60 mix-blend-plus-lighter",
+                "bg-[radial-gradient(circle_at_center,rgba(0,255,180,0.6),transparent_70%)]",
                 settings.animations !== false && "animate-blob animation-delay-4000"
               )} />
-              {/* Additional artistic high-frequency light streak */}
+              
               <div className={cn(
-                "absolute inset-x-0 top-1/3 h-[20%] bg-white/20 rounded-full blur-[80px] rotate-[-30deg]",
+                "absolute top-1/2 left-1/4 w-[50%] h-[50%] rounded-full opacity-50 mix-blend-screen",
+                "bg-[radial-gradient(circle_at_center,rgba(255,100,200,0.5),transparent_70%)]",
+                settings.animations !== false && "animate-blob animation-delay-3000"
               )} />
             </div>
-            {/* Soft artistic grain overlay (CSS representation of abstract noise) */}
-            <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }} />
+            {/* Fine artistic noise overlay */}
+            <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }} />
+            {/* Vignette */}
+            <div className={cn(
+              "absolute inset-0 pointer-events-none",
+              settings.theme === 'vision' 
+                ? "bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(255,255,255,0.4)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" 
+                : "bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"
+            )} />
           </div>
         )}
 
-        {/* Removed Header - Directly jumping to Main Content for a clean layout */}
-        <main className={cn("flex-1 overflow-y-auto no-scrollbar pb-[90px] px-2", view === 'dashboard' ? 'pt-2' : 'pt-4')}>
+        {/* Main Content Area */}
+        <main className={cn("flex-1 overflow-y-auto no-scrollbar pb-[100px] px-2", view === 'dashboard' ? 'pt-2' : 'pt-4')}>
           <AnimatePresence mode="wait">
           <motion.div
             key={view}
@@ -668,6 +684,7 @@ export default function App() {
                 substances={substances} 
                 doses={doses} 
                 settings={settings}
+                onUpdateSettings={setSettings}
                 onAddDose={handleAddDose} 
                 onDeleteDose={handleDeleteDose}
                 onClearAll={handleClearAll}
@@ -733,45 +750,77 @@ export default function App() {
       </main>
 
       {/* Bottom Navigation - Premium Abstract Floating Dock */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 z-50 pointer-events-none pb-safe">
-        <nav className="mx-auto max-w-[380px] bg-white/5 dark:bg-black/20 backdrop-blur-[40px] border border-white/10 rounded-[2.5rem] flex justify-between items-center px-3 py-3 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] pointer-events-auto overflow-x-auto custom-scrollbar hide-scroll-indicator">
+      <div className="fixed bottom-4 md:bottom-6 left-0 right-0 px-4 z-50 pointer-events-none pb-safe flex justify-center">
+        <nav className={cn(
+          "backdrop-blur-[60px] border rounded-[2.5rem] flex items-center px-2.5 py-2.5 pointer-events-auto gap-2 md:gap-3",
+          settings.theme === 'vision' 
+            ? "bg-white/40 dark:bg-theme-glass border-white/40 dark:border-theme-border shadow-[0_30px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.5)]" 
+            : "bg-theme-subtle/80 border-white/10 shadow-[0_30px_60px_-10px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)]"
+        )}>
           {[
             { id: 'dashboard', icon: LayoutDashboard, label: 'Přehled' },
-            { id: 'logger', icon: PlusCircle, label: 'Zapsat' },
             { id: 'substances', icon: Database, label: 'Látky' },
             { id: 'history', icon: History, label: 'Historie' },
+            { id: 'logger', icon: PlusCircle, label: 'Zapsat', isPrimary: true },
             { id: 'analytics', icon: BarChart2, label: 'Analýza' },
             { id: 'predictions', icon: Lightbulb, label: 'Predikce' },
             { id: 'settings', icon: SettingsIcon, label: 'Nastavení' },
           ].map((item) => {
             const isActive = view === item.id;
+            if (item.isPrimary) {
+               return (
+                 <button
+                   key={item.id}
+                   onClick={() => {
+                     if (navigator.vibrate) navigator.vibrate(10);
+                     setView(item.id as ViewType);
+                   }}
+                   className="relative group px-1"
+                 >
+                   <div className="absolute inset-0 bg-cyan-500/30 blur-[20px] rounded-full group-hover:bg-cyan-500/50 transition-colors" />
+                   <div className={cn(
+                     "w-14 h-14 rounded-full flex items-center justify-center relative z-10 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(255,255,255,0.2),0_10px_20px_rgba(0,0,0,0.3)]",
+                     isActive ? "bg-cyan-500 text-black scale-95" : "bg-gradient-to-br from-cyan-400 to-cyan-600 text-white hover:scale-105"
+                   )}>
+                     <item.icon size={26} strokeWidth={isActive ? 3 : 2.5} />
+                   </div>
+                 </button>
+               )
+            }
             return (
               <button
                 key={item.id}
                 onClick={() => {
-                  if (navigator.vibrate) navigator.vibrate(10); // Subtle haptic feedback
+                  if (navigator.vibrate) navigator.vibrate(10);
                   setView(item.id as ViewType);
                 }}
                 className={cn(
-                  "flex flex-col items-center justify-center min-w-[50px] h-12 active:scale-95 transition-all duration-300 relative group rounded-full",
-                  isActive ? 'text-theme-text' : 'text-md3-gray/70 hover:text-theme-text/90'
+                  "flex flex-col items-center justify-center w-10 h-10 md:w-11 md:h-11 active:scale-90 transition-all duration-300 relative group rounded-full",
+                  isActive ? 'text-theme-text' : 'text-theme-text/40 hover:text-theme-text/80'
                 )}
               >
                 <div className={cn(
-                  "w-11 h-11 rounded-[1.2rem] transition-all duration-500 relative flex items-center justify-center",
-                  isActive ? "bg-white/10 text-white shadow-[0_4px_25px_rgba(255,255,255,0.1)] border border-white/20" : "bg-transparent text-md3-gray/80 group-hover:bg-white/5",
+                  "w-full h-full rounded-full transition-all duration-500 relative flex items-center justify-center",
+                  isActive 
+                    ? settings.theme === 'vision' 
+                      ? "bg-black/10 dark:bg-white/10 text-theme-text shadow-sm border border-black/5 dark:border-theme-border" 
+                      : "bg-white/10 text-theme-text shadow-[0_4px_15px_rgba(255,255,255,0.05)] border border-white/5" 
+                    : "bg-transparent",
                 )}>
                   {isActive && (
                     <motion.div 
                       layoutId="activeTabBadge" 
-                      className="absolute inset-0 bg-md3-primary/30 rounded-[1.2rem] blur-[8px]" 
+                      className={cn(
+                        "absolute inset-0 rounded-full blur-[8px] opacity-50",
+                        settings.theme === 'vision' ? "bg-theme-text/20" : "bg-theme-primary/30"
+                      )} 
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
                   {item.id === 'settings' && settings.privacyMode && !isActive && (
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
+                      <div className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.6)]" />
                   )}
-                  <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className="relative z-10 drop-shadow-sm" />
+                  <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} className="relative z-10" />
                 </div>
               </button>
             );
